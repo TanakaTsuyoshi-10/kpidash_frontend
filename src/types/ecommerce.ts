@@ -6,11 +6,15 @@
 export interface ChannelData {
   channel: string  // "EC", "電話", "FAX", "店舗受付"
   sales: number | null
+  sales_target: number | null              // 売上高目標
+  sales_achievement_rate: number | null    // 売上高達成率（%）
   sales_previous_year: number | null
   sales_two_years_ago: number | null
   sales_yoy: number | null
   sales_yoy_two_years: number | null
   buyers: number | null
+  buyers_target: number | null             // 購入者数目標
+  buyers_achievement_rate: number | null   // 購入者数達成率（%）
   buyers_previous_year: number | null
   buyers_two_years_ago: number | null
   buyers_yoy: number | null
@@ -24,11 +28,15 @@ export interface ChannelData {
 
 export interface ChannelTotals {
   sales: number | null
+  sales_target: number | null              // 売上高目標
+  sales_achievement_rate: number | null    // 売上高達成率（%）
   sales_previous_year: number | null
   sales_two_years_ago: number | null
   sales_yoy: number | null
   sales_yoy_two_years: number | null
   buyers: number | null
+  buyers_target: number | null             // 購入者数目標
+  buyers_achievement_rate: number | null   // 購入者数達成率（%）
   buyers_previous_year: number | null
   buyers_two_years_ago: number | null
   buyers_yoy: number | null
@@ -75,16 +83,22 @@ export interface ProductSummaryResponse {
 // 顧客別実績
 export interface CustomerStatsData {
   new_customers: number | null
+  new_customers_target: number | null              // 新規顧客数目標
+  new_customers_achievement_rate: number | null    // 新規顧客数達成率（%）
   new_customers_previous_year: number | null
   new_customers_two_years_ago: number | null
   new_customers_yoy: number | null
   new_customers_yoy_two_years: number | null
   repeat_customers: number | null
+  repeat_customers_target: number | null           // リピーター数目標
+  repeat_customers_achievement_rate: number | null // リピーター数達成率（%）
   repeat_customers_previous_year: number | null
   repeat_customers_two_years_ago: number | null
   repeat_customers_yoy: number | null
   repeat_customers_yoy_two_years: number | null
   total_customers: number | null
+  total_customers_target: number | null            // 合計顧客数目標
+  total_customers_achievement_rate: number | null  // 合計顧客数達成率（%）
   total_customers_previous_year: number | null
   total_customers_two_years_ago: number | null
   repeat_rate: number | null
@@ -175,4 +189,18 @@ export function formatPercent(value: number | null | undefined): string {
 
 export function isPositiveYoY(rate: number | null | undefined): boolean {
   return rate != null && rate >= 0
+}
+
+// 達成率の色クラスを取得
+export function getAchievementRateColor(rate: number | null | undefined): string {
+  if (rate == null) return 'text-gray-400'
+  if (rate >= 100) return 'text-green-600'
+  if (rate >= 80) return 'text-orange-600'
+  return 'text-red-600'
+}
+
+// 達成率をフォーマット
+export function formatAchievementRate(rate: number | null | undefined): string {
+  if (rate == null) return '-'
+  return `${rate.toFixed(1)}%`
 }

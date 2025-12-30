@@ -18,6 +18,8 @@ import {
   formatYoY,
   formatPercent,
   isPositiveYoY,
+  getAchievementRateColor,
+  formatAchievementRate,
   PeriodType,
 } from '@/types/ecommerce'
 import { cn } from '@/lib/utils'
@@ -77,6 +79,8 @@ export function CustomerStats({ month, periodType }: Props) {
     {
       label: '新規顧客',
       value: stats.new_customers,
+      target: stats.new_customers_target,
+      achievementRate: stats.new_customers_achievement_rate,
       previousYear: stats.new_customers_previous_year,
       twoYearsAgo: stats.new_customers_two_years_ago,
       yoy: stats.new_customers_yoy,
@@ -85,6 +89,8 @@ export function CustomerStats({ month, periodType }: Props) {
     {
       label: 'リピーター',
       value: stats.repeat_customers,
+      target: stats.repeat_customers_target,
+      achievementRate: stats.repeat_customers_achievement_rate,
       previousYear: stats.repeat_customers_previous_year,
       twoYearsAgo: stats.repeat_customers_two_years_ago,
       yoy: stats.repeat_customers_yoy,
@@ -93,12 +99,17 @@ export function CustomerStats({ month, periodType }: Props) {
     {
       label: '合計顧客数',
       value: stats.total_customers,
+      target: stats.total_customers_target,
+      achievementRate: stats.total_customers_achievement_rate,
       previousYear: stats.total_customers_previous_year,
       twoYearsAgo: stats.total_customers_two_years_ago,
       yoy: null,
       yoyTwoYears: null,
     },
   ]
+
+  // 列数を計算
+  const colSpan = isCumulative ? 7 : 5  // 実績,目標,達成率,前年,[前々年],前年比,[前々年比]
 
   return (
     <Card>
@@ -117,26 +128,25 @@ export function CustomerStats({ month, periodType }: Props) {
                   <div className="py-1">項目</div>
                 </TableHead>
                 <TableHead
-                  colSpan={isCumulative ? 5 : 3}
+                  colSpan={colSpan}
                   className="text-center bg-blue-50 text-blue-800 font-bold py-1"
                 >
                   顧客数
                 </TableHead>
               </TableRow>
               <TableRow>
-                <TableHead className="text-right bg-blue-50/50 py-1 px-3 w-[100px]">実績</TableHead>
-                <TableHead className="text-right bg-blue-50/50 py-1 px-3 w-[100px]">前年</TableHead>
+                <TableHead className="text-right bg-blue-50/50 py-1 px-2 w-[80px]">実績</TableHead>
+                <TableHead className="text-right bg-blue-50/50 py-1 px-2 w-[80px]">目標</TableHead>
+                <TableHead className="text-right bg-blue-50/50 py-1 px-2 w-[60px]">達成率</TableHead>
+                <TableHead className="text-right bg-blue-50/50 py-1 px-2 w-[80px]">前年</TableHead>
                 {isCumulative && (
-                  <TableHead className="text-right bg-blue-50/50 py-1 px-3 w-[100px]">前々年</TableHead>
+                  <TableHead className="text-right bg-blue-50/50 py-1 px-2 w-[80px]">前々年</TableHead>
                 )}
-                <TableHead className={cn(
-                  "text-right bg-blue-50/50 py-1 px-3 w-[80px]",
-                  !isCumulative && ""
-                )}>
+                <TableHead className="text-right bg-blue-50/50 py-1 px-2 w-[60px]">
                   前年比
                 </TableHead>
                 {isCumulative && (
-                  <TableHead className="text-right bg-blue-50/50 py-1 px-3 w-[80px]">
+                  <TableHead className="text-right bg-blue-50/50 py-1 px-2 w-[60px]">
                     前々年比
                   </TableHead>
                 )}
@@ -150,6 +160,15 @@ export function CustomerStats({ month, periodType }: Props) {
                   </TableCell>
                   <TableCell className="text-right font-mono py-1.5 px-2">
                     {row.value != null ? `${formatNumber(row.value)}人` : '-'}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
+                    {row.target != null ? `${formatNumber(row.target)}人` : '-'}
+                  </TableCell>
+                  <TableCell className={cn(
+                    "text-right font-mono font-medium py-1.5 px-2",
+                    getAchievementRateColor(row.achievementRate)
+                  )}>
+                    {formatAchievementRate(row.achievementRate)}
                   </TableCell>
                   <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
                     {row.previousYear != null ? `${formatNumber(row.previousYear)}人` : '-'}
@@ -182,6 +201,12 @@ export function CustomerStats({ month, periodType }: Props) {
                 </TableCell>
                 <TableCell className="text-right font-mono font-bold text-green-600 py-1.5 px-2">
                   {stats.repeat_rate != null ? formatPercent(stats.repeat_rate) : '-'}
+                </TableCell>
+                <TableCell className="text-right font-mono text-gray-400 py-1.5 px-2">
+                  -
+                </TableCell>
+                <TableCell className="text-right font-mono text-gray-400 py-1.5 px-2">
+                  -
                 </TableCell>
                 <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
                   {stats.repeat_rate_previous_year != null ? formatPercent(stats.repeat_rate_previous_year) : '-'}
