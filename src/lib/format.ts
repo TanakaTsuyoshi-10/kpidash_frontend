@@ -10,9 +10,12 @@
 export function formatCurrency(value: number | null, short: boolean = true): string {
   if (value === null || value === undefined) return '-'
 
+  // 小数点以下を四捨五入して整数にする
+  const intValue = Math.round(value)
+
   if (short) {
-    const absValue = Math.abs(value)
-    const sign = value < 0 ? '▲' : ''
+    const absValue = Math.abs(intValue)
+    const sign = intValue < 0 ? '▲' : ''
 
     if (absValue >= 100000000) {
       // 1億以上
@@ -30,10 +33,10 @@ export function formatCurrency(value: number | null, short: boolean = true): str
     return `${sign}¥${absValue.toLocaleString()}`
   }
 
-  if (value < 0) {
-    return `▲¥${Math.abs(value).toLocaleString()}`
+  if (intValue < 0) {
+    return `▲¥${Math.abs(intValue).toLocaleString()}`
   }
-  return `¥${value.toLocaleString()}`
+  return `¥${intValue.toLocaleString()}`
 }
 
 /**
