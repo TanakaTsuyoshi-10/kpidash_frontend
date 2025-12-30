@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { FileUploader } from '@/components/upload/FileUploader'
 import { UploadResultDisplay } from '@/components/upload/UploadResultDisplay'
 import { UploadHistoryList } from '@/components/upload/UploadHistory'
+import { TemplateDownload } from '@/components/upload/TemplateDownload'
 import { UploadResult } from '@/types/upload'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
@@ -35,6 +36,10 @@ export default function UploadPage() {
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
+          {/* テンプレートダウンロードセクション */}
+          <TemplateDownload />
+
+          {/* ファイルアップロードセクション */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <FileUploader
               onUploadComplete={handleUploadComplete}
