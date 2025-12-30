@@ -7,9 +7,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { useEcommerceTargets } from '@/hooks/useTarget'
-import { formatCurrency, formatAchievementRate } from '@/lib/format'
+import { useChannelSummary, useCustomerSummary } from '@/hooks/useEcommerce'
+import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Target, TrendingUp, Users } from 'lucide-react'
+import type { ChannelData, CustomerStatsData } from '@/types/ecommerce'
 
 interface Props {
   month: string
@@ -38,16 +40,23 @@ function calculateAchievementRate(actual: number | null, target: number | null):
 }
 
 interface ChannelAchievementProps {
-  channel: string
-  actualSales: number | null
-  targetSales: number | null
-  actualBuyers: number | null
-  targetBuyers: number | null
+  channelData: ChannelData
 }
 
-function ChannelAchievement({ channel, actualSales, targetSales, actualBuyers, targetBuyers }: ChannelAchievementProps) {
-  const salesRate = calculateAchievementRate(actualSales, targetSales)
-  const buyersRate = calculateAchievementRate(actualBuyers, targetBuyers)
+function ChannelAchievement({ channelData }: ChannelAchievementProps) {
+  const {
+    channel,
+    sales,
+    sales_target,
+    sales_achievement_rate,
+    buyers,
+    buyers_target,
+    buyers_achievement_rate
+  } = channelData
+
+  // 達成率はAPIから取得、なければ計算
+  const salesRate = sales_achievement_rate ?? calculateAchievementRate(sales, sales_target)
+  const buyersRate = buyers_achievement_rate ?? calculateAchievementRate(buyers, buyers_target)
   const channelColor = CHANNEL_COLORS[channel] || 'bg-gray-500'
 
   return (
@@ -62,7 +71,7 @@ function ChannelAchievement({ channel, actualSales, targetSales, actualBuyers, t
         <div className="flex justify-between text-sm text-gray-600">
           <span>売上</span>
           <span>
-            {formatCurrency(actualSales, false)} / {formatCurrency(targetSales, false)}
+            {formatCurrency(sales, false)} / {formatCurrency(sales_target, false)}
           </span>
         </div>
         <Progress
@@ -81,12 +90,12 @@ function ChannelAchievement({ channel, actualSales, targetSales, actualBuyers, t
       </div>
 
       {/* 購入者数達成率 */}
-      {(targetBuyers !== null || actualBuyers !== null) && (
+      {(buyers_target !== null || buyers !== null) && (
         <div className="space-y-1">
           <div className="flex justify-between text-sm text-gray-600">
             <span>購入者</span>
             <span>
-              {actualBuyers?.toLocaleString() ?? '-'} / {targetBuyers?.toLocaleString() ?? '-'}人
+              {buyers?.toLocaleString() ?? '-'} / {buyers_target?.toLocaleString() ?? '-'}人
             </span>
           </div>
           <Progress
@@ -109,7 +118,12 @@ function ChannelAchievement({ channel, actualSales, targetSales, actualBuyers, t
 }
 
 export function TargetAchievementCard({ month }: Props) {
-  const { data: targetData, loading, error } = useEcommerceTargets(month)
+  const { data: targetData, loading: targetLoading, error: targetError } = useEcommerceTargets(month)
+  const { data: channelData, loading: channelLoading, error: channelError } = useChannelSummary(month, 'monthly')
+  const { data: customerData, loading: customerLoading, error: customerError } = useCustomerSummary(month, 'monthly')
+
+  const loading = targetLoading || channelLoading || customerLoading
+  const error = targetError || channelError || customerError
 
   if (loading) {
     return (
@@ -145,11 +159,12 @@ export function TargetAchievementCard({ month }: Props) {
     )
   }
 
-  // 目標が設定されていない場合
-  const hasTargets = targetData?.channel_targets?.some(ch => ch.target_sales !== null) ||
-                     targetData?.customer_target !== null
+  // 実績データがあるか確認
+  const hasChannelData = channelData?.channels && channelData.channels.length > 0
+  const hasCustomerData = customerData?.data
 
-  if (!targetData || !hasTargets) {
+  // 目標が設定されていない、かつ実績データもない場合
+  if (!hasChannelData && !hasCustomerData) {
     return (
       <Card>
         <CardHeader>
@@ -160,19 +175,17 @@ export function TargetAchievementCard({ month }: Props) {
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-gray-400">
-            <p>目標が設定されていません</p>
-            <p className="text-sm mt-2">目標設定画面から設定してください</p>
+            <p>データがありません</p>
+            <p className="text-sm mt-2">実績データをアップロードしてください</p>
           </div>
         </CardContent>
       </Card>
     )
   }
 
-  // 合計達成率
-  const totalRate = calculateAchievementRate(
-    targetData.last_year_total_sales, // 実績データはAPI側で提供されていないため、仮で前年を使用
-    targetData.total_target_sales
-  )
+  // 合計達成率（実績データから取得）
+  const totalRate = channelData?.totals?.sales_achievement_rate ??
+    calculateAchievementRate(channelData?.totals?.sales, channelData?.totals?.sales_target)
 
   return (
     <Card>
@@ -184,103 +197,124 @@ export function TargetAchievementCard({ month }: Props) {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* 売上目標サマリー */}
-        {targetData.total_target_sales !== null && (
+        {(channelData?.totals?.sales_target !== null || channelData?.totals?.sales !== null) && (
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-gray-500" />
-                <span className="font-medium">売上目標</span>
+                <span className="font-medium">売上合計</span>
               </div>
               <span className="text-lg font-bold">
-                {formatCurrency(targetData.total_target_sales, false)}
+                {formatCurrency(channelData?.totals?.sales, false)} / {formatCurrency(channelData?.totals?.sales_target, false)}
               </span>
             </div>
-            {targetData.yoy_total_rate !== null && (
-              <p className="text-sm text-gray-500">
-                前年比: <span className={cn(
-                  targetData.yoy_total_rate >= 0 ? 'text-green-600' : 'text-red-600'
+            {/* 達成率 */}
+            <div className="space-y-1">
+              <Progress
+                value={totalRate !== null ? Math.min(totalRate, 100) : 0}
+                className="h-2"
+              />
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">達成率</span>
+                <span className={cn(
+                  'font-medium',
+                  totalRate !== null && totalRate >= 100 ? 'text-green-600' :
+                  totalRate !== null && totalRate >= 80 ? 'text-yellow-600' :
+                  totalRate !== null ? 'text-red-600' : 'text-gray-400'
                 )}>
-                  {targetData.yoy_total_rate >= 0 ? '+' : ''}{targetData.yoy_total_rate.toFixed(1)}%
+                  {totalRate !== null ? `${totalRate.toFixed(1)}%` : '-'}
                 </span>
-              </p>
-            )}
+              </div>
+            </div>
           </div>
         )}
 
         {/* チャネル別達成状況 */}
-        {targetData.channel_targets && targetData.channel_targets.length > 0 && (
+        {hasChannelData && (
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-3">チャネル別達成状況</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {targetData.channel_targets.map((channel) => (
+              {channelData!.channels.map((channel) => (
                 <ChannelAchievement
                   key={channel.channel}
-                  channel={channel.channel}
-                  actualSales={channel.last_year_sales} // 実績がないため前年データで代用
-                  targetSales={channel.target_sales}
-                  actualBuyers={channel.last_year_buyers}
-                  targetBuyers={channel.target_buyers}
+                  channelData={channel}
                 />
               ))}
             </div>
           </div>
         )}
 
-        {/* 顧客統計目標 */}
-        {targetData.customer_target && (
+        {/* 顧客統計 */}
+        {hasCustomerData && (
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
               <Users className="h-4 w-4" />
-              顧客目標
+              顧客達成状況
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* 新規顧客 */}
-              {targetData.customer_target.new_customers !== null && (
+              {(customerData!.data.new_customers !== null || customerData!.data.new_customers_target !== null) && (
                 <div className="p-4 border rounded-lg space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">新規顧客数</span>
                     <span className="font-medium">
-                      {targetData.customer_target.last_year_new?.toLocaleString() ?? '-'} / {targetData.customer_target.new_customers.toLocaleString()}人
+                      {customerData!.data.new_customers?.toLocaleString() ?? '-'} / {customerData!.data.new_customers_target?.toLocaleString() ?? '-'}人
                     </span>
                   </div>
-                  <Progress
-                    value={calculateAchievementRate(targetData.customer_target.last_year_new, targetData.customer_target.new_customers) ?? 0}
-                    className="h-2"
-                  />
-                  {targetData.customer_target.yoy_new_rate !== null && (
-                    <p className="text-xs text-gray-500 text-right">
-                      前年比目標: <span className={cn(
-                        targetData.customer_target.yoy_new_rate >= 0 ? 'text-green-600' : 'text-red-600'
-                      )}>
-                        {targetData.customer_target.yoy_new_rate >= 0 ? '+' : ''}{targetData.customer_target.yoy_new_rate.toFixed(1)}%
-                      </span>
-                    </p>
-                  )}
+                  {(() => {
+                    const rate = customerData!.data.new_customers_achievement_rate ??
+                      calculateAchievementRate(customerData!.data.new_customers, customerData!.data.new_customers_target)
+                    return (
+                      <>
+                        <Progress
+                          value={rate !== null ? Math.min(rate, 100) : 0}
+                          className="h-2"
+                        />
+                        <div className="text-right text-sm font-medium">
+                          <span className={cn(
+                            rate !== null && rate >= 100 ? 'text-green-600' :
+                            rate !== null && rate >= 80 ? 'text-yellow-600' :
+                            rate !== null ? 'text-red-600' : 'text-gray-400'
+                          )}>
+                            {rate !== null ? `${rate.toFixed(1)}%` : '-'}
+                          </span>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
 
               {/* リピーター */}
-              {targetData.customer_target.repeat_customers !== null && (
+              {(customerData!.data.repeat_customers !== null || customerData!.data.repeat_customers_target !== null) && (
                 <div className="p-4 border rounded-lg space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">リピーター数</span>
                     <span className="font-medium">
-                      {targetData.customer_target.last_year_repeat?.toLocaleString() ?? '-'} / {targetData.customer_target.repeat_customers.toLocaleString()}人
+                      {customerData!.data.repeat_customers?.toLocaleString() ?? '-'} / {customerData!.data.repeat_customers_target?.toLocaleString() ?? '-'}人
                     </span>
                   </div>
-                  <Progress
-                    value={calculateAchievementRate(targetData.customer_target.last_year_repeat, targetData.customer_target.repeat_customers) ?? 0}
-                    className="h-2"
-                  />
-                  {targetData.customer_target.yoy_repeat_rate !== null && (
-                    <p className="text-xs text-gray-500 text-right">
-                      前年比目標: <span className={cn(
-                        targetData.customer_target.yoy_repeat_rate >= 0 ? 'text-green-600' : 'text-red-600'
-                      )}>
-                        {targetData.customer_target.yoy_repeat_rate >= 0 ? '+' : ''}{targetData.customer_target.yoy_repeat_rate.toFixed(1)}%
-                      </span>
-                    </p>
-                  )}
+                  {(() => {
+                    const rate = customerData!.data.repeat_customers_achievement_rate ??
+                      calculateAchievementRate(customerData!.data.repeat_customers, customerData!.data.repeat_customers_target)
+                    return (
+                      <>
+                        <Progress
+                          value={rate !== null ? Math.min(rate, 100) : 0}
+                          className="h-2"
+                        />
+                        <div className="text-right text-sm font-medium">
+                          <span className={cn(
+                            rate !== null && rate >= 100 ? 'text-green-600' :
+                            rate !== null && rate >= 80 ? 'text-yellow-600' :
+                            rate !== null ? 'text-red-600' : 'text-gray-400'
+                          )}>
+                            {rate !== null ? `${rate.toFixed(1)}%` : '-'}
+                          </span>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
             </div>
