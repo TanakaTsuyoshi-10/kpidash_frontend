@@ -126,9 +126,13 @@ export interface FinancialAnalysisResponseV2 {
   period_type: 'monthly' | 'cumulative'
   current: FinancialSummaryWithDetails
   previous_year: FinancialSummaryWithDetails | null
+  target: FinancialSummaryWithDetails | null           // 目標データ
   sales_yoy_rate: number | null
   gross_profit_yoy_rate: number | null
   operating_profit_yoy_rate: number | null
+  sales_achievement_rate: number | null                // 売上高達成率
+  gross_profit_achievement_rate: number | null         // 売上総利益達成率
+  operating_profit_achievement_rate: number | null     // 営業利益達成率
 }
 
 // =============================================================================
@@ -156,8 +160,15 @@ export interface StorePL {
   sga_total: number
   operating_profit: number
   sga_detail: StorePLSGADetail | null
+  // 目標値
+  sales_target: number | null
+  operating_profit_target: number | null
+  // 前年比
   sales_yoy_rate: number | null
   operating_profit_yoy_rate: number | null
+  // 達成率
+  sales_achievement_rate: number | null
+  operating_profit_achievement_rate: number | null
 }
 
 // 店舗別収支一覧レスポンス

@@ -42,6 +42,20 @@ function getYoYColor(value: number | null): string {
   return value >= 0 ? 'text-green-600' : 'text-red-600'
 }
 
+// 達成率フォーマット
+function formatAchievementRate(value: number | null): string {
+  if (value === null || value === undefined) return '-'
+  return `${value.toFixed(1)}%`
+}
+
+// 達成率の色
+function getAchievementRateColor(value: number | null): string {
+  if (value === null) return 'text-gray-400'
+  if (value >= 100) return 'text-green-600'
+  if (value >= 80) return 'text-yellow-600'
+  return 'text-red-600'
+}
+
 // 明細行の型
 interface SGADetailItem {
   name: string
@@ -108,18 +122,19 @@ export function StorePLTable({ data, loading }: Props) {
               <TableRow>
                 <TableHead className="w-[140px]">店舗名</TableHead>
                 <TableHead className="text-right">売上高</TableHead>
-                <TableHead className="text-right">売上原価</TableHead>
-                <TableHead className="text-right">売上総利益</TableHead>
-                <TableHead className="text-right">販管費</TableHead>
+                <TableHead className="text-right">売上目標</TableHead>
+                <TableHead className="text-right w-[70px]">売上達成率</TableHead>
+                <TableHead className="text-right w-[70px]">売上前年比</TableHead>
                 <TableHead className="text-right">営業利益</TableHead>
-                <TableHead className="text-right w-[80px]">売上前年比</TableHead>
-                <TableHead className="text-right w-[80px]">利益前年比</TableHead>
+                <TableHead className="text-right">利益目標</TableHead>
+                <TableHead className="text-right w-[70px]">利益達成率</TableHead>
+                <TableHead className="text-right w-[70px]">利益前年比</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!hasStores ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-400">
+                  <TableCell colSpan={9} className="text-center py-8 text-gray-400">
                     店舗別収支データがありません
                   </TableCell>
                 </TableRow>
@@ -154,23 +169,28 @@ export function StorePLTable({ data, loading }: Props) {
                           <span className="truncate">{store.store_name}</span>
                         </div>
                       </TableCell>
+                      {/* 売上高セクション */}
                       <TableCell className="text-right font-mono">
                         {formatCurrency(store.sales)}
                       </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(store.cost_of_sales)}
+                      <TableCell className="text-right font-mono text-gray-500">
+                        {formatCurrency(store.sales_target)}
                       </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(store.gross_profit)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(store.sga_total)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono font-medium">
-                        {formatCurrency(store.operating_profit)}
+                      <TableCell className={cn('text-right font-mono font-medium', getAchievementRateColor(store.sales_achievement_rate))}>
+                        {formatAchievementRate(store.sales_achievement_rate)}
                       </TableCell>
                       <TableCell className={cn('text-right font-mono', getYoYColor(store.sales_yoy_rate))}>
                         {formatYoY(store.sales_yoy_rate)}
+                      </TableCell>
+                      {/* 営業利益セクション */}
+                      <TableCell className="text-right font-mono font-medium">
+                        {formatCurrency(store.operating_profit)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-gray-500">
+                        {formatCurrency(store.operating_profit_target)}
+                      </TableCell>
+                      <TableCell className={cn('text-right font-mono font-medium', getAchievementRateColor(store.operating_profit_achievement_rate))}>
+                        {formatAchievementRate(store.operating_profit_achievement_rate)}
                       </TableCell>
                       <TableCell className={cn('text-right font-mono', getYoYColor(store.operating_profit_yoy_rate))}>
                         {formatYoY(store.operating_profit_yoy_rate)}
@@ -183,7 +203,7 @@ export function StorePLTable({ data, loading }: Props) {
                         <TableCell className="pl-8 text-sm text-gray-600">
                           {item.name}
                         </TableCell>
-                        <TableCell colSpan={3}></TableCell>
+                        <TableCell colSpan={4}></TableCell>
                         <TableCell className="text-right font-mono text-sm text-gray-600">
                           {formatCurrency(item.value)}
                         </TableCell>
@@ -200,20 +220,15 @@ export function StorePLTable({ data, loading }: Props) {
                 <TableCell className="text-right font-mono">
                   {formatCurrency(data?.total_sales ?? null)}
                 </TableCell>
-                <TableCell className="text-right font-mono">
-                  {formatCurrency(data?.total_cost_of_sales ?? null)}
-                </TableCell>
-                <TableCell className="text-right font-mono">
-                  {formatCurrency(data?.total_gross_profit ?? null)}
-                </TableCell>
-                <TableCell className="text-right font-mono">
-                  {formatCurrency(data?.total_sga ?? null)}
-                </TableCell>
+                <TableCell className="text-right font-mono text-gray-400">-</TableCell>
+                <TableCell className="text-right font-mono text-gray-400">-</TableCell>
+                <TableCell className="text-right font-mono text-gray-400">-</TableCell>
                 <TableCell className="text-right font-mono">
                   {formatCurrency(data?.total_operating_profit ?? null)}
                 </TableCell>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
+                <TableCell className="text-right font-mono text-gray-400">-</TableCell>
+                <TableCell className="text-right font-mono text-gray-400">-</TableCell>
+                <TableCell className="text-right font-mono text-gray-400">-</TableCell>
               </TableRow>
                 </>
               )}

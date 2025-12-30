@@ -56,6 +56,20 @@ function getYoYColor(value: number | null): string {
   return value >= 0 ? 'text-green-600' : 'text-red-600'
 }
 
+// 達成率フォーマット
+function formatAchievementRate(value: number | null): string {
+  if (value === null || value === undefined) return '-'
+  return `${value.toFixed(1)}%`
+}
+
+// 達成率の色
+function getAchievementRateColor(value: number | null): string {
+  if (value === null) return 'text-gray-400'
+  if (value >= 100) return 'text-green-600'
+  if (value >= 80) return 'text-yellow-600'
+  return 'text-red-600'
+}
+
 // YoY計算
 function calculateYoY(current: number | null, previous: number | null): number | null {
   if (current === null || previous === null || previous === 0) return null
@@ -109,7 +123,7 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
     )
   }
 
-  const { current, previous_year } = data
+  const { current, previous_year, target } = data
 
   // 売上原価明細を取得
   const getCostOfSalesDetails = (): DetailItem[] => {
@@ -176,7 +190,9 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px]">項目</TableHead>
-              <TableHead className="text-right">今期</TableHead>
+              <TableHead className="text-right">実績</TableHead>
+              <TableHead className="text-right">目標</TableHead>
+              <TableHead className="text-right">達成率</TableHead>
               <TableHead className="text-right">前年</TableHead>
               <TableHead className="text-right">前年比</TableHead>
             </TableRow>
@@ -187,6 +203,12 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
               <TableCell className="font-medium">売上高</TableCell>
               <TableCell className="text-right font-mono">
                 {formatCurrency(current.sales_total)}
+              </TableCell>
+              <TableCell className="text-right font-mono text-gray-500">
+                {formatCurrency(target?.sales_total ?? null)}
+              </TableCell>
+              <TableCell className={cn('text-right font-mono font-medium', getAchievementRateColor(data.sales_achievement_rate))}>
+                {formatAchievementRate(data.sales_achievement_rate)}
               </TableCell>
               <TableCell className="text-right font-mono text-gray-500">
                 {formatCurrency(previous_year?.sales_total ?? null)}
@@ -215,6 +237,12 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
                 {formatCurrency(current.cost_of_sales)}
               </TableCell>
               <TableCell className="text-right font-mono text-gray-500">
+                {formatCurrency(target?.cost_of_sales ?? null)}
+              </TableCell>
+              <TableCell className="text-right font-mono text-gray-400">
+                -
+              </TableCell>
+              <TableCell className="text-right font-mono text-gray-500">
                 {formatCurrency(previous_year?.cost_of_sales ?? null)}
               </TableCell>
               <TableCell className={cn('text-right font-mono', getYoYColor(calculateYoY(current.cost_of_sales, previous_year?.cost_of_sales ?? null)))}>
@@ -232,6 +260,12 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
                       {formatCurrency(item.current)}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm text-gray-400">
+                      -
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm text-gray-400">
+                      -
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm text-gray-400">
                       {formatCurrency(item.previous)}
                     </TableCell>
                     <TableCell className={cn('text-right font-mono text-sm', getYoYColor(calculateYoY(item.current, item.previous)))}>
@@ -241,7 +275,7 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
                 ))
               ) : (
                 <TableRow className="bg-gray-50/50">
-                  <TableCell colSpan={4} className="text-center text-sm text-gray-400 py-2">
+                  <TableCell colSpan={6} className="text-center text-sm text-gray-400 py-2">
                     明細データがありません
                   </TableCell>
                 </TableRow>
@@ -253,6 +287,12 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
               <TableCell className="font-medium">売上総利益</TableCell>
               <TableCell className="text-right font-mono">
                 {formatCurrency(grossProfit)}
+              </TableCell>
+              <TableCell className="text-right font-mono text-gray-500">
+                {formatCurrency(target?.gross_profit ?? null)}
+              </TableCell>
+              <TableCell className={cn('text-right font-mono font-medium', getAchievementRateColor(data.gross_profit_achievement_rate))}>
+                {formatAchievementRate(data.gross_profit_achievement_rate)}
               </TableCell>
               <TableCell className="text-right font-mono text-gray-500">
                 {formatCurrency(grossProfitPrev)}
@@ -281,6 +321,12 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
                 {formatCurrency(current.sga_total)}
               </TableCell>
               <TableCell className="text-right font-mono text-gray-500">
+                {formatCurrency(target?.sga_total ?? null)}
+              </TableCell>
+              <TableCell className="text-right font-mono text-gray-400">
+                -
+              </TableCell>
+              <TableCell className="text-right font-mono text-gray-500">
                 {formatCurrency(previous_year?.sga_total ?? null)}
               </TableCell>
               <TableCell className={cn('text-right font-mono', getYoYColor(calculateYoY(current.sga_total, previous_year?.sga_total ?? null)))}>
@@ -298,6 +344,12 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
                       {formatCurrency(item.current)}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm text-gray-400">
+                      -
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm text-gray-400">
+                      -
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-sm text-gray-400">
                       {formatCurrency(item.previous)}
                     </TableCell>
                     <TableCell className={cn('text-right font-mono text-sm', getYoYColor(calculateYoY(item.current, item.previous)))}>
@@ -307,7 +359,7 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
                 ))
               ) : (
                 <TableRow className="bg-gray-50/50">
-                  <TableCell colSpan={4} className="text-center text-sm text-gray-400 py-2">
+                  <TableCell colSpan={6} className="text-center text-sm text-gray-400 py-2">
                     明細データがありません
                   </TableCell>
                 </TableRow>
@@ -319,6 +371,12 @@ export function ExpandablePLSummaryTable({ data, loading }: Props) {
               <TableCell className="font-medium">営業利益</TableCell>
               <TableCell className="text-right font-mono">
                 {formatCurrency(operatingProfit)}
+              </TableCell>
+              <TableCell className="text-right font-mono text-gray-500">
+                {formatCurrency(target?.operating_profit ?? null)}
+              </TableCell>
+              <TableCell className={cn('text-right font-mono font-medium', getAchievementRateColor(data.operating_profit_achievement_rate))}>
+                {formatAchievementRate(data.operating_profit_achievement_rate)}
               </TableCell>
               <TableCell className="text-right font-mono text-gray-500">
                 {formatCurrency(operatingProfitPrev)}
