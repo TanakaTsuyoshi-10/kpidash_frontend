@@ -123,3 +123,61 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* タッチデバイス用の調整 */
+@media (hover: none) and (pointer: coarse) {
+  /* タッチターゲットを大きくする */
+  button, a, input, select {
+    min-height: 44px;
+  }
+
+  /* アクティブ時のスタイル */
+  button:active, a:active {
+    opacity: 0.7;
+  }
+}
+
+/* スクロールバーのスタイル */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background-color: #f1f5f9;
+}
+
+/* 安全なエリア対応（ノッチのあるデバイス） */
+@supports (padding: max(0px)) {
+  .safe-area-inset {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* プリントスタイル */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break {
+    page-break-before: always;
+  }
+}
+
+/* モバイル用テーブルスクロール */
+.table-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+}

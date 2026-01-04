@@ -1,9 +1,47 @@
+/**
+ * ダッシュボードレイアウト（レスポンシブ対応）
+ */
 'use client'
 
+import { Sidebar, navItems } from '@/components/layout/Sidebar'
+import { MobileSidebar } from '@/components/layout/MobileSidebar'
 import { Header } from '@/components/layout/Header'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { UserProvider } from '@/contexts/UserContext'
+import { UserProvider, useUserContext } from '@/contexts/UserContext'
 import { SWRProvider } from '@/lib/swr-config'
+import { useAuth } from '@/hooks/useAuth'
+
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const { signOut } = useAuth()
+  const { user } = useUserContext()
+
+  const handleLogout = async () => {
+    await signOut()
+  }
+
+  const userName = user?.display_name || user?.email?.split('@')[0]
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* デスクトップ用サイドバー */}
+      <Sidebar userName={userName} onLogout={handleLogout} />
+
+      {/* モバイル用サイドバー */}
+      <MobileSidebar
+        navItems={navItems}
+        userName={userName}
+        onLogout={handleLogout}
+      />
+
+      {/* メインコンテンツ */}
+      <div className="lg:pl-64">
+        <Header />
+        <main className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+          {children}
+        </main>
+      </div>
+    </div>
+  )
+}
 
 export default function DashboardLayout({
   children,
@@ -13,15 +51,7 @@ export default function DashboardLayout({
   return (
     <UserProvider>
       <SWRProvider>
-        <div className="min-h-screen bg-gray-100">
-          <Header />
-          <div className="flex">
-            <Sidebar />
-            <main className="flex-1 min-w-0 p-6 overflow-x-auto">
-              {children}
-            </main>
-          </div>
-        </div>
+        <DashboardContent>{children}</DashboardContent>
       </SWRProvider>
     </UserProvider>
   )
