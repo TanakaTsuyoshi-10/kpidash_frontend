@@ -16,6 +16,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { FileType, FILE_TYPE_OPTIONS, UploadResult } from '@/types/upload'
 import { uploadCSV } from '@/lib/api/upload'
+import { validateFile } from '@/lib/validators'
 
 interface Props {
   onUploadComplete?: (result: UploadResult) => void
@@ -44,7 +45,14 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
     setDragOver(false)
 
     const droppedFile = e.dataTransfer.files[0]
-    if (droppedFile && (droppedFile.type === 'text/csv' || droppedFile.name.endsWith('.csv'))) {
+    if (droppedFile) {
+      // バリデーション
+      const validation = validateFile(droppedFile)
+      if (!validation.valid) {
+        onUploadError?.(validation.error || 'ファイルが無効です')
+        return
+      }
+
       setFile(droppedFile)
       // ファイル名から種別を自動判定
       if (droppedFile.name.includes('店舗別')) {
@@ -52,14 +60,19 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
       } else if (droppedFile.name.includes('商品別')) {
         setFileType('product')
       }
-    } else {
-      onUploadError?.('CSVファイルのみアップロード可能です')
     }
   }, [onUploadError])
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
+      // バリデーション
+      const validation = validateFile(selectedFile)
+      if (!validation.valid) {
+        onUploadError?.(validation.error || 'ファイルが無効です')
+        return
+      }
+
       setFile(selectedFile)
       // ファイル名から種別を自動判定
       if (selectedFile.name.includes('店舗別')) {
@@ -68,7 +81,7 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
         setFileType('product')
       }
     }
-  }, [])
+  }, [onUploadError])
 
   const handleUpload = async () => {
     if (!file) return
@@ -149,8 +162,9 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
           ) : (
             <div className="space-y-2">
               <div className="text-gray-500">
-                CSVファイルをドラッグ＆ドロップ
+                ファイルをドラッグ＆ドロップ
               </div>
+              <div className="text-gray-400 text-sm">対応形式: .xlsx, .xls, .csv（10MB以下）</div>
               <div className="text-gray-400 text-sm">または</div>
               <Button
                 variant="outline"
@@ -161,7 +175,7 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv"
+                accept=".xlsx,.xls,.csv"
                 className="hidden"
                 onChange={handleFileSelect}
               />

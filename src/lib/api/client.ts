@@ -5,8 +5,8 @@
 import { createClient } from '@/lib/supabase/client'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
+const REQUEST_TIMEOUT = 30000  // 30秒
 
-// Supabaseクライアントをシングルトンとして保持
 let supabaseClient: ReturnType<typeof createClient> | null = null
 
 function getSupabase() {
@@ -16,161 +16,200 @@ function getSupabase() {
   return supabaseClient
 }
 
+// タイムアウト付きfetch
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeout: number = REQUEST_TIMEOUT
+): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 export class ApiClient {
   private async getAuthHeader(): Promise<HeadersInit> {
     const supabase = getSupabase()
-
-    // まずgetSessionを試す
     let { data: { session } } = await supabase.auth.getSession()
 
-    // セッションがない場合、refreshSessionを試す
     if (!session) {
       const { data } = await supabase.auth.refreshSession()
       session = data.session
     }
 
     if (!session?.access_token) {
-      console.error('セッションが取得できません')
       throw new Error('認証が必要です')
     }
 
-    console.log('Token obtained:', session.access_token.substring(0, 20) + '...')
-
+    // セキュリティ: トークンをログに出力しない
     return {
       'Authorization': `Bearer ${session.access_token}`,
       'Content-Type': 'application/json',
     }
   }
 
-  async get<T>(endpoint: string): Promise<T> {
-    const headers = await this.getAuthHeader()
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'GET',
-      headers,
-    })
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`)
+  private handleErrorResponse(status: number, errorData?: { detail?: string | Array<{ msg?: string }> }): never {
+    // 401: 認証エラー
+    if (status === 401) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+      throw new Error('認証が必要です。再度ログインしてください。')
     }
 
-    return response.json()
-  }
+    // 429: レート制限
+    if (status === 429) {
+      throw new Error('リクエスト数が制限を超えました。しばらく待ってから再試行してください。')
+    }
 
-  async post<T>(endpoint: string, data?: unknown): Promise<T> {
-    const headers = await this.getAuthHeader()
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-    })
-
-    if (!response.ok) {
-      // 422などのエラーの場合、詳細を取得
-      try {
-        const errorBody = await response.json()
-        const detail = errorBody.detail
-        if (typeof detail === 'string') {
-          throw new Error(detail)
-        } else if (Array.isArray(detail)) {
-          // FastAPI validation error format
-          const messages = detail.map((e: { loc?: string[]; msg?: string }) =>
-            e.msg || JSON.stringify(e)
-          ).join(', ')
-          throw new Error(messages || `API Error: ${response.status}`)
-        }
-        throw new Error(JSON.stringify(errorBody) || `API Error: ${response.status}`)
-      } catch (e) {
-        if (e instanceof Error && e.message !== `API Error: ${response.status}`) {
-          throw e
-        }
-        throw new Error(`API Error: ${response.status}`)
+    // その他のエラー
+    if (errorData?.detail) {
+      if (typeof errorData.detail === 'string') {
+        throw new Error(errorData.detail)
+      } else if (Array.isArray(errorData.detail)) {
+        const messages = errorData.detail.map(e => e.msg || JSON.stringify(e)).join(', ')
+        throw new Error(messages || `API Error: ${status}`)
       }
     }
-
-    return response.json()
+    throw new Error(`API Error: ${status}`)
   }
 
-  async put<T>(endpoint: string, data?: unknown): Promise<T> {
+  async get<T>(endpoint: string, timeout?: number): Promise<T> {
     const headers = await this.getAuthHeader()
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'PUT',
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-    })
 
-    if (!response.ok) {
-      // 422などのエラーの場合、詳細を取得
-      try {
-        const errorBody = await response.json()
-        const detail = errorBody.detail
-        if (typeof detail === 'string') {
-          throw new Error(detail)
-        } else if (Array.isArray(detail)) {
-          // FastAPI validation error format
-          const messages = detail.map((e: { loc?: string[]; msg?: string }) =>
-            e.msg || JSON.stringify(e)
-          ).join(', ')
-          throw new Error(messages || `API Error: ${response.status}`)
-        }
-        throw new Error(JSON.stringify(errorBody) || `API Error: ${response.status}`)
-      } catch (e) {
-        if (e instanceof Error && e.message !== `API Error: ${response.status}`) {
-          throw e
-        }
-        throw new Error(`API Error: ${response.status}`)
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}${endpoint}`,
+        { method: 'GET', headers },
+        timeout
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        this.handleErrorResponse(response.status, errorData)
       }
-    }
 
-    return response.json()
-  }
-
-  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
-    const headers = await this.getAuthHeader()
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'PATCH',
-      headers,
-      body: data ? JSON.stringify(data) : undefined,
-    })
-
-    if (!response.ok) {
-      try {
-        const errorBody = await response.json()
-        const detail = errorBody.detail
-        if (typeof detail === 'string') {
-          throw new Error(detail)
-        } else if (Array.isArray(detail)) {
-          const messages = detail.map((e: { loc?: string[]; msg?: string }) =>
-            e.msg || JSON.stringify(e)
-          ).join(', ')
-          throw new Error(messages || `API Error: ${response.status}`)
-        }
-        throw new Error(JSON.stringify(errorBody) || `API Error: ${response.status}`)
-      } catch (e) {
-        if (e instanceof Error && e.message !== `API Error: ${response.status}`) {
-          throw e
-        }
-        throw new Error(`API Error: ${response.status}`)
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('リクエストがタイムアウトしました。')
       }
+      throw error
     }
-
-    return response.json()
   }
 
-  async delete(endpoint: string): Promise<void> {
+  async post<T>(endpoint: string, data?: unknown, timeout?: number): Promise<T> {
     const headers = await this.getAuthHeader()
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'DELETE',
-      headers,
-    })
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`)
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}${endpoint}`,
+        {
+          method: 'POST',
+          headers,
+          body: data ? JSON.stringify(data) : undefined,
+        },
+        timeout
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        this.handleErrorResponse(response.status, errorData)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('リクエストがタイムアウトしました。')
+      }
+      throw error
     }
-
-    // 204 No Content の場合はJSONをパースしない
   }
 
-  async uploadFile<T>(endpoint: string, file: File): Promise<T> {
+  async put<T>(endpoint: string, data?: unknown, timeout?: number): Promise<T> {
+    const headers = await this.getAuthHeader()
+
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}${endpoint}`,
+        {
+          method: 'PUT',
+          headers,
+          body: data ? JSON.stringify(data) : undefined,
+        },
+        timeout
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        this.handleErrorResponse(response.status, errorData)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('リクエストがタイムアウトしました。')
+      }
+      throw error
+    }
+  }
+
+  async patch<T>(endpoint: string, data?: unknown, timeout?: number): Promise<T> {
+    const headers = await this.getAuthHeader()
+
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}${endpoint}`,
+        {
+          method: 'PATCH',
+          headers,
+          body: data ? JSON.stringify(data) : undefined,
+        },
+        timeout
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        this.handleErrorResponse(response.status, errorData)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('リクエストがタイムアウトしました。')
+      }
+      throw error
+    }
+  }
+
+  async delete(endpoint: string, timeout?: number): Promise<void> {
+    const headers = await this.getAuthHeader()
+
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}${endpoint}`,
+        { method: 'DELETE', headers },
+        timeout
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        this.handleErrorResponse(response.status, errorData)
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('リクエストがタイムアウトしました。')
+      }
+      throw error
+    }
+  }
+
+  async uploadFile<T>(endpoint: string, file: File, timeout: number = 60000): Promise<T> {
     const supabase = getSupabase()
     let { data: { session } } = await supabase.auth.getSession()
 
@@ -186,22 +225,32 @@ export class ApiClient {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-      body: formData,
-    })
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}${endpoint}`,
+        {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+          body: formData,
+        },
+        timeout
+      )
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        this.handleErrorResponse(response.status, errorData)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('アップロードがタイムアウトしました。')
+      }
+      throw error
     }
-
-    return response.json()
   }
 
-  async downloadFile(endpoint: string, filename: string): Promise<void> {
+  async downloadFile(endpoint: string, filename: string, timeout: number = 60000): Promise<void> {
     const supabase = getSupabase()
     let { data: { session } } = await supabase.auth.getSession()
 
@@ -214,26 +263,36 @@ export class ApiClient {
       throw new Error('認証が必要です')
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-    })
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}${endpoint}`,
+        {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        },
+        timeout
+      )
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        this.handleErrorResponse(response.status, errorData)
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('ダウンロードがタイムアウトしました。')
+      }
+      throw error
     }
-
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    window.URL.revokeObjectURL(url)
-    document.body.removeChild(a)
   }
 }
 

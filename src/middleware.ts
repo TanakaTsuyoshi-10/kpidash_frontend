@@ -1,7 +1,5 @@
 /**
  * 認証状態に基づくルーティング制御
- * - 未認証: /login へリダイレクト
- * - 認証済み: ダッシュボードへアクセス可能
  */
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
@@ -12,6 +10,10 @@ export async function middleware(request: NextRequest) {
       headers: request.headers,
     },
   })
+
+  // リクエストIDを生成（ログ追跡用）
+  const requestId = crypto.randomUUID()
+  response.headers.set('X-Request-ID', requestId)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,6 +29,8 @@ export async function middleware(request: NextRequest) {
             request: { headers: request.headers },
           })
           response.cookies.set({ name, value, ...options })
+          // X-Request-IDを再設定
+          response.headers.set('X-Request-ID', requestId)
         },
         remove(name: string, options: CookieOptions) {
           request.cookies.set({ name, value: '', ...options })
@@ -34,6 +38,8 @@ export async function middleware(request: NextRequest) {
             request: { headers: request.headers },
           })
           response.cookies.set({ name, value: '', ...options })
+          // X-Request-IDを再設定
+          response.headers.set('X-Request-ID', requestId)
         },
       },
     }
