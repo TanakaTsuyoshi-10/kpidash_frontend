@@ -99,7 +99,8 @@ export function RegionalSummaryTable({ month, periodType }: Props) {
     )
   }
 
-  const hasData = data && data.regions.length > 0
+  const hasData = data && data.regions && data.regions.length > 0
+  const hasGrandTotal = data && data.grand_total
 
   return (
     <Card>
@@ -326,56 +327,58 @@ export function RegionalSummaryTable({ month, periodType }: Props) {
                     )
                   })}
                   {/* 合計行 */}
-                  <TableRow className="bg-gray-100 font-bold border-t-2 border-gray-400">
-                    <TableCell className="sticky left-0 z-10 bg-gray-100 border-r-2 border-gray-300 py-1.5 px-2 w-[120px]">
-                      合計
-                    </TableCell>
-                    {/* 売上高 */}
-                    <TableCell className="text-right font-mono py-1.5 px-2">
-                      {formatCurrency(data.grand_total.total_sales)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
-                      {formatCurrency(data.grand_total.total_sales_previous_year)}
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        'text-right font-mono py-1.5 px-2',
-                        isPositive(data.grand_total.sales_yoy_rate)
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      )}
-                    >
-                      {formatRate(data.grand_total.sales_yoy_rate)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono py-1.5 px-2">-</TableCell>
-                    <TableCell className="text-right font-mono py-1.5 px-2 border-r-2 border-gray-300">
-                      -
-                    </TableCell>
-                    {/* 購入者数 */}
-                    <TableCell className="text-right font-mono py-1.5 px-2">
-                      {formatNumber(data.grand_total.total_customers)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
-                      {formatNumber(data.grand_total.total_customers_previous_year)}
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        'text-right font-mono py-1.5 px-2 border-r-2 border-gray-300',
-                        isPositive(data.grand_total.customers_yoy_rate)
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      )}
-                    >
-                      {formatRate(data.grand_total.customers_yoy_rate)}
-                    </TableCell>
-                    {/* 客単価 */}
-                    <TableCell className="text-right font-mono py-1.5 px-2">
-                      {formatCurrency(data.grand_total.avg_unit_price)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
-                      -
-                    </TableCell>
-                  </TableRow>
+                  {hasGrandTotal && (
+                    <TableRow className="bg-gray-100 font-bold border-t-2 border-gray-400">
+                      <TableCell className="sticky left-0 z-10 bg-gray-100 border-r-2 border-gray-300 py-1.5 px-2 w-[120px]">
+                        合計
+                      </TableCell>
+                      {/* 売上高 */}
+                      <TableCell className="text-right font-mono py-1.5 px-2">
+                        {formatCurrency(data.grand_total.total_sales)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
+                        {formatCurrency(data.grand_total.total_sales_previous_year)}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          'text-right font-mono py-1.5 px-2',
+                          isPositive(data.grand_total.sales_yoy_rate)
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        )}
+                      >
+                        {formatRate(data.grand_total.sales_yoy_rate)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono py-1.5 px-2">-</TableCell>
+                      <TableCell className="text-right font-mono py-1.5 px-2 border-r-2 border-gray-300">
+                        -
+                      </TableCell>
+                      {/* 購入者数 */}
+                      <TableCell className="text-right font-mono py-1.5 px-2">
+                        {formatNumber(data.grand_total.total_customers)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
+                        {formatNumber(data.grand_total.total_customers_previous_year)}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          'text-right font-mono py-1.5 px-2 border-r-2 border-gray-300',
+                          isPositive(data.grand_total.customers_yoy_rate)
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        )}
+                      >
+                        {formatRate(data.grand_total.customers_yoy_rate)}
+                      </TableCell>
+                      {/* 客単価 */}
+                      <TableCell className="text-right font-mono py-1.5 px-2">
+                        {formatCurrency(data.grand_total.avg_unit_price)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-gray-500 py-1.5 px-2">
+                        -
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </>
               )}
             </TableBody>
