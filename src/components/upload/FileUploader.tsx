@@ -30,6 +30,22 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // ファイル名から種別を自動判定
+  const detectFileType = (fileName: string) => {
+    const lowerName = fileName.toLowerCase()
+    if (lowerName.includes('店舗別収支') || lowerName.includes('store_pl')) {
+      setFileType('store_pl')
+    } else if (lowerName.includes('財務') || lowerName.includes('financial')) {
+      setFileType('financial')
+    } else if (lowerName.includes('製造') || lowerName.includes('manufacturing')) {
+      setFileType('manufacturing')
+    } else if (lowerName.includes('商品別') || lowerName.includes('product')) {
+      setFileType('product')
+    } else if (lowerName.includes('店舗別') || lowerName.includes('store')) {
+      setFileType('store')
+    }
+  }
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(true)
@@ -55,11 +71,7 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
 
       setFile(droppedFile)
       // ファイル名から種別を自動判定
-      if (droppedFile.name.includes('店舗別')) {
-        setFileType('store')
-      } else if (droppedFile.name.includes('商品別')) {
-        setFileType('product')
-      }
+      detectFileType(droppedFile.name)
     }
   }, [onUploadError])
 
@@ -75,11 +87,7 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
 
       setFile(selectedFile)
       // ファイル名から種別を自動判定
-      if (selectedFile.name.includes('店舗別')) {
-        setFileType('store')
-      } else if (selectedFile.name.includes('商品別')) {
-        setFileType('product')
-      }
+      detectFileType(selectedFile.name)
     }
   }, [onUploadError])
 

@@ -5,7 +5,7 @@
 /**
  * CSVファイルの種別
  */
-export type FileType = 'store' | 'product'
+export type FileType = 'store' | 'product' | 'store_pl' | 'financial' | 'manufacturing'
 
 /**
  * アップロード結果（店舗別）
@@ -87,6 +87,24 @@ export const FILE_TYPE_OPTIONS = [
     label: '売上集計-商品別',
     description: '商品別の売上データ（店舗別に集計）',
     endpoint: '/upload/product-kpi'
+  },
+  {
+    value: 'store_pl' as FileType,
+    label: '店舗別収支',
+    description: '店舗別の売上高、売上原価、販管費、営業利益',
+    endpoint: '/upload/store-pl'
+  },
+  {
+    value: 'financial' as FileType,
+    label: '財務データ',
+    description: '月次財務データ、売上原価明細、販管費明細',
+    endpoint: '/upload/financial'
+  },
+  {
+    value: 'manufacturing' as FileType,
+    label: '製造データ',
+    description: '日次の製造量、出勤者数、有給取得時間',
+    endpoint: '/upload/manufacturing'
   },
 ] as const
 

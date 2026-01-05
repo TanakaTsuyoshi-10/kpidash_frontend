@@ -93,6 +93,81 @@ export async function uploadProductCSV(file: File, segmentId?: string): Promise<
 }
 
 /**
+ * 店舗別収支をアップロードする
+ */
+export async function uploadStorePL(file: File): Promise<UploadResult> {
+  const token = await getAuthToken()
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${API_URL}/upload/store-pl`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`アップロードエラー: ${response.status} - ${errorText}`)
+  }
+
+  return response.json()
+}
+
+/**
+ * 財務データをアップロードする
+ */
+export async function uploadFinancial(file: File): Promise<UploadResult> {
+  const token = await getAuthToken()
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${API_URL}/upload/financial`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`アップロードエラー: ${response.status} - ${errorText}`)
+  }
+
+  return response.json()
+}
+
+/**
+ * 製造データをアップロードする
+ */
+export async function uploadManufacturing(file: File): Promise<UploadResult> {
+  const token = await getAuthToken()
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${API_URL}/upload/manufacturing`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`アップロードエラー: ${response.status} - ${errorText}`)
+  }
+
+  return response.json()
+}
+
+/**
  * CSVをアップロードする（共通関数）
  */
 export async function uploadCSV(
@@ -100,10 +175,19 @@ export async function uploadCSV(
   fileType: FileType,
   segmentId?: string
 ): Promise<UploadResult> {
-  if (fileType === 'store') {
-    return uploadStoreCSV(file)
-  } else {
-    return uploadProductCSV(file, segmentId)
+  switch (fileType) {
+    case 'store':
+      return uploadStoreCSV(file)
+    case 'product':
+      return uploadProductCSV(file, segmentId)
+    case 'store_pl':
+      return uploadStorePL(file)
+    case 'financial':
+      return uploadFinancial(file)
+    case 'manufacturing':
+      return uploadManufacturing(file)
+    default:
+      throw new Error(`不明なファイル種別: ${fileType}`)
   }
 }
 
