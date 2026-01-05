@@ -23,10 +23,10 @@ interface Props {
   loading?: boolean
 }
 
-// 数値フォーマット（カンマ区切り＋円）
+// 数値フォーマット（カンマ区切り＋円、小数点以下なし）
 function formatCurrency(value: number | null): string {
   if (value === null || value === undefined) return '-'
-  return `¥${value.toLocaleString()}`
+  return `¥${Math.round(value).toLocaleString('ja-JP')}`
 }
 
 // 前年比フォーマット（変化率: 0基準）
