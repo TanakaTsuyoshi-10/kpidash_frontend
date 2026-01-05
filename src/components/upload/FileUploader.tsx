@@ -30,6 +30,11 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // ファイル選択ダイアログを開く
+  const openFileDialog = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+
   // ファイル名から種別を自動判定
   const detectFileType = (fileName: string) => {
     const lowerName = fileName.toLowerCase()
@@ -137,16 +142,34 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
           )}
         </div>
 
+        {/* 非表示のファイル入力 */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+
         {/* ドラッグ＆ドロップエリア */}
         <div
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center transition-colors
-            ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
+            border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+            ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
             ${file ? 'bg-green-50 border-green-500' : ''}
           `}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onClick={!file ? openFileDialog : undefined}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (!file && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault()
+              openFileDialog()
+            }
+          }}
         >
           {file ? (
             <div className="space-y-2">
@@ -157,7 +180,8 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
                   setFile(null)
                   if (fileInputRef.current) {
                     fileInputRef.current.value = ''
@@ -178,21 +202,12 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
                 type="button"
                 variant="outline"
                 onClick={(e) => {
-                  e.preventDefault()
                   e.stopPropagation()
-                  fileInputRef.current?.click()
+                  openFileDialog()
                 }}
               >
                 ファイルを選択
               </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                className="hidden"
-                onChange={handleFileSelect}
-                onClick={(e) => e.stopPropagation()}
-              />
             </div>
           )}
         </div>
