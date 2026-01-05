@@ -175,8 +175,13 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
               <div className="text-gray-400 text-sm">対応形式: .xlsx, .xls, .csv（10MB以下）</div>
               <div className="text-gray-400 text-sm">または</div>
               <Button
+                type="button"
                 variant="outline"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  fileInputRef.current?.click()
+                }}
               >
                 ファイルを選択
               </Button>
@@ -186,6 +191,7 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
                 accept=".xlsx,.xls,.csv"
                 className="hidden"
                 onChange={handleFileSelect}
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
           )}
