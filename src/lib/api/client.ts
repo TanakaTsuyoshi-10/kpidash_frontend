@@ -54,11 +54,8 @@ export class ApiClient {
   }
 
   private handleErrorResponse(status: number, errorData?: { detail?: string | Array<{ msg?: string }> }): never {
-    // 401: 認証エラー
+    // 401: 認証エラー（リダイレクトせずエラーをスロー）
     if (status === 401) {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login'
-      }
       throw new Error('認証が必要です。再度ログインしてください。')
     }
 
