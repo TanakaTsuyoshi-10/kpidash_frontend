@@ -120,16 +120,21 @@ export function parseInputValue(value: string): number | null {
 
 /**
  * 年度内の月リスト生成（9月〜翌8月）
+ * 例: fiscalYear=2025 → 2024/9〜2025/8
  */
 export function generateMonthOptions(fiscalYear: number): { value: string; label: string }[] {
   const months = []
+  // 年度の開始カレンダー年（年度-1）
+  const startYear = fiscalYear - 1
+
   for (let i = 0; i < 12; i++) {
-    const year = fiscalYear + Math.floor((8 + i) / 12)
-    const month = ((8 + i) % 12) + 1 // 9,10,11,12,1,2,3,4,5,6,7,8
-    const date = new Date(year, month - 1, 1)
+    // 9月から開始: 9,10,11,12,1,2,3,4,5,6,7,8
+    const monthNum = ((8 + i) % 12) + 1
+    // 9-12月は開始年、1-8月は翌年
+    const year = monthNum >= 9 ? startYear : startYear + 1
     months.push({
-      value: `${year}-${String(month).padStart(2, '0')}-01`,
-      label: `${year}年${month}月`,
+      value: `${year}-${String(monthNum).padStart(2, '0')}-01`,
+      label: `${year}年${monthNum}月`,
     })
   }
   return months
@@ -137,13 +142,14 @@ export function generateMonthOptions(fiscalYear: number): { value: string; label
 
 /**
  * 現在の会計年度を取得
+ * 例: 2024年9月〜2025年8月 → 2025年度
  */
 export function getCurrentFiscalYear(): number {
   const now = new Date()
   const month = now.getMonth() + 1
   const year = now.getFullYear()
-  // 9月以降は当年、1-8月は前年が会計年度
-  return month >= 9 ? year : year - 1
+  // 9月以降は翌年度、1-8月は当年が会計年度
+  return month >= 9 ? year + 1 : year
 }
 
 /**

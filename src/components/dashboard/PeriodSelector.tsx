@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { getYearOptions } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/dashboard'
 
 interface Props {
@@ -23,21 +24,6 @@ interface Props {
   onYearChange: (year: number) => void
   onMonthChange: (month: number) => void
   onQuarterChange: (quarter: number) => void
-}
-
-// 年度選択肢を生成（現在年度から過去5年）
-function getYearOptions(): number[] {
-  const now = new Date()
-  const currentMonth = now.getMonth() + 1
-  const currentYear = now.getFullYear()
-  // 9月以降は今年が年度、それ以前は前年が年度
-  const fiscalYear = currentMonth >= 9 ? currentYear : currentYear - 1
-
-  const years: number[] = []
-  for (let i = 0; i < 5; i++) {
-    years.push(fiscalYear - i)
-  }
-  return years
 }
 
 // 月選択肢

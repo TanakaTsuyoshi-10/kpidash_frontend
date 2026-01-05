@@ -16,6 +16,7 @@ import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
 import { useManufacturingAnalysis } from '@/hooks/useManufacturing'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Upload } from 'lucide-react'
+import { formatPeriod } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/dashboard'
 
 interface Props {
@@ -42,7 +43,8 @@ export function ManufacturingAnalysisContainer({
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
 
   // コメント用の期間文字列（YYYY-MM-01形式）
-  const commentPeriod = `${year}-${String(month).padStart(2, '0')}-01`
+  // 年度からカレンダー年に変換（例: 2025年度9月 → 2024-09-01）
+  const commentPeriod = formatPeriod(year, month)
 
   // 製造分析データ取得
   const { data, loading, error, refetch } = useManufacturingAnalysis({

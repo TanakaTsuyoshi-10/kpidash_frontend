@@ -29,7 +29,11 @@ export default function EcommercePage() {
   const [year, monthNum] = month.substring(0, 7).split('-').map(Number)
 
   // 会計年度の開始年を計算（9月起点）
+  // 例: 2024年9月〜2025年8月 は 2025年度
+  // fiscalYearStart は累計表示用のカレンダー年（年度の開始年）
   const fiscalYearStart = monthNum >= 9 ? year : year - 1
+  // fiscalYear は年度名（2025年度など）
+  const fiscalYear = monthNum >= 9 ? year + 1 : year
 
   // 累計モードかどうか
   const isCumulative = periodType === 'cumulative'
@@ -112,7 +116,7 @@ export default function EcommercePage() {
       <WebsiteStats month={month} periodType={periodType} />
 
       {/* 推移グラフ */}
-      <ChannelTrendChart fiscalYear={fiscalYearStart} />
+      <ChannelTrendChart fiscalYear={fiscalYear} />
 
       {/* 月次コメント */}
       <MonthlyCommentCard
