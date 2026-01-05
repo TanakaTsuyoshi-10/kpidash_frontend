@@ -23,36 +23,48 @@ interface Props {
   loading?: boolean
 }
 
+// 数値に変換（文字列対応）
+function toNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  const num = typeof value === 'number' ? value : Number(value)
+  return isNaN(num) ? null : num
+}
+
 // 数値フォーマット（カンマ区切り＋円、小数点以下なし）
-function formatCurrency(value: number | null): string {
-  if (value === null || value === undefined) return '-'
-  return `¥${Math.round(value).toLocaleString('ja-JP')}`
+function formatCurrency(value: number | string | null | undefined): string {
+  const num = toNumber(value)
+  if (num === null) return '-'
+  return `¥${Math.round(num).toLocaleString('ja-JP')}`
 }
 
 // 前年比フォーマット（変化率: 0基準）
-function formatYoY(value: number | null): string {
-  if (value === null || value === undefined) return '-'
-  const sign = value >= 0 ? '+' : ''
-  return `${sign}${value.toFixed(1)}%`
+function formatYoY(value: number | string | null | undefined): string {
+  const num = toNumber(value)
+  if (num === null) return '-'
+  const sign = num >= 0 ? '+' : ''
+  return `${sign}${num.toFixed(1)}%`
 }
 
 // 前年比の色
-function getYoYColor(value: number | null): string {
-  if (value === null) return 'text-gray-500'
-  return value >= 0 ? 'text-green-600' : 'text-red-600'
+function getYoYColor(value: number | string | null | undefined): string {
+  const num = toNumber(value)
+  if (num === null) return 'text-gray-500'
+  return num >= 0 ? 'text-green-600' : 'text-red-600'
 }
 
 // 達成率フォーマット
-function formatAchievementRate(value: number | null): string {
-  if (value === null || value === undefined) return '-'
-  return `${value.toFixed(1)}%`
+function formatAchievementRate(value: number | string | null | undefined): string {
+  const num = toNumber(value)
+  if (num === null) return '-'
+  return `${num.toFixed(1)}%`
 }
 
 // 達成率の色
-function getAchievementRateColor(value: number | null): string {
-  if (value === null) return 'text-gray-400'
-  if (value >= 100) return 'text-green-600'
-  if (value >= 80) return 'text-yellow-600'
+function getAchievementRateColor(value: number | string | null | undefined): string {
+  const num = toNumber(value)
+  if (num === null) return 'text-gray-400'
+  if (num >= 100) return 'text-green-600'
+  if (num >= 80) return 'text-yellow-600'
   return 'text-red-600'
 }
 
