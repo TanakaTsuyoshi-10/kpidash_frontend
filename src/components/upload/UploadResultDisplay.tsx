@@ -5,7 +5,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { UploadResult, ProductUploadResult } from '@/types/upload'
+import { UploadResult, ProductUploadResult, StorePLUploadResult, UploadError, ParseError } from '@/types/upload'
 
 interface Props {
   result: UploadResult | null
@@ -14,6 +14,38 @@ interface Props {
 // ProductUploadResultかどうかを判定する型ガード
 function isProductResult(result: UploadResult): result is ProductUploadResult {
   return 'stores_processed' in result
+}
+
+// StorePLUploadResultかどうかを判定する型ガード
+function isStorePLResult(result: UploadResult): result is StorePLUploadResult {
+  return 'updated_count' in result || 'inserted_count' in result
+}
+
+// エラーが文字列かオブジェクトかを判定
+function isParseError(error: UploadError): error is ParseError {
+  return typeof error === 'object' && error !== null && 'message' in error
+}
+
+// エラーを表示用文字列に変換
+function formatError(error: UploadError): string {
+  if (typeof error === 'string') {
+    return error
+  }
+  if (isParseError(error)) {
+    const parts: string[] = []
+    if (error.row !== undefined) {
+      parts.push(`行${error.row}`)
+    }
+    if (error.column) {
+      parts.push(`列「${error.column}」`)
+    }
+    parts.push(error.message)
+    if (error.value) {
+      parts.push(`（値: ${error.value}）`)
+    }
+    return parts.join(' ')
+  }
+  return String(error)
 }
 
 export function UploadResultDisplay({ result }: Props) {
@@ -39,7 +71,9 @@ export function UploadResultDisplay({ result }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-sm text-gray-500">対象期間</div>
-            <div className="text-lg font-bold">{result.period}</div>
+            <div className="text-lg font-bold">
+              {isStorePLResult(result) ? result.month : 'period' in result ? result.period : '-'}
+            </div>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
             <div className="text-sm text-gray-500">インポート件数</div>
@@ -48,6 +82,24 @@ export function UploadResultDisplay({ result }: Props) {
             </div>
           </div>
         </div>
+
+        {/* 店舗別収支の追加情報 */}
+        {isStorePLResult(result) && (result.updated_count > 0 || result.inserted_count > 0) && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-500">新規登録</div>
+              <div className="text-lg font-bold text-blue-600">
+                {result.inserted_count}件
+              </div>
+            </div>
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-500">更新</div>
+              <div className="text-lg font-bold text-yellow-600">
+                {result.updated_count}件
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 商品別の追加情報 */}
         {isProductResult(result) && (
@@ -117,9 +169,16 @@ export function UploadResultDisplay({ result }: Props) {
             </div>
             <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
               {result.errors.map((error, index) => (
-                <li key={index}>{error}</li>
+                <li key={index}>{formatError(error)}</li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* 店舗別収支の追加情報 */}
+        {isStorePLResult(result) && result.message && (
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm text-gray-700">{result.message}</div>
           </div>
         )}
       </CardContent>

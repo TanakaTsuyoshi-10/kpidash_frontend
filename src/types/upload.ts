@@ -8,13 +8,28 @@
 export type FileType = 'store' | 'product' | 'store_pl' | 'financial' | 'manufacturing'
 
 /**
+ * パースエラー（オブジェクト形式）
+ */
+export interface ParseError {
+  row?: number
+  column?: string
+  message: string
+  value?: string
+}
+
+/**
+ * エラー型（文字列またはオブジェクト）
+ */
+export type UploadError = string | ParseError
+
+/**
  * アップロード結果（店舗別）
  */
 export interface StoreUploadResult {
   success: boolean
   period: string
   imported_count: number
-  errors: string[]
+  errors: UploadError[]
   warnings: string[]
 }
 
@@ -31,14 +46,29 @@ export interface ProductUploadResult {
     store_code: string
     store_name: string
   }>
-  errors: string[]
+  errors: UploadError[]
+  warnings: string[]
+}
+
+/**
+ * アップロード結果（店舗別収支）
+ */
+export interface StorePLUploadResult {
+  success: boolean
+  message: string
+  month?: string
+  data_type?: string
+  imported_count: number
+  updated_count: number
+  inserted_count: number
+  errors: UploadError[]
   warnings: string[]
 }
 
 /**
  * アップロード結果（共通型）
  */
-export type UploadResult = StoreUploadResult | ProductUploadResult
+export type UploadResult = StoreUploadResult | ProductUploadResult | StorePLUploadResult
 
 /**
  * アップロード履歴レスポンス
