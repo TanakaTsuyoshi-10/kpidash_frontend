@@ -24,23 +24,33 @@ interface Props {
   month: string
 }
 
+// 数値に変換（文字列対応）
+function toNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  const num = typeof value === 'number' ? value : Number(value)
+  return isNaN(num) ? null : num
+}
+
 // 数値フォーマット（カンマ区切り＋円）
-function formatCurrency(value: number | null): string {
-  if (value === null || value === undefined) return '-'
-  return `¥${value.toLocaleString()}`
+function formatCurrency(value: number | string | null | undefined): string {
+  const num = toNumber(value)
+  if (num === null) return '-'
+  return `¥${Math.round(num).toLocaleString('ja-JP')}`
 }
 
 // 前年比フォーマット（変化率: 0基準）
-function formatYoY(value: number | null): string {
-  if (value === null || value === undefined) return '-'
-  const sign = value >= 0 ? '+' : ''
-  return `${sign}${value.toFixed(1)}%`
+function formatYoY(value: number | string | null | undefined): string {
+  const num = toNumber(value)
+  if (num === null) return '-'
+  const sign = num >= 0 ? '+' : ''
+  return `${sign}${num.toFixed(1)}%`
 }
 
 // 前年比の色
-function getYoYColor(value: number | null): string {
-  if (value === null) return 'text-gray-500'
-  return value >= 0 ? 'text-green-600' : 'text-red-600'
+function getYoYColor(value: number | string | null | undefined): string {
+  const num = toNumber(value)
+  if (num === null) return 'text-gray-500'
+  return num >= 0 ? 'text-green-600' : 'text-red-600'
 }
 
 // 明細行の型
