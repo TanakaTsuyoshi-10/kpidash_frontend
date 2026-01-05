@@ -87,3 +87,12 @@ export function getFiscalYearFromPeriod(period: string): number {
   const year = date.getFullYear()
   return month >= 9 ? year + 1 : year
 }
+
+/**
+ * 年度と月から表示用の文字列を生成
+ * 例: 2026年度の9月 → "2025年9月"（カレンダー年で表示）
+ */
+export function formatDisplayPeriod(fiscalYear: number, month: number): string {
+  const calendarYear = getCalendarYear(fiscalYear, month)
+  return `${calendarYear}年${month}月`
+}

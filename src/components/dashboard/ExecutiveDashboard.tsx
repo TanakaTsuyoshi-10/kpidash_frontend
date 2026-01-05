@@ -15,6 +15,7 @@ import { ComplaintSummaryCard } from './ComplaintSummaryCard'
 import { useDashboardData, useDashboardChart } from '@/hooks/useDashboard'
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { formatDisplayPeriod } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/dashboard'
 
 interface Props {
@@ -86,11 +87,9 @@ export function ExecutiveDashboard({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">経営ダッシュボード</h1>
-          {data?.company_summary && (
-            <p className="text-sm text-gray-600 mt-1">
-              {data.company_summary.period} | {data.company_summary.fiscal_year}年度
-            </p>
-          )}
+          <p className="text-sm text-gray-600 mt-1">
+            {formatDisplayPeriod(year, month)} | {year}年度
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <PeriodSelector

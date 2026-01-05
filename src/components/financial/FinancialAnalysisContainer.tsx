@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useFinancialAnalysis, useFinanceAnalysisV2, useStorePLList } from '@/hooks/useFinancial'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Upload } from 'lucide-react'
-import { formatPeriod } from '@/lib/fiscal-year'
+import { formatPeriod, formatDisplayPeriod } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/dashboard'
 
 interface Props {
@@ -125,11 +125,9 @@ export function FinancialAnalysisContainer({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">財務分析</h1>
-          {data && (
-            <p className="text-sm text-gray-600 mt-1">
-              {data.period} | {data.fiscal_year}年度
-            </p>
-          )}
+          <p className="text-sm text-gray-600 mt-1">
+            {formatDisplayPeriod(year, month)} | {year}年度
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <PeriodSelector
