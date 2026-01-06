@@ -1,6 +1,6 @@
 /**
  * 店舗別収支テーブル（転置レイアウト・拡張版）
- * 列: 店舗名（色分け）、行: 財務項目・前年比・目標比・販管費明細
+ * 列: 店舗名（色分け）+ 対売上%、行: 財務項目・前年比・目標比・販管費明細
  */
 'use client'
 
@@ -23,22 +23,22 @@ interface Props {
 
 // 店舗カラーパレット
 const STORE_COLORS = [
-  { bg: 'bg-blue-50', header: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-800' },
-  { bg: 'bg-green-50', header: 'bg-green-100', border: 'border-green-200', text: 'text-green-800' },
-  { bg: 'bg-amber-50', header: 'bg-amber-100', border: 'border-amber-200', text: 'text-amber-800' },
-  { bg: 'bg-purple-50', header: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-800' },
-  { bg: 'bg-pink-50', header: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-800' },
-  { bg: 'bg-cyan-50', header: 'bg-cyan-100', border: 'border-cyan-200', text: 'text-cyan-800' },
-  { bg: 'bg-orange-50', header: 'bg-orange-100', border: 'border-orange-200', text: 'text-orange-800' },
-  { bg: 'bg-teal-50', header: 'bg-teal-100', border: 'border-teal-200', text: 'text-teal-800' },
-  { bg: 'bg-indigo-50', header: 'bg-indigo-100', border: 'border-indigo-200', text: 'text-indigo-800' },
-  { bg: 'bg-rose-50', header: 'bg-rose-100', border: 'border-rose-200', text: 'text-rose-800' },
-  { bg: 'bg-lime-50', header: 'bg-lime-100', border: 'border-lime-200', text: 'text-lime-800' },
-  { bg: 'bg-sky-50', header: 'bg-sky-100', border: 'border-sky-200', text: 'text-sky-800' },
-  { bg: 'bg-violet-50', header: 'bg-violet-100', border: 'border-violet-200', text: 'text-violet-800' },
-  { bg: 'bg-fuchsia-50', header: 'bg-fuchsia-100', border: 'border-fuchsia-200', text: 'text-fuchsia-800' },
-  { bg: 'bg-emerald-50', header: 'bg-emerald-100', border: 'border-emerald-200', text: 'text-emerald-800' },
-  { bg: 'bg-red-50', header: 'bg-red-100', border: 'border-red-200', text: 'text-red-800' },
+  { bg: 'bg-blue-50', header: 'bg-blue-100', border: 'border-blue-200', text: 'text-blue-800', ratio: 'bg-blue-100/50' },
+  { bg: 'bg-green-50', header: 'bg-green-100', border: 'border-green-200', text: 'text-green-800', ratio: 'bg-green-100/50' },
+  { bg: 'bg-amber-50', header: 'bg-amber-100', border: 'border-amber-200', text: 'text-amber-800', ratio: 'bg-amber-100/50' },
+  { bg: 'bg-purple-50', header: 'bg-purple-100', border: 'border-purple-200', text: 'text-purple-800', ratio: 'bg-purple-100/50' },
+  { bg: 'bg-pink-50', header: 'bg-pink-100', border: 'border-pink-200', text: 'text-pink-800', ratio: 'bg-pink-100/50' },
+  { bg: 'bg-cyan-50', header: 'bg-cyan-100', border: 'border-cyan-200', text: 'text-cyan-800', ratio: 'bg-cyan-100/50' },
+  { bg: 'bg-orange-50', header: 'bg-orange-100', border: 'border-orange-200', text: 'text-orange-800', ratio: 'bg-orange-100/50' },
+  { bg: 'bg-teal-50', header: 'bg-teal-100', border: 'border-teal-200', text: 'text-teal-800', ratio: 'bg-teal-100/50' },
+  { bg: 'bg-indigo-50', header: 'bg-indigo-100', border: 'border-indigo-200', text: 'text-indigo-800', ratio: 'bg-indigo-100/50' },
+  { bg: 'bg-rose-50', header: 'bg-rose-100', border: 'border-rose-200', text: 'text-rose-800', ratio: 'bg-rose-100/50' },
+  { bg: 'bg-lime-50', header: 'bg-lime-100', border: 'border-lime-200', text: 'text-lime-800', ratio: 'bg-lime-100/50' },
+  { bg: 'bg-sky-50', header: 'bg-sky-100', border: 'border-sky-200', text: 'text-sky-800', ratio: 'bg-sky-100/50' },
+  { bg: 'bg-violet-50', header: 'bg-violet-100', border: 'border-violet-200', text: 'text-violet-800', ratio: 'bg-violet-100/50' },
+  { bg: 'bg-fuchsia-50', header: 'bg-fuchsia-100', border: 'border-fuchsia-200', text: 'text-fuchsia-800', ratio: 'bg-fuchsia-100/50' },
+  { bg: 'bg-emerald-50', header: 'bg-emerald-100', border: 'border-emerald-200', text: 'text-emerald-800', ratio: 'bg-emerald-100/50' },
+  { bg: 'bg-red-50', header: 'bg-red-100', border: 'border-red-200', text: 'text-red-800', ratio: 'bg-red-100/50' },
 ]
 
 // 数値に変換（文字列対応）
@@ -78,6 +78,13 @@ function formatAchievement(value: number | string | null | undefined): string {
   return `${num.toFixed(1)}%`
 }
 
+// 対売上比率フォーマット
+function formatSalesRatio(value: number | null, sales: number | null): string {
+  if (value === null || sales === null || sales === 0) return '-'
+  const ratio = (value / sales) * 100
+  return `${ratio.toFixed(1)}%`
+}
+
 // 前年比の色
 function getYoYColor(value: number | null): string {
   if (value === null) return 'text-gray-400'
@@ -92,7 +99,7 @@ function getAchievementColor(value: number | null): string {
   return 'text-red-600'
 }
 
-// 前年比計算
+// 前年比率計算
 function calcYoYRate(current: number | null, prev: number | null): number | null {
   if (current === null || prev === null || prev === 0) return null
   return ((current - prev) / Math.abs(prev)) * 100
@@ -137,6 +144,53 @@ export function StorePLTable({ data, loading }: Props) {
     others: stores.reduce((sum, s) => sum + (s.sga_detail?.others ?? 0), 0),
   }
 
+  // ストアセル（金額＋対売上%の2列を返す）
+  const renderStoreCell = (
+    store: StorePL,
+    idx: number,
+    value: number | null,
+    showRatio: boolean = true,
+    isHighlight: boolean = false,
+    isNegativeRed: boolean = false
+  ) => {
+    const color = STORE_COLORS[idx % STORE_COLORS.length]
+    const num = toNumber(value)
+    return (
+      <>
+        <TableCell
+          className={cn(
+            'text-right font-mono',
+            isHighlight ? 'bg-opacity-50' : color.bg,
+            isNegativeRed && num !== null && num < 0 && 'text-red-600'
+          )}
+        >
+          {formatCurrency(value)}
+        </TableCell>
+        {showRatio && (
+          <TableCell className={cn('text-right font-mono text-xs border-r', color.ratio)}>
+            {formatSalesRatio(num, store.sales)}
+          </TableCell>
+        )}
+      </>
+    )
+  }
+
+  // 合計セル（金額＋対売上%の2列を返す）
+  const renderTotalCell = (value: number, showRatio: boolean = true) => {
+    return (
+      <>
+        <TableCell className="text-right font-mono font-bold bg-gray-100">
+          {formatCurrency(value)}
+        </TableCell>
+        {showRatio && (
+          <TableCell className="text-right font-mono text-xs bg-gray-100 border-r">
+            {formatSalesRatio(value, totals.sales)}
+          </TableCell>
+        )}
+      </>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -155,20 +209,35 @@ export function StorePLTable({ data, loading }: Props) {
                 {hasStores && stores.map((store, idx) => {
                   const color = STORE_COLORS[idx % STORE_COLORS.length]
                   return (
-                    <TableHead
-                      key={store.store_id}
-                      className={cn(
-                        'text-center min-w-[120px] whitespace-nowrap border-r',
-                        color.header,
-                        color.text
-                      )}
-                    >
-                      {store.store_name}
-                    </TableHead>
+                    <>
+                      <TableHead
+                        key={`${store.store_id}-name`}
+                        className={cn(
+                          'text-center min-w-[100px] whitespace-nowrap',
+                          color.header,
+                          color.text
+                        )}
+                      >
+                        {store.store_name}
+                      </TableHead>
+                      <TableHead
+                        key={`${store.store_id}-ratio`}
+                        className={cn(
+                          'text-center min-w-[60px] whitespace-nowrap text-xs border-r',
+                          color.header,
+                          color.text
+                        )}
+                      >
+                        対売上%
+                      </TableHead>
+                    </>
                   )
                 })}
-                <TableHead className="text-center min-w-[120px] bg-gray-200 font-bold">
+                <TableHead className="text-center min-w-[100px] bg-gray-200 font-bold">
                   合計
+                </TableHead>
+                <TableHead className="text-center min-w-[60px] bg-gray-200 font-bold text-xs border-r">
+                  対売上%
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -190,31 +259,50 @@ export function StorePLTable({ data, loading }: Props) {
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg)}>
-                          {formatCurrency(store.sales)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-sales`} className={cn('text-right font-mono', color.bg)}>
+                            {formatCurrency(store.sales)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-sales-ratio`} className={cn('text-right font-mono text-xs border-r', color.ratio)}>
+                            100.0%
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono font-bold bg-gray-100">
                       {formatCurrency(totals.sales)}
                     </TableCell>
+                    <TableCell className="text-right font-mono text-xs bg-gray-100 border-r">
+                      100.0%
+                    </TableCell>
                   </TableRow>
 
-                  {/* 売上高 前年比（金額） */}
+                  {/* 売上高 前年同月差額 */}
                   <TableRow className="text-xs">
                     <TableCell className="sticky left-0 bg-white z-10 border-r pl-4 text-gray-500">
-                      前年差額
+                      前年同月差額
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
-                      const diff = store.sales - (store.sales_prev_year ?? store.sales)
+                      const prevYear = toNumber(store.sales_prev_year)
+                      const current = toNumber(store.sales)
+                      const diff = current !== null && prevYear !== null ? current - prevYear : null
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg, getYoYColor(diff))}>
-                          {store.sales_prev_year ? formatYoYDiff(store.sales, store.sales_prev_year) : '-'}
-                        </TableCell>
+                        <>
+                          <TableCell
+                            key={`${store.store_id}-sales-diff`}
+                            className={cn('text-right font-mono', color.bg, getYoYColor(diff))}
+                          >
+                            {prevYear !== null ? formatYoYDiff(current, prevYear) : '-'}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-sales-diff-ratio`} className={cn('text-right font-mono border-r', color.ratio)}>
+                            {/* 差額の対売上%は表示しない */}
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">-</TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r"></TableCell>
                   </TableRow>
 
                   {/* 売上高 前年比（%） */}
@@ -224,14 +312,26 @@ export function StorePLTable({ data, loading }: Props) {
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
-                      const yoyRate = toNumber(store.sales_yoy_rate)
+                      // APIからの前年比がなければ計算
+                      let yoyRate = toNumber(store.sales_yoy_rate)
+                      if (yoyRate === null) {
+                        yoyRate = calcYoYRate(store.sales, toNumber(store.sales_prev_year))
+                      }
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg, getYoYColor(yoyRate))}>
-                          {formatYoY(store.sales_yoy_rate)}
-                        </TableCell>
+                        <>
+                          <TableCell
+                            key={`${store.store_id}-sales-yoy`}
+                            className={cn('text-right font-mono', color.bg, getYoYColor(yoyRate))}
+                          >
+                            {formatYoY(yoyRate)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-sales-yoy-ratio`} className={cn('text-right font-mono border-r', color.ratio)}>
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">-</TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r"></TableCell>
                   </TableRow>
 
                   {/* 売上高 目標達成率 */}
@@ -243,12 +343,20 @@ export function StorePLTable({ data, loading }: Props) {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
                       const rate = toNumber(store.sales_achievement_rate)
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg, getAchievementColor(rate))}>
-                          {formatAchievement(store.sales_achievement_rate)}
-                        </TableCell>
+                        <>
+                          <TableCell
+                            key={`${store.store_id}-sales-ach`}
+                            className={cn('text-right font-mono', color.bg, getAchievementColor(rate))}
+                          >
+                            {formatAchievement(rate)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-sales-ach-ratio`} className={cn('text-right font-mono border-r', color.ratio)}>
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">-</TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r"></TableCell>
                   </TableRow>
 
                   {/* 売上原価 */}
@@ -259,14 +367,17 @@ export function StorePLTable({ data, loading }: Props) {
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg)}>
-                          {formatCurrency(store.cost_of_sales)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-cogs`} className={cn('text-right font-mono', color.bg)}>
+                            {formatCurrency(store.cost_of_sales)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-cogs-ratio`} className={cn('text-right font-mono text-xs border-r', color.ratio)}>
+                            {formatSalesRatio(store.cost_of_sales, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
-                    <TableCell className="text-right font-mono bg-gray-100">
-                      {formatCurrency(totals.cost_of_sales)}
-                    </TableCell>
+                    {renderTotalCell(totals.cost_of_sales)}
                   </TableRow>
 
                   {/* 粗利益 */}
@@ -277,13 +388,21 @@ export function StorePLTable({ data, loading }: Props) {
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r bg-green-50/50')}>
-                          {formatCurrency(store.gross_profit)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-gp`} className={cn('text-right font-mono bg-green-50/50')}>
+                            {formatCurrency(store.gross_profit)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-gp-ratio`} className={cn('text-right font-mono text-xs border-r bg-green-100/30')}>
+                            {formatSalesRatio(store.gross_profit, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono font-bold bg-green-100">
                       {formatCurrency(totals.gross_profit)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs bg-green-100 border-r">
+                      {formatSalesRatio(totals.gross_profit, totals.sales)}
                     </TableCell>
                   </TableRow>
 
@@ -295,14 +414,17 @@ export function StorePLTable({ data, loading }: Props) {
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg)}>
-                          {formatCurrency(store.sga_total)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-sga`} className={cn('text-right font-mono', color.bg)}>
+                            {formatCurrency(store.sga_total)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-sga-ratio`} className={cn('text-right font-mono text-xs border-r', color.ratio)}>
+                            {formatSalesRatio(store.sga_total, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
-                    <TableCell className="text-right font-mono bg-gray-100">
-                      {formatCurrency(totals.sga_total)}
-                    </TableCell>
+                    {renderTotalCell(totals.sga_total)}
                   </TableRow>
 
                   {/* 販管費明細: 人件費 */}
@@ -312,14 +434,23 @@ export function StorePLTable({ data, loading }: Props) {
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
+                      const val = store.sga_detail?.personnel_cost ?? null
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r bg-gray-50/50')}>
-                          {formatCurrency(store.sga_detail?.personnel_cost)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-personnel`} className={cn('text-right font-mono bg-gray-50/50')}>
+                            {formatCurrency(val)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-personnel-ratio`} className={cn('text-right font-mono border-r bg-gray-100/30')}>
+                            {formatSalesRatio(val, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">
                       {formatCurrency(sgaTotals.personnel_cost)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r">
+                      {formatSalesRatio(sgaTotals.personnel_cost, totals.sales)}
                     </TableCell>
                   </TableRow>
 
@@ -330,14 +461,23 @@ export function StorePLTable({ data, loading }: Props) {
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
+                      const val = store.sga_detail?.land_rent ?? null
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r bg-gray-50/50')}>
-                          {formatCurrency(store.sga_detail?.land_rent)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-rent`} className={cn('text-right font-mono bg-gray-50/50')}>
+                            {formatCurrency(val)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-rent-ratio`} className={cn('text-right font-mono border-r bg-gray-100/30')}>
+                            {formatSalesRatio(val, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">
                       {formatCurrency(sgaTotals.land_rent)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r">
+                      {formatSalesRatio(sgaTotals.land_rent, totals.sales)}
                     </TableCell>
                   </TableRow>
 
@@ -348,14 +488,23 @@ export function StorePLTable({ data, loading }: Props) {
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
+                      const val = store.sga_detail?.lease_cost ?? null
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r bg-gray-50/50')}>
-                          {formatCurrency(store.sga_detail?.lease_cost)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-lease`} className={cn('text-right font-mono bg-gray-50/50')}>
+                            {formatCurrency(val)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-lease-ratio`} className={cn('text-right font-mono border-r bg-gray-100/30')}>
+                            {formatSalesRatio(val, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">
                       {formatCurrency(sgaTotals.lease_cost)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r">
+                      {formatSalesRatio(sgaTotals.lease_cost, totals.sales)}
                     </TableCell>
                   </TableRow>
 
@@ -366,14 +515,23 @@ export function StorePLTable({ data, loading }: Props) {
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
+                      const val = store.sga_detail?.utilities ?? null
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r bg-gray-50/50')}>
-                          {formatCurrency(store.sga_detail?.utilities)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-utilities`} className={cn('text-right font-mono bg-gray-50/50')}>
+                            {formatCurrency(val)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-utilities-ratio`} className={cn('text-right font-mono border-r bg-gray-100/30')}>
+                            {formatSalesRatio(val, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">
                       {formatCurrency(sgaTotals.utilities)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r">
+                      {formatSalesRatio(sgaTotals.utilities, totals.sales)}
                     </TableCell>
                   </TableRow>
 
@@ -384,14 +542,23 @@ export function StorePLTable({ data, loading }: Props) {
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
+                      const val = store.sga_detail?.others ?? null
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r bg-gray-50/50')}>
-                          {formatCurrency(store.sga_detail?.others)}
-                        </TableCell>
+                        <>
+                          <TableCell key={`${store.store_id}-others`} className={cn('text-right font-mono bg-gray-50/50')}>
+                            {formatCurrency(val)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-others-ratio`} className={cn('text-right font-mono border-r bg-gray-100/30')}>
+                            {formatSalesRatio(val, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">
                       {formatCurrency(sgaTotals.others)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r">
+                      {formatSalesRatio(sgaTotals.others, totals.sales)}
                     </TableCell>
                   </TableRow>
 
@@ -404,34 +571,55 @@ export function StorePLTable({ data, loading }: Props) {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
                       const profit = toNumber(store.operating_profit)
                       return (
-                        <TableCell key={store.store_id} className={cn(
-                          'text-right font-mono border-r bg-amber-50/50',
-                          profit !== null && profit < 0 && 'text-red-600'
-                        )}>
-                          {formatCurrency(store.operating_profit)}
-                        </TableCell>
+                        <>
+                          <TableCell
+                            key={`${store.store_id}-op`}
+                            className={cn(
+                              'text-right font-mono bg-amber-50/50',
+                              profit !== null && profit < 0 && 'text-red-600'
+                            )}
+                          >
+                            {formatCurrency(store.operating_profit)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-op-ratio`} className={cn('text-right font-mono text-xs border-r bg-amber-100/30')}>
+                            {formatSalesRatio(store.operating_profit, store.sales)}
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono font-bold bg-amber-100">
                       {formatCurrency(totals.operating_profit)}
                     </TableCell>
+                    <TableCell className="text-right font-mono text-xs bg-amber-100 border-r">
+                      {formatSalesRatio(totals.operating_profit, totals.sales)}
+                    </TableCell>
                   </TableRow>
 
-                  {/* 営業利益 前年比（金額） */}
+                  {/* 営業利益 前年同月差額 */}
                   <TableRow className="text-xs">
                     <TableCell className="sticky left-0 bg-white z-10 border-r pl-4 text-gray-500">
-                      前年差額
+                      前年同月差額
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
-                      const diff = store.operating_profit - (store.operating_profit_prev_year ?? store.operating_profit)
+                      const prevYear = toNumber(store.operating_profit_prev_year)
+                      const current = toNumber(store.operating_profit)
+                      const diff = current !== null && prevYear !== null ? current - prevYear : null
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg, getYoYColor(diff))}>
-                          {store.operating_profit_prev_year ? formatYoYDiff(store.operating_profit, store.operating_profit_prev_year) : '-'}
-                        </TableCell>
+                        <>
+                          <TableCell
+                            key={`${store.store_id}-op-diff`}
+                            className={cn('text-right font-mono', color.bg, getYoYColor(diff))}
+                          >
+                            {prevYear !== null ? formatYoYDiff(current, prevYear) : '-'}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-op-diff-ratio`} className={cn('text-right font-mono border-r', color.ratio)}>
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">-</TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r"></TableCell>
                   </TableRow>
 
                   {/* 営業利益 前年比（%） */}
@@ -441,14 +629,26 @@ export function StorePLTable({ data, loading }: Props) {
                     </TableCell>
                     {stores.map((store, idx) => {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
-                      const yoyRate = toNumber(store.operating_profit_yoy_rate)
+                      // APIからの前年比がなければ計算
+                      let yoyRate = toNumber(store.operating_profit_yoy_rate)
+                      if (yoyRate === null) {
+                        yoyRate = calcYoYRate(store.operating_profit, toNumber(store.operating_profit_prev_year))
+                      }
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg, getYoYColor(yoyRate))}>
-                          {formatYoY(store.operating_profit_yoy_rate)}
-                        </TableCell>
+                        <>
+                          <TableCell
+                            key={`${store.store_id}-op-yoy`}
+                            className={cn('text-right font-mono', color.bg, getYoYColor(yoyRate))}
+                          >
+                            {formatYoY(yoyRate)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-op-yoy-ratio`} className={cn('text-right font-mono border-r', color.ratio)}>
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">-</TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r"></TableCell>
                   </TableRow>
 
                   {/* 営業利益 目標達成率 */}
@@ -460,18 +660,33 @@ export function StorePLTable({ data, loading }: Props) {
                       const color = STORE_COLORS[idx % STORE_COLORS.length]
                       const rate = toNumber(store.operating_profit_achievement_rate)
                       return (
-                        <TableCell key={store.store_id} className={cn('text-right font-mono border-r', color.bg, getAchievementColor(rate))}>
-                          {formatAchievement(store.operating_profit_achievement_rate)}
-                        </TableCell>
+                        <>
+                          <TableCell
+                            key={`${store.store_id}-op-ach`}
+                            className={cn('text-right font-mono', color.bg, getAchievementColor(rate))}
+                          >
+                            {formatAchievement(rate)}
+                          </TableCell>
+                          <TableCell key={`${store.store_id}-op-ach-ratio`} className={cn('text-right font-mono border-r', color.ratio)}>
+                          </TableCell>
+                        </>
                       )
                     })}
                     <TableCell className="text-right font-mono bg-gray-50">-</TableCell>
+                    <TableCell className="text-right font-mono bg-gray-50 border-r"></TableCell>
                   </TableRow>
                 </>
               )}
             </TableBody>
           </Table>
         </div>
+
+        {/* 前年データがない場合の注記 */}
+        {hasStores && stores.every(s => s.sales_prev_year === null) && (
+          <div className="p-4 text-sm text-gray-500 border-t">
+            ※前年同月データがありません。バックエンドから前年データを取得するには、前年同月のデータがアップロードされている必要があります。
+          </div>
+        )}
       </CardContent>
     </Card>
   )
