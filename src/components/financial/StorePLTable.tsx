@@ -14,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { sortStoresByRegion, getRegionByStoreName, REGION_ORDER } from '@/lib/store-region'
 import type { StorePLListResponse, StorePL } from '@/types/financial'
 
 interface Props {
@@ -124,7 +125,8 @@ export function StorePLTable({ data, loading }: Props) {
   }
 
   const hasStores = data && data.stores && data.stores.length > 0
-  const stores = data?.stores ?? []
+  // 地区順にソート
+  const stores = hasStores ? sortStoresByRegion(data.stores) : []
 
   // 合計を計算
   const totals = {
@@ -208,6 +210,7 @@ export function StorePLTable({ data, loading }: Props) {
                 </TableHead>
                 {hasStores && stores.map((store, idx) => {
                   const color = STORE_COLORS[idx % STORE_COLORS.length]
+                  const region = getRegionByStoreName(store.store_name)
                   return (
                     <>
                       <TableHead
@@ -218,7 +221,10 @@ export function StorePLTable({ data, loading }: Props) {
                           color.text
                         )}
                       >
-                        {store.store_name}
+                        <div>{store.store_name}</div>
+                        {region && (
+                          <div className="text-[10px] font-normal opacity-70">{region}</div>
+                        )}
                       </TableHead>
                       <TableHead
                         key={`${store.store_id}-ratio`}
