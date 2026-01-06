@@ -4,6 +4,7 @@
  */
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -14,8 +15,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { sortStoresByRegion, getRegionByStoreName, REGION_ORDER } from '@/lib/store-region'
+import { getStoreMappings } from '@/lib/api/regional'
+import { REGION_ORDER } from '@/lib/store-region'
 import type { StorePLListResponse, StorePL } from '@/types/financial'
+import type { StoreMapping } from '@/types/regional'
 
 interface Props {
   data: StorePLListResponse | null
@@ -107,6 +110,46 @@ function calcYoYRate(current: number | null, prev: number | null): number | null
 }
 
 export function StorePLTable({ data, loading }: Props) {
+  const [storeMappings, setStoreMappings] = useState<StoreMapping[]>([])
+
+  // 店舗-地区マッピングを取得
+  useEffect(() => {
+    getStoreMappings()
+      .then((res) => setStoreMappings(res.mappings))
+      .catch(() => setStoreMappings([]))
+  }, [])
+
+  // 店舗名から地区名を取得する関数
+  const getRegionByStoreName = (storeName: string): string | undefined => {
+    const mapping = storeMappings.find(
+      (m) => m.segment_name === storeName || storeName.includes(m.segment_name) || m.segment_name.includes(storeName)
+    )
+    return mapping?.region_name
+  }
+
+  // 店舗を地区順にソートする関数
+  const sortStoresByRegion = (storeList: StorePL[]): StorePL[] => {
+    // 地区名から順序を取得
+    const getRegionOrder = (regionName: string | undefined): number => {
+      if (!regionName) return REGION_ORDER.length + 1
+      const idx = REGION_ORDER.indexOf(regionName as typeof REGION_ORDER[number])
+      return idx >= 0 ? idx : REGION_ORDER.length
+    }
+
+    return [...storeList].sort((a, b) => {
+      const regionA = getRegionByStoreName(a.store_name)
+      const regionB = getRegionByStoreName(b.store_name)
+      const orderA = getRegionOrder(regionA)
+      const orderB = getRegionOrder(regionB)
+
+      if (orderA !== orderB) {
+        return orderA - orderB
+      }
+      // 同じ地区内は店舗名でソート
+      return a.store_name.localeCompare(b.store_name, 'ja')
+    })
+  }
+
   if (loading) {
     return (
       <Card>

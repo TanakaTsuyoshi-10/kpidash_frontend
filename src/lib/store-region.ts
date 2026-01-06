@@ -10,6 +10,7 @@ export const REGION_ORDER = [
   '鹿児島地区',
   '福岡地区',
   '熊本地区',
+  'その他',
 ] as const
 
 export type RegionName = typeof REGION_ORDER[number]
