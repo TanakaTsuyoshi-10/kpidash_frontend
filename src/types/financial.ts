@@ -148,6 +148,14 @@ export interface StorePLSGADetail {
   others: number              // その他
 }
 
+// 店舗別売上原価明細
+export interface StorePLCostDetail {
+  purchases: number           // 仕入高
+  labor_cost: number          // 労務費
+  manufacturing_cost: number  // 製造経費
+  others: number              // その他
+}
+
 // 店舗別収支
 export interface StorePL {
   store_id: string
@@ -160,9 +168,16 @@ export interface StorePL {
   sga_total: number
   operating_profit: number
   sga_detail: StorePLSGADetail | null
+  cost_detail: StorePLCostDetail | null  // 売上原価明細
   // 目標値
   sales_target: number | null
   operating_profit_target: number | null
+  // 前年実績
+  sales_prev_year: number | null
+  cost_of_sales_prev_year: number | null
+  gross_profit_prev_year: number | null
+  sga_prev_year: number | null
+  operating_profit_prev_year: number | null
   // 前年比
   sales_yoy_rate: number | null
   operating_profit_yoy_rate: number | null
