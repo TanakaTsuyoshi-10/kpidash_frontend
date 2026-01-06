@@ -48,11 +48,11 @@ function toNumber(value: unknown): number | null {
   return isNaN(num) ? null : num
 }
 
-// 数値フォーマット（カンマ区切り＋円、小数点以下なし）
+// 数値フォーマット（カンマ区切り、小数点以下なし）
 function formatCurrency(value: number | string | null | undefined): string {
   const num = toNumber(value)
   if (num === null) return '-'
-  return `¥${Math.round(num).toLocaleString('ja-JP')}`
+  return Math.round(num).toLocaleString('ja-JP')
 }
 
 // 前年比フォーマット
@@ -68,7 +68,7 @@ function formatYoYDiff(current: number | null, prev: number | null): string {
   if (current === null || prev === null) return '-'
   const diff = current - prev
   const sign = diff >= 0 ? '+' : ''
-  return `${sign}¥${Math.round(diff).toLocaleString('ja-JP')}`
+  return `${sign}${Math.round(diff).toLocaleString('ja-JP')}`
 }
 
 // 達成率フォーマット

@@ -5,7 +5,7 @@
 /**
  * 金額を短縮表示
  * @param value - 金額
- * @param short - 短縮表示するか（true: ¥228M、false: ¥228,000,000）
+ * @param short - 短縮表示するか（true: 228M、false: 228,000,000）
  */
 export function formatCurrency(value: number | null, short: boolean = true): string {
   if (value === null || value === undefined) return '-'
@@ -19,24 +19,24 @@ export function formatCurrency(value: number | null, short: boolean = true): str
 
     if (absValue >= 100000000) {
       // 1億以上
-      return `${sign}¥${(absValue / 100000000).toFixed(1)}億`
+      return `${sign}${(absValue / 100000000).toFixed(1)}億`
     } else if (absValue >= 10000000) {
       // 1000万以上
-      return `${sign}¥${Math.round(absValue / 10000).toLocaleString()}万`
+      return `${sign}${Math.round(absValue / 10000).toLocaleString()}万`
     } else if (absValue >= 1000000) {
       // 100万以上
-      return `${sign}¥${(absValue / 10000).toFixed(0)}万`
+      return `${sign}${(absValue / 10000).toFixed(0)}万`
     } else if (absValue >= 10000) {
       // 1万以上
-      return `${sign}¥${(absValue / 10000).toFixed(1)}万`
+      return `${sign}${(absValue / 10000).toFixed(1)}万`
     }
-    return `${sign}¥${absValue.toLocaleString()}`
+    return `${sign}${absValue.toLocaleString()}`
   }
 
   if (intValue < 0) {
-    return `▲¥${Math.abs(intValue).toLocaleString()}`
+    return `▲${Math.abs(intValue).toLocaleString()}`
   }
-  return `¥${intValue.toLocaleString()}`
+  return intValue.toLocaleString()
 }
 
 /**

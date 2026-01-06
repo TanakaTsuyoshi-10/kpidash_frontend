@@ -37,10 +37,10 @@ interface DetailItem {
   previous: number | null
 }
 
-// 数値フォーマット（カンマ区切り＋円、小数点以下なし）
+// 数値フォーマット（カンマ区切り、小数点以下なし）
 function formatCurrency(value: number | null): string {
   if (value === null || value === undefined) return '-'
-  return `¥${Math.round(value).toLocaleString('ja-JP')}`
+  return Math.round(value).toLocaleString('ja-JP')
 }
 
 // 前年比フォーマット（変化率: 0基準）
