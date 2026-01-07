@@ -154,22 +154,13 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
         {/* ドラッグ＆ドロップエリア */}
         <div
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
+            border-2 border-dashed rounded-lg p-8 text-center transition-colors
             ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
             ${file ? 'bg-green-50 border-green-500' : ''}
           `}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onClick={!file ? openFileDialog : undefined}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (!file && (e.key === 'Enter' || e.key === ' ')) {
-              e.preventDefault()
-              openFileDialog()
-            }
-          }}
         >
           {file ? (
             <div className="space-y-2">
@@ -202,8 +193,13 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
                 type="button"
                 variant="outline"
                 onClick={(e) => {
+                  e.preventDefault()
                   e.stopPropagation()
                   openFileDialog()
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
                 }}
               >
                 ファイルを選択
