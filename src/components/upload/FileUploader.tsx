@@ -30,11 +30,6 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ファイル選択ダイアログを開く
-  const openFileDialog = useCallback(() => {
-    fileInputRef.current?.click()
-  }, [])
-
   // ファイル名から種別を自動判定
   const detectFileType = (fileName: string) => {
     const lowerName = fileName.toLowerCase()
@@ -142,15 +137,6 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
           )}
         </div>
 
-        {/* 非表示のファイル入力 */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".xlsx,.xls,.csv"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
-
         {/* ドラッグ＆ドロップエリア */}
         <div
           className={`
@@ -168,19 +154,16 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
               <div className="text-sm text-gray-500">
                 {(file.size / 1024).toFixed(1)} KB
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setFile(null)
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = ''
-                  }
-                }}
-              >
+              <label className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 cursor-pointer">
                 ファイルを変更
-              </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="sr-only"
+                  onChange={handleFileSelect}
+                />
+              </label>
             </div>
           ) : (
             <div className="space-y-2">
@@ -189,21 +172,16 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
               </div>
               <div className="text-gray-400 text-sm">対応形式: .xlsx, .xls, .csv（10MB以下）</div>
               <div className="text-gray-400 text-sm">または</div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  openFileDialog()
-                }}
-                onMouseDown={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                }}
-              >
+              <label className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer">
                 ファイルを選択
-              </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="sr-only"
+                  onChange={handleFileSelect}
+                />
+              </label>
             </div>
           )}
         </div>
