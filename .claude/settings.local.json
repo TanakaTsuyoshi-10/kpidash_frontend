@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(pkill:*)",
+      "Bash(npm run dev:*)",
+      "Bash(iconv:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(lsof:*)",
+      "Bash(rm:*)",
+      "Bash(xargs kill:*)",
+      "Bash(npx next:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(npm show:*)",
+      "Bash(GIT_AUTHOR_NAME=\"Claude\" GIT_AUTHOR_EMAIL=\"noreply@anthropic.com\" git commit:*)",
+      "Bash(git fsck:*)",
+      "Bash(git reset:*)",
+      "Bash(find:*)",
+      "Bash(git config:*)",
+      "Bash(head:*)",
+      "Bash(wc:*)",
+      "Bash(od:*)",
+      "Bash(stat:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm cache clean:*)"
+    ]
+  }
+}
