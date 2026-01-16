@@ -196,6 +196,20 @@ interface Props {
   onQuarterChange: (quarter: number) => void
 }
 
+/**
+ * 四半期から基準月を取得
+ * Q1: 9月, Q2: 12月, Q3: 3月, Q4: 6月
+ */
+function getMonthFromQuarter(quarter: number): number {
+  switch (quarter) {
+    case 1: return 9
+    case 2: return 12
+    case 3: return 3
+    case 4: return 6
+    default: return 9
+  }
+}
+
 export function FinancialAnalysisContainer({
   periodType,
   year,
@@ -209,9 +223,19 @@ export function FinancialAnalysisContainer({
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'summary' | 'store-pl'>('summary')
 
+  // 期間タイプに応じた基準月を決定
+  // - 月次: 選択された月
+  // - 四半期: 四半期の開始月
+  // - 年度: 年度開始月（9月）
+  const baseMonth = periodType === 'quarterly'
+    ? getMonthFromQuarter(quarter)
+    : periodType === 'yearly'
+      ? 9
+      : month
+
   // コメント用の期間文字列（YYYY-MM-01形式）
   // 年度からカレンダー年に変換（例: 2025年度9月 → 2024-09-01）
-  const commentPeriod = formatPeriod(year, month)
+  const commentPeriod = formatPeriod(year, baseMonth)
 
   // 期間タイプをV2 API用に変換
   const v2PeriodType = periodType === 'monthly' ? 'monthly' : 'cumulative'
@@ -290,7 +314,7 @@ export function FinancialAnalysisContainer({
         <div>
           <h1 className="text-2xl font-bold">財務分析</h1>
           <p className="text-sm text-gray-600 mt-1">
-            {formatDisplayPeriod(year, month)} | {year}年度
+            {formatDisplayPeriod(year, baseMonth)} | {year}年度
           </p>
         </div>
         <div className="flex items-center gap-3">
