@@ -1,74 +1,105 @@
 /**
  * 店舗分析ページ
- * 店舗別売上サマリーと商品×店舗マトリックスを表示
  */
 'use client'
 
 import { useState } from 'react'
 import { format, subMonths } from 'date-fns'
-import { PeriodSelector } from '@/components/dashboard/PeriodSelector'
 import { StoreSummaryTable } from '@/components/products/StoreSummaryTable'
 import { ProductSalesMatrix } from '@/components/products/ProductSalesMatrix'
+import { StoreTrendChart } from '@/components/products/StoreTrendChart'
+import { ProductSalesChart } from '@/components/products/ProductSalesChart'
+import { RegionalSummaryTable } from '@/components/products/RegionalSummaryTable'
+import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  formatPeriod,
-  getFiscalYearFromPeriod,
-} from '@/lib/fiscal-year'
-import type { PeriodType } from '@/types/dashboard'
-
-// 期間文字列から月を取得
-function getMonthFromPeriod(period: string): number {
-  const date = new Date(period)
-  return date.getMonth() + 1
-}
+import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
+import { PeriodTypeSelector } from '@/components/dashboard/PeriodTypeSelector'
+import type { PeriodType } from '@/types/regional'
 
 export default function ProductsPage() {
-  const defaultMonth = format(subMonths(new Date(), 1), 'yyyy-MM-01')
-
-  // 年度・月の状態管理
+  const [month, setMonth] = useState(format(subMonths(new Date(), 1), 'yyyy-MM-01'))
+  const [selectedProduct, setSelectedProduct] = useState<string>('ぎょうざ')
   const [periodType, setPeriodType] = useState<PeriodType>('monthly')
-  const [year, setYear] = useState(() => getFiscalYearFromPeriod(defaultMonth))
-  const [month, setMonth] = useState(() => getMonthFromPeriod(defaultMonth))
-  const [quarter, setQuarter] = useState(1)
-
-  // 期間文字列を計算
-  const periodString = formatPeriod(year, month)
 
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">店舗分析</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            店舗別の売上状況と商品販売実績を確認できます
-          </p>
-        </div>
-        <PeriodSelector
-          periodType={periodType}
-          year={year}
-          month={month}
-          quarter={quarter}
-          onPeriodTypeChange={setPeriodType}
-          onYearChange={setYear}
-          onMonthChange={setMonth}
-          onQuarterChange={setQuarter}
-        />
+        <h1 className="text-2xl font-bold">店舗分析</h1>
+        <FiscalMonthSelector value={month} onChange={setMonth} />
       </div>
 
-      {/* タブ切替 */}
+      {/* タブ */}
       <Tabs defaultValue="summary" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="summary">店舗別サマリー</TabsTrigger>
-          <TabsTrigger value="matrix">商品×店舗マトリックス</TabsTrigger>
+          <TabsTrigger value="summary">店舗別</TabsTrigger>
+          <TabsTrigger value="matrix">店舗×商品</TabsTrigger>
+          <TabsTrigger value="regional">地区別</TabsTrigger>
+          <TabsTrigger value="chart">推移グラフ</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
-          <StoreSummaryTable month={periodString} />
+          <div className="space-y-6">
+            <StoreSummaryTable month={month} />
+            <MonthlyCommentCard
+              category="store"
+              period={month}
+              title="月次コメント"
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="matrix">
-          <ProductSalesMatrix month={periodString} />
+          <div className="space-y-6">
+            <ProductSalesMatrix month={month} />
+            <MonthlyCommentCard
+              category="store"
+              period={month}
+              title="月次コメント"
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="regional">
+          <div className="space-y-6">
+            {/* 期間タイプ切替 */}
+            <div className="flex justify-end">
+              <PeriodTypeSelector value={periodType} onChange={setPeriodType} />
+            </div>
+
+            {/* 地区別実績テーブル */}
+            <RegionalSummaryTable
+              month={month}
+              periodType={periodType}
+            />
+
+            {/* 月次コメント */}
+            <MonthlyCommentCard
+              category="regional"
+              period={month}
+              title="月次コメント"
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="chart">
+          <div className="space-y-6">
+            {/* 店舗別売上推移 */}
+            <StoreTrendChart />
+
+            {/* 商品グループ別売上推移 */}
+            <ProductSalesChart
+              selectedProduct={selectedProduct}
+              onProductChange={setSelectedProduct}
+            />
+
+            {/* 月次コメント */}
+            <MonthlyCommentCard
+              category="store"
+              period={month}
+              title="月次コメント"
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
