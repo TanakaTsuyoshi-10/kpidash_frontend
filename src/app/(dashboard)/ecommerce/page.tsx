@@ -15,7 +15,6 @@ import { CustomerStats } from '@/components/ecommerce/CustomerStats'
 import { WebsiteStats } from '@/components/ecommerce/WebsiteStats'
 import { ChannelTrendChart } from '@/components/ecommerce/ChannelTrendChart'
 import { ExcelUploadModal } from '@/components/ecommerce/ExcelUploadModal'
-import { TargetAchievementCard } from '@/components/ecommerce/TargetAchievementCard'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
 import { cn } from '@/lib/utils'
 
@@ -100,11 +99,6 @@ export default function EcommercePage() {
 
       {/* チャネル別実績 */}
       <ChannelSummaryTable month={month} periodType={periodType} />
-
-      {/* 目標達成状況（単月表示時のみ） */}
-      {periodType === 'monthly' && (
-        <TargetAchievementCard month={month} />
-      )}
 
       {/* 商品別売上 */}
       <ProductSalesTable month={month} periodType={periodType} />
