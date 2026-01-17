@@ -3,7 +3,7 @@
  */
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent } from '@/components/ui/card'
@@ -24,13 +24,20 @@ export default function EcommerceTargetsPage() {
   const { data, loading, error, refetch } = useEcommerceTargets(month)
   const { save, saving, error: saveError } = useEcommerceTargetMutation()
 
+  // 月が変更されたときに状態をリセット
+  useEffect(() => {
+    setChannelData([])
+    setCustomerData(null)
+    setHasChanges(false)
+  }, [month])
+
   // データ取得時に状態を初期化
-  useState(() => {
+  useEffect(() => {
     if (data) {
       setChannelData(data.channel_targets)
       setCustomerData(data.customer_target)
     }
-  })
+  }, [data])
 
   // チャネルデータ変更
   const handleChannelChange = useCallback((channels: EcommerceChannelTarget[]) => {
@@ -111,9 +118,9 @@ export default function EcommerceTargetsPage() {
     )
   }
 
-  // データが取得できたら状態を更新
+  // 表示用データ（状態が空の場合はAPIデータを使用）
   const channels = channelData.length > 0 ? channelData : (data?.channel_targets || [])
-  const customer = customerData || data?.customer_target || null
+  const customer = customerData ?? data?.customer_target ?? null
 
   return (
     <div className="space-y-6">

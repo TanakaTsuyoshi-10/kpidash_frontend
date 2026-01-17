@@ -45,6 +45,12 @@ export function FinancialTargetForm({ month, onSaveSuccess }: Props) {
   const { data, loading, error, refetch } = useFinancialTargets(month)
   const { save, saving, error: saveError } = useFinancialTargetMutation()
 
+  // 月が変更されたときに状態をリセット
+  useEffect(() => {
+    setFormState({})
+    setOriginalState({})
+  }, [month])
+
   // データ取得時に状態を初期化
   useEffect(() => {
     if (data) {

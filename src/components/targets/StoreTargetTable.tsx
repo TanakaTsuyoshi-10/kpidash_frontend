@@ -43,6 +43,12 @@ export function StoreTargetTable({ month, onSaveSuccess }: Props) {
   const { data, loading, error, refetch } = useStoreTargets(month)
   const { save, saving, error: saveError } = useStoreTargetMutation()
 
+  // 月が変更されたときに状態をリセット
+  useEffect(() => {
+    setEditState({})
+    setOriginalState({})
+  }, [month])
+
   // データ取得時に元の状態を保存
   useEffect(() => {
     if (data) {
