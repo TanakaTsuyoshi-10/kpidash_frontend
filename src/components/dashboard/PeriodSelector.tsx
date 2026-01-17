@@ -115,37 +115,44 @@ export function PeriodSelector({
         </SelectContent>
       </Select>
 
-      {/* 月選択（月次の場合のみ） */}
-      {periodType === 'monthly' && (
-        <Select value={month.toString()} onValueChange={(v) => onMonthChange(Number(v))}>
-          <SelectTrigger className="w-[100px]">
-            <SelectValue placeholder="月" />
-          </SelectTrigger>
-          <SelectContent>
-            {MONTHS.map((m) => (
-              <SelectItem key={m.value} value={m.value.toString()}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      {/* 月/四半期選択（固定幅で位置を安定化） */}
+      <div className="w-[140px]">
+        {periodType === 'monthly' && (
+          <Select value={month.toString()} onValueChange={(v) => onMonthChange(Number(v))}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="月" />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m) => (
+                <SelectItem key={m.value} value={m.value.toString()}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
-      {/* 四半期選択（四半期の場合のみ） */}
-      {periodType === 'quarterly' && (
-        <Select value={quarter.toString()} onValueChange={(v) => onQuarterChange(Number(v))}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="四半期" />
-          </SelectTrigger>
-          <SelectContent>
-            {QUARTERS.map((q) => (
-              <SelectItem key={q.value} value={q.value.toString()}>
-                {q.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+        {periodType === 'quarterly' && (
+          <Select value={quarter.toString()} onValueChange={(v) => onQuarterChange(Number(v))}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="四半期" />
+            </SelectTrigger>
+            <SelectContent>
+              {QUARTERS.map((q) => (
+                <SelectItem key={q.value} value={q.value.toString()}>
+                  {q.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {periodType === 'yearly' && (
+          <div className="h-9 flex items-center justify-center text-sm text-gray-400">
+            年度累計
+          </div>
+        )}
+      </div>
     </div>
   )
 }
