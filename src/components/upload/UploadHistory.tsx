@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getUploadHistory } from '@/lib/api/upload'
 
-export function UploadHistoryList() {
+export function UploadHistory() {
   const [message, setMessage] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
