@@ -4,6 +4,7 @@
  */
 'use client'
 
+import { useState } from 'react'
 import { PeriodSelector } from './PeriodSelector'
 import { CompanySummaryCard } from './CompanySummaryCard'
 import { DepartmentTable } from './DepartmentTable'
@@ -16,7 +17,9 @@ import { ComplaintSummaryCard } from './ComplaintSummaryCard'
 import { useDashboardData, useDashboardChart } from '@/hooks/useDashboard'
 import { useStoreSummary } from '@/hooks/useStoreSummary'
 import { useChannelSummary } from '@/hooks/useEcommerce'
-import { RefreshCw } from 'lucide-react'
+import { useDashboardExport } from '@/hooks/useExport'
+import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
+import { RefreshCw, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatDisplayPeriod, formatPeriod } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/dashboard'
@@ -86,6 +89,26 @@ export function ExecutiveDashboard({
       }
     : null
 
+  // エクスポート機能
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const { exportData } = useDashboardExport()
+
+  // 現在の表示期間ラベル
+  const getCurrentPeriodLabel = () => {
+    if (periodType === 'monthly') {
+      return formatDisplayPeriod(year, month)
+    } else if (periodType === 'quarterly') {
+      return `${year}年度 Q${quarter}`
+    } else {
+      return `${year}年度`
+    }
+  }
+
+  // エクスポート実行
+  const handleExport = async (scope: ExportScope) => {
+    await exportData(scope, year, month, periodType, quarter)
+  }
+
   // エラー表示
   if (error) {
     return (
@@ -138,6 +161,14 @@ export function ExecutiveDashboard({
             onMonthChange={onMonthChange}
             onQuarterChange={onQuarterChange}
           />
+          <Button
+            onClick={() => setExportDialogOpen(true)}
+            variant="outline"
+            size="sm"
+          >
+            <Download className="h-4 w-4 mr-1" />
+            出力
+          </Button>
           <Button onClick={refetch} variant="outline" size="sm" disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
@@ -191,6 +222,16 @@ export function ExecutiveDashboard({
       <section>
         <DashboardAlertList alerts={data?.alerts ?? []} loading={loading} />
       </section>
+
+      {/* エクスポートダイアログ */}
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        title="経営ダッシュボード"
+        fiscalYear={year}
+        currentPeriodLabel={getCurrentPeriodLabel()}
+        onExport={handleExport}
+      />
     </div>
   )
 }

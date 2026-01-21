@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import { format, subMonths } from 'date-fns'
-import { Upload } from 'lucide-react'
+import { Upload, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { ChannelSummaryTable } from '@/components/ecommerce/ChannelSummaryTable'
@@ -16,13 +16,17 @@ import { WebsiteStats } from '@/components/ecommerce/WebsiteStats'
 import { ChannelTrendChart } from '@/components/ecommerce/ChannelTrendChart'
 import { ExcelUploadModal } from '@/components/ecommerce/ExcelUploadModal'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
+import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
+import { useEcommerceExport } from '@/hooks/useExport'
 import { cn } from '@/lib/utils'
 
 export default function EcommercePage() {
   const [month, setMonth] = useState(format(subMonths(new Date(), 1), 'yyyy-MM-01'))
   const [periodType, setPeriodType] = useState<PeriodType>('monthly')
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const { exportData } = useEcommerceExport()
 
   // 日付をパース
   const [year, monthNum] = month.substring(0, 7).split('-').map(Number)
@@ -45,6 +49,16 @@ export default function EcommercePage() {
   // アップロード成功時にデータを再読み込み
   const handleUploadSuccess = () => {
     setRefreshKey((prev) => prev + 1)
+  }
+
+  // 現在の表示期間ラベル
+  const currentPeriodLabel = periodType === 'cumulative'
+    ? `${fiscalYear}年度累計`
+    : `${year}年${monthNum}月`
+
+  // エクスポート実行
+  const handleExport = async (scope: ExportScope) => {
+    await exportData(scope, fiscalYear, month, periodType)
   }
 
   return (
@@ -94,6 +108,16 @@ export default function EcommercePage() {
             <Upload className="h-4 w-4 mr-2" />
             アップロード
           </Button>
+
+          {/* 出力ボタン */}
+          <Button
+            variant="outline"
+            onClick={() => setExportDialogOpen(true)}
+            className="shrink-0"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            出力
+          </Button>
         </div>
       </div>
 
@@ -124,6 +148,16 @@ export default function EcommercePage() {
         open={uploadModalOpen}
         onOpenChange={setUploadModalOpen}
         onUploadSuccess={handleUploadSuccess}
+      />
+
+      {/* エクスポートダイアログ */}
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        title="通販分析"
+        fiscalYear={fiscalYear}
+        currentPeriodLabel={currentPeriodLabel}
+        onExport={handleExport}
       />
     </div>
   )

@@ -14,19 +14,44 @@ import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
 import { PeriodTypeSelector } from '@/components/dashboard/PeriodTypeSelector'
+import { Button } from '@/components/ui/button'
+import { Download } from 'lucide-react'
+import { useStoreAnalysisExport } from '@/hooks/useExport'
+import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
+import { getFiscalYearFromPeriod } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/regional'
 
 export default function ProductsPage() {
   const [month, setMonth] = useState(format(subMonths(new Date(), 1), 'yyyy-MM-01'))
   const [selectedProduct, setSelectedProduct] = useState<string>('ぎょうざ')
   const [periodType, setPeriodType] = useState<PeriodType>('monthly')
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const { exportData } = useStoreAnalysisExport()
+
+  // 年度を計算
+  const fiscalYear = getFiscalYearFromPeriod(month)
+
+  // 現在の表示期間ラベル
+  const [yearStr, monthStr] = month.split('-')
+  const currentPeriodLabel = `${yearStr}年${parseInt(monthStr)}月`
+
+  // エクスポート実行
+  const handleExport = async (scope: ExportScope) => {
+    await exportData(scope, fiscalYear, month)
+  }
 
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl font-bold">店舗分析</h1>
-        <FiscalMonthSelector value={month} onChange={setMonth} />
+        <div className="flex items-center gap-3">
+          <FiscalMonthSelector value={month} onChange={setMonth} />
+          <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            出力
+          </Button>
+        </div>
       </div>
 
       {/* タブ */}
@@ -102,6 +127,16 @@ export default function ProductsPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* エクスポートダイアログ */}
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        title="店舗分析"
+        fiscalYear={fiscalYear}
+        currentPeriodLabel={currentPeriodLabel}
+        onExport={handleExport}
+      />
     </div>
   )
 }

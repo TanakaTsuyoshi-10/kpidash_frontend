@@ -18,8 +18,10 @@ import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useFinancialAnalysis, useFinanceAnalysisV2, useStorePLList } from '@/hooks/useFinancial'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Upload } from 'lucide-react'
+import { RefreshCw, Upload, Download } from 'lucide-react'
 import { formatPeriod, formatDisplayPeriod } from '@/lib/fiscal-year'
+import { useFinancialExport } from '@/hooks/useExport'
+import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
 import type { PeriodType } from '@/types/dashboard'
 import type { ExpenseItem, FinancialAnalysisResponseV2, ProfitabilityMetric } from '@/types/financial'
 
@@ -221,7 +223,9 @@ export function FinancialAnalysisContainer({
   onQuarterChange,
 }: Props) {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'summary' | 'store-pl'>('summary')
+  const { exportData } = useFinancialExport()
 
   // 期間タイプに応じた基準月を決定
   // - 月次: 選択された月
@@ -259,6 +263,22 @@ export function FinancialAnalysisContainer({
     refetch()
     financeV2.refetch()
     storePL.refetch()
+  }
+
+  // 現在の表示期間ラベル
+  const getCurrentPeriodLabel = () => {
+    if (periodType === 'monthly') {
+      return formatDisplayPeriod(year, month)
+    } else if (periodType === 'quarterly') {
+      return `${year}年度 Q${quarter}`
+    } else {
+      return `${year}年度`
+    }
+  }
+
+  // エクスポート実行
+  const handleExport = async (scope: ExportScope) => {
+    await exportData(scope, year, month, periodType, quarter)
   }
 
   // エラー表示
@@ -331,6 +351,10 @@ export function FinancialAnalysisContainer({
           <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             アップロード
+          </Button>
+          <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            出力
           </Button>
           <Button onClick={refetch} variant="outline" size="icon" disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -413,6 +437,16 @@ export function FinancialAnalysisContainer({
         month={month}
         onUploadSuccess={handleUploadSuccess}
         uploadType={activeTab === 'store-pl' ? 'store-pl' : 'financial'}
+      />
+
+      {/* エクスポートダイアログ */}
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        title="財務分析"
+        fiscalYear={year}
+        currentPeriodLabel={getCurrentPeriodLabel()}
+        onExport={handleExport}
       />
     </div>
   )
