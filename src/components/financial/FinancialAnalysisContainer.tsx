@@ -229,13 +229,11 @@ export function FinancialAnalysisContainer({
 
   // 期間タイプに応じた基準月を決定
   // - 月次: 選択された月
-  // - 四半期: 四半期の開始月
-  // - 年度: 年度開始月（9月）
+  // - 四半期: 四半期の最終月
+  // - 年度: 選択された月（その月までの累計を表示）
   const baseMonth = periodType === 'quarterly'
     ? getMonthFromQuarter(quarter)
-    : periodType === 'yearly'
-      ? 9
-      : month
+    : month
 
   // コメント用の期間文字列（YYYY-MM-01形式）
   // 年度からカレンダー年に変換（例: 2025年度9月 → 2024-09-01）
