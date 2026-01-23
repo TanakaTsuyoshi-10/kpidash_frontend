@@ -115,7 +115,7 @@ export function DepartmentTable({ departments, loading }: Props) {
                   {formatCurrency(dept.sales, false)}
                 </TableCell>
                 <TableCell className={cn('text-right', getValueColor(dept.sales_yoy_rate))}>
-                  {dept.sales_yoy_rate !== null
+                  {dept.sales_yoy_rate != null
                     ? `${dept.sales_yoy_rate > 0 ? '+' : dept.sales_yoy_rate < 0 ? '▲' : ''}${dept.sales_yoy_rate < 0 ? Math.abs(dept.sales_yoy_rate).toFixed(1) : dept.sales_yoy_rate.toFixed(1)}%`
                     : '-'}
                 </TableCell>
@@ -138,7 +138,7 @@ export function DepartmentTable({ departments, loading }: Props) {
                   {formatCurrency(totals.sales, false)}
                 </TableCell>
                 <TableCell className={cn('text-right', getValueColor(totalYoyRate))}>
-                  {totalYoyRate !== null
+                  {totalYoyRate != null
                     ? `${totalYoyRate > 0 ? '+' : totalYoyRate < 0 ? '▲' : ''}${totalYoyRate < 0 ? Math.abs(totalYoyRate).toFixed(1) : totalYoyRate.toFixed(1)}%`
                     : '-'}
                 </TableCell>

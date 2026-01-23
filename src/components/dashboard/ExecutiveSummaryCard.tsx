@@ -66,7 +66,7 @@ export function ExecutiveSummaryCard({ title, metric, unit = '円', isPercentage
             <div className="text-gray-500">前年比</div>
             <div className={cn("font-medium flex items-center gap-1", yoyColor)}>
               <YoYIcon className="h-4 w-4" />
-              {yoyRate !== null ? `${yoyRate > 0 ? '+' : ''}${yoyRate.toFixed(1)}%` : '-'}
+              {yoyRate != null ? `${yoyRate > 0 ? '+' : ''}${yoyRate.toFixed(1)}%` : '-'}
             </div>
           </div>
         </div>
