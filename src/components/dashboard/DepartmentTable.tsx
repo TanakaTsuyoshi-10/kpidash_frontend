@@ -24,6 +24,15 @@ function toNumber(value: unknown): number | null {
   return isNaN(num) ? null : num
 }
 
+// 前年比をフォーマット
+function formatYoY(value: unknown): string {
+  const num = toNumber(value)
+  if (num == null) return '-'
+  const sign = num > 0 ? '+' : num < 0 ? '▲' : ''
+  const absValue = Math.abs(num).toFixed(1)
+  return `${sign}${absValue}%`
+}
+
 interface Props {
   departments: DepartmentPerformance[]
   loading?: boolean
@@ -114,10 +123,8 @@ export function DepartmentTable({ departments, loading }: Props) {
                 <TableCell className="text-right">
                   {formatCurrency(dept.sales, false)}
                 </TableCell>
-                <TableCell className={cn('text-right', getValueColor(dept.sales_yoy_rate))}>
-                  {dept.sales_yoy_rate != null
-                    ? `${dept.sales_yoy_rate > 0 ? '+' : dept.sales_yoy_rate < 0 ? '▲' : ''}${dept.sales_yoy_rate < 0 ? Math.abs(dept.sales_yoy_rate).toFixed(1) : dept.sales_yoy_rate.toFixed(1)}%`
-                    : '-'}
+                <TableCell className={cn('text-right', getValueColor(toNumber(dept.sales_yoy_rate)))}>
+                  {formatYoY(dept.sales_yoy_rate)}
                 </TableCell>
                 <TableCell className="text-right">
                   {formatCurrency(dept.profit, false)}
@@ -138,9 +145,7 @@ export function DepartmentTable({ departments, loading }: Props) {
                   {formatCurrency(totals.sales, false)}
                 </TableCell>
                 <TableCell className={cn('text-right', getValueColor(totalYoyRate))}>
-                  {totalYoyRate != null
-                    ? `${totalYoyRate > 0 ? '+' : totalYoyRate < 0 ? '▲' : ''}${totalYoyRate < 0 ? Math.abs(totalYoyRate).toFixed(1) : totalYoyRate.toFixed(1)}%`
-                    : '-'}
+                  {formatYoY(totalYoyRate)}
                 </TableCell>
                 <TableCell className="text-right">
                   {formatCurrency(totals.profit, false)}
