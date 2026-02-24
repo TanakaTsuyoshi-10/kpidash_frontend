@@ -537,7 +537,7 @@ function createStorePLSheet(
         Number(store.sales),
         Number(store.cost_of_sales),
         Number(store.gross_profit),
-        Number(store.sga),
+        Number(store.sga_total),
         Number(store.operating_profit),
         grossRate,
         opRate,

@@ -185,7 +185,7 @@ export function TargetAchievementCard({ month }: Props) {
 
   // 合計達成率（実績データから取得）
   const totalRate = channelData?.totals?.sales_achievement_rate ??
-    calculateAchievementRate(channelData?.totals?.sales, channelData?.totals?.sales_target)
+    calculateAchievementRate(channelData?.totals?.sales ?? null, channelData?.totals?.sales_target ?? null)
 
   return (
     <Card>

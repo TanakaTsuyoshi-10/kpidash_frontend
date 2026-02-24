@@ -4,6 +4,7 @@
 import { apiClient } from './client'
 import type {
   RegionsResponse,
+  RegionalTargetsResponse,
   StoreMappingsResponse,
   RegionalSummaryResponse,
   PeriodType,
@@ -28,6 +29,14 @@ export async function getStoreMappings(): Promise<StoreMappingsResponse> {
  */
 export async function initializeStoreMappings(): Promise<StoreMappingsResponse> {
   return apiClient.post<StoreMappingsResponse>('/regional/store-mappings/initialize')
+}
+
+/**
+ * 地区別目標を取得する
+ */
+export async function getRegionalTargets(month: string): Promise<RegionalTargetsResponse> {
+  const params = new URLSearchParams({ month })
+  return apiClient.get<RegionalTargetsResponse>(`/regional/targets?${params}`)
 }
 
 /**

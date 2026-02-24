@@ -9,11 +9,14 @@ import {
   getStoreMappings,
   initializeStoreMappings,
   getRegionalSummary,
+  getRegionalTargets,
 } from '@/lib/api/regional'
 import type {
   Region,
   StoreMapping,
   RegionalSummaryResponse,
+  RegionalTarget,
+  SaveRegionalTargetRequest,
   PeriodType,
 } from '@/types/regional'
 
@@ -119,4 +122,42 @@ export function useRegionalSummary(month: string, periodType: PeriodType = 'mont
   }, [fetchData])
 
   return { data, loading, error, refetch: fetchData }
+}
+
+/**
+ * 地区別目標を取得するフック（読み取り専用: 目標は店舗目標から自動集計）
+ */
+export function useRegionalTargets(month: string) {
+  const [targets, setTargets] = useState<RegionalTarget[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    if (!month) return
+
+    try {
+      setLoading(true)
+      setError(null)
+      const result = await getRegionalTargets(month)
+      setTargets(result.targets)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '地区別目標の取得に失敗しました')
+      setTargets([])
+    } finally {
+      setLoading(false)
+    }
+  }, [month])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  const save = useCallback(async (_targetData: SaveRegionalTargetRequest[]) => {
+    setSaving(true)
+    setSaving(false)
+    throw new Error('地区別目標の直接設定は廃止されました。目標設定ページから店舗別に設定してください。')
+  }, [])
+
+  return { targets, loading, saving, error, save, refetch: fetchData }
 }

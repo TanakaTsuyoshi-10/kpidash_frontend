@@ -112,6 +112,8 @@ export interface SGADetail {
 export interface FinancialSummaryWithDetails {
   period: string
   sales_total: number | null
+  sales_store: number | null
+  sales_online: number | null
   cost_of_sales: number | null
   cost_of_sales_detail: CostOfSalesDetail | null
   gross_profit: number | null

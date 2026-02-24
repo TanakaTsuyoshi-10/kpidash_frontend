@@ -87,7 +87,7 @@ export function ManufacturingAnalysisContainer({
         {/* エラーメッセージ */}
         <div className="text-center py-12">
           <div className="text-red-600 mb-4">{error}</div>
-          <Button onClick={refetch} variant="outline">
+          <Button onClick={() => refetch()} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
             再読み込み
           </Button>
@@ -129,7 +129,7 @@ export function ManufacturingAnalysisContainer({
             <Upload className="h-4 w-4 mr-2" />
             アップロード
           </Button>
-          <Button onClick={refetch} variant="outline" size="icon" disabled={loading}>
+          <Button onClick={() => refetch()} variant="outline" size="icon" disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>

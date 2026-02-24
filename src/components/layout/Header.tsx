@@ -44,7 +44,7 @@ export function Header() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={signOut}
+                  onClick={() => signOut()}
                   className="hidden sm:flex"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
@@ -54,7 +54,7 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={signOut}
+                  onClick={() => signOut()}
                   className="sm:hidden p-2"
                 >
                   <LogOut className="h-5 w-5" />
