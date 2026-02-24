@@ -14,6 +14,15 @@ export const LazySalesChart = dynamic(
   }
 )
 
+// KPIチャート
+export const LazyKPIChart = dynamic(
+  () => import('@/components/dashboard/KPIChart').then(mod => ({ default: mod.KPIChart })),
+  {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+  }
+)
+
 // 製造量チャート
 export const LazyProductionChart = dynamic(
   () => import('@/components/manufacturing/ProductionChart').then(mod => ({ default: mod.ProductionChart })),
@@ -45,5 +54,14 @@ export const LazyFinancialAnalysis = dynamic(
   () => import('@/components/financial/FinancialAnalysisContainer').then(mod => ({ default: mod.FinancialAnalysisContainer })),
   {
     loading: () => <CardSkeleton />
+  }
+)
+
+// 通販チャネル推移チャート
+export const LazyChannelTrendChart = dynamic(
+  () => import('@/components/ecommerce/ChannelTrendChart').then(mod => ({ default: mod.ChannelTrendChart })),
+  {
+    loading: () => <ChartSkeleton />,
+    ssr: false
   }
 )

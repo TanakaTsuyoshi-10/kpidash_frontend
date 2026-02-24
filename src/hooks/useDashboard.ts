@@ -1,9 +1,9 @@
 /**
- * 経営ダッシュボードデータ取得カスタムフック
+ * 経営ダッシュボードデータ取得カスタムフック（SWR版）
  */
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import useSWR from 'swr'
 import {
   getDashboardData,
   getCompanySummary,
@@ -20,147 +20,84 @@ import type {
   DashboardQueryParams,
 } from '@/types/dashboard'
 
+function buildDashboardKey(params: DashboardQueryParams) {
+  const p = new URLSearchParams()
+  if (params.period_type) p.append('period_type', params.period_type)
+  if (params.year !== undefined) p.append('year', params.year.toString())
+  if (params.month !== undefined) p.append('month', params.month.toString())
+  if (params.quarter !== undefined) p.append('quarter', params.quarter.toString())
+  return `/api/v1/dashboard${p.toString() ? `?${p}` : ''}`
+}
+
 /**
  * ダッシュボード全体データ取得
  */
 export function useDashboardData(params: DashboardQueryParams = {}) {
-  const [data, setData] = useState<DashboardResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = buildDashboardKey(params)
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getDashboardData(params)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [params.period_type, params.year, params.month, params.quarter])
+  const { data, error, isLoading, mutate } = useSWR<DashboardResponse>(
+    key,
+    () => getDashboardData(params),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * 全社サマリー取得
  */
 export function useCompanySummary(params: DashboardQueryParams = {}) {
-  const [data, setData] = useState<CompanySummary | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = buildDashboardKey(params) + '#company-summary'
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getCompanySummary(params)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [params.period_type, params.year, params.month, params.quarter])
+  const { data, error, isLoading, mutate } = useSWR<CompanySummary>(
+    key,
+    () => getCompanySummary(params),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * キャッシュフロー取得
  */
 export function useCashFlow(params: DashboardQueryParams = {}) {
-  const [data, setData] = useState<CashFlowData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = buildDashboardKey(params) + '#cashflow'
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getCashFlow(params)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [params.period_type, params.year, params.month, params.quarter])
+  const { data, error, isLoading, mutate } = useSWR<CashFlowData>(
+    key,
+    () => getCashFlow(params),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * 推移グラフデータ取得
  */
 export function useDashboardChart(months: number = 12) {
-  const [data, setData] = useState<ChartDataPoint[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, isLoading, mutate } = useSWR<ChartDataPoint[]>(
+    `/api/v1/dashboard/chart?months=${months}`,
+    () => getChartData(months),
+    { dedupingInterval: 60000 }
+  )
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getChartData(months)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [months])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? [], loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * ダッシュボードアラート取得
  */
 export function useDashboardAlerts(params: DashboardQueryParams = {}) {
-  const [data, setData] = useState<DashboardAlertItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = buildDashboardKey(params) + '#alerts'
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getDashboardAlerts(params)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [params.period_type, params.year, params.month, params.quarter])
+  const { data, error, isLoading, mutate } = useSWR<DashboardAlertItem[]>(
+    key,
+    () => getDashboardAlerts(params),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? [], loading: isLoading, error: error?.message || null, refetch: mutate }
 }

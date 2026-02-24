@@ -82,7 +82,7 @@ export function useDashboardExport() {
         ? getPeriodLabel(periodType, fiscalYear, currentMonth, quarter)
         : `${fiscalYear}年度`
 
-      downloadExcel({
+      await downloadExcel({
         filename: `ダッシュボード_${periodLabel}`,
         sheets,
       })
@@ -430,7 +430,7 @@ export function useFinancialExport() {
         ? getPeriodLabel(periodType, fiscalYear, currentMonth, quarter)
         : `${fiscalYear}年度`
 
-      downloadExcel({
+      await downloadExcel({
         filename: `財務分析_${periodLabel}`,
         sheets,
       })
@@ -646,7 +646,7 @@ export function useStoreAnalysisExport() {
         ? getMonthLabel(currentPeriod)
         : `${fiscalYear}年度`
 
-      downloadExcel({
+      await downloadExcel({
         filename: `店舗分析_${periodLabel}`,
         sheets,
       })
@@ -784,7 +784,7 @@ export function useEcommerceExport() {
         ? getMonthLabel(currentPeriod)
         : `${fiscalYear}年度`
 
-      downloadExcel({
+      await downloadExcel({
         filename: `通販分析_${periodLabel}`,
         sheets,
       })

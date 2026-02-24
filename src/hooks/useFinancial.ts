@@ -1,9 +1,10 @@
 /**
- * 財務分析データ取得カスタムフック
+ * 財務分析データ取得カスタムフック（SWR版）
  */
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
+import useSWR from 'swr'
 import {
   getFinancialAnalysis,
   uploadFinancialData,
@@ -21,33 +22,28 @@ import type {
   StorePL,
 } from '@/types/financial'
 
+function buildFinancialKey(params: FinancialQueryParams) {
+  const p = new URLSearchParams()
+  if (params.period_type) p.append('period_type', params.period_type)
+  if (params.year !== undefined) p.append('year', params.year.toString())
+  if (params.month !== undefined) p.append('month', params.month.toString())
+  if (params.quarter !== undefined) p.append('quarter', params.quarter.toString())
+  return `/api/v1/dashboard/financial${p.toString() ? `?${p}` : ''}`
+}
+
 /**
  * 財務分析データ取得フック
  */
 export function useFinancialAnalysis(params: FinancialQueryParams = {}) {
-  const [data, setData] = useState<FinancialAnalysisData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = buildFinancialKey(params)
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getFinancialAnalysis(params)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [params.period_type, params.year, params.month, params.quarter])
+  const { data, error, isLoading, mutate } = useSWR<FinancialAnalysisData>(
+    key,
+    () => getFinancialAnalysis(params),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -124,31 +120,17 @@ export function useStorePLUpload() {
  * 財務分析データ取得フック（明細展開対応）
  */
 export function useFinanceAnalysisV2(month: string, periodType: 'monthly' | 'cumulative') {
-  const [data, setData] = useState<FinancialAnalysisResponseV2 | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = month
+    ? `/api/v1/finance/analysis?month=${month}&period_type=${periodType}`
+    : null
 
-  const fetchData = useCallback(async () => {
-    if (!month) return
+  const { data, error, isLoading, mutate } = useSWR<FinancialAnalysisResponseV2>(
+    key,
+    () => getFinanceAnalysisV2(month, periodType),
+    { dedupingInterval: 60000 }
+  )
 
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getFinanceAnalysisV2(month, periodType)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [month, periodType])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -159,60 +141,32 @@ export function useStorePLList(
   departmentSlug: string = 'store',
   periodType: 'monthly' | 'quarterly' | 'yearly' = 'monthly'
 ) {
-  const [data, setData] = useState<StorePLListResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = month
+    ? `/api/v1/finance/store-pl?month=${month}&department_slug=${departmentSlug}&period_type=${periodType}`
+    : null
 
-  const fetchData = useCallback(async () => {
-    if (!month) return
+  const { data, error, isLoading, mutate } = useSWR<StorePLListResponse>(
+    key,
+    () => getStorePLList(month, departmentSlug, periodType),
+    { dedupingInterval: 60000 }
+  )
 
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getStorePLList(month, departmentSlug, periodType)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [month, departmentSlug, periodType])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * 店舗収支取得フック（店舗詳細ページ用）
  */
 export function useStorePL(segmentId: string, month: string) {
-  const [data, setData] = useState<StorePL | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = segmentId && month
+    ? `/api/v1/finance/store-pl/${segmentId}?month=${month}`
+    : null
 
-  const fetchData = useCallback(async () => {
-    if (!segmentId || !month) return
+  const { data, error, isLoading, mutate } = useSWR<StorePL>(
+    key,
+    () => getStorePLBySegment(segmentId, month),
+    { dedupingInterval: 60000 }
+  )
 
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getStorePLBySegment(segmentId, month)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [segmentId, month])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }

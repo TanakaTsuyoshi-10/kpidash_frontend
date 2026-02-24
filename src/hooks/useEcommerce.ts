@@ -1,7 +1,10 @@
 /**
- * 通販分析のデータ取得フック
+ * 通販分析のデータ取得フック（SWR版）
  */
-import { useState, useEffect, useCallback } from 'react'
+'use client'
+
+
+import useSWR from 'swr'
 import {
   getChannelSummary,
   getProductSummary,
@@ -22,29 +25,15 @@ import type {
  * チャネル別実績を取得するフック
  */
 export function useChannelSummary(month: string, periodType: PeriodType = 'monthly') {
-  const [data, setData] = useState<ChannelSummaryResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = month ? `/ecommerce/channel-summary?month=${month}&period_type=${periodType}` : null
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getChannelSummary(month, periodType)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month, periodType])
+  const { data, error, isLoading, mutate } = useSWR<ChannelSummaryResponse>(
+    key,
+    () => getChannelSummary(month, periodType),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -55,87 +44,47 @@ export function useProductSummary(
   periodType: PeriodType = 'monthly',
   limit: number = 20
 ) {
-  const [data, setData] = useState<ProductSummaryResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = month
+    ? `/ecommerce/product-summary?month=${month}&period_type=${periodType}&limit=${limit}`
+    : null
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getProductSummary(month, periodType, limit)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month, periodType, limit])
+  const { data, error, isLoading, mutate } = useSWR<ProductSummaryResponse>(
+    key,
+    () => getProductSummary(month, periodType, limit),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * 顧客別実績を取得するフック
  */
 export function useCustomerSummary(month: string, periodType: PeriodType = 'monthly') {
-  const [data, setData] = useState<CustomerSummaryResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = month ? `/ecommerce/customer-summary?month=${month}&period_type=${periodType}` : null
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getCustomerSummary(month, periodType)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month, periodType])
+  const { data, error, isLoading, mutate } = useSWR<CustomerSummaryResponse>(
+    key,
+    () => getCustomerSummary(month, periodType),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * HPアクセス数を取得するフック
  */
 export function useWebsiteStats(month: string, periodType: PeriodType = 'monthly') {
-  const [data, setData] = useState<WebsiteStatsResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = month ? `/ecommerce/website-stats?month=${month}&period_type=${periodType}` : null
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getWebsiteStats(month, periodType)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month, periodType])
+  const { data, error, isLoading, mutate } = useSWR<WebsiteStatsResponse>(
+    key,
+    () => getWebsiteStats(month, periodType),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -145,27 +94,15 @@ export function useEcommerceTrend(
   metric: 'channel_sales' | 'product_sales' | 'customers' | 'website',
   fiscalYear?: number
 ) {
-  const [data, setData] = useState<TrendResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = fiscalYear
+    ? `/ecommerce/trend?metric=${metric}&fiscal_year=${fiscalYear}`
+    : `/ecommerce/trend?metric=${metric}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getEcommerceTrend(metric, fiscalYear)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [metric, fiscalYear])
+  const { data, error, isLoading, mutate } = useSWR<TrendResponse>(
+    key,
+    () => getEcommerceTrend(metric, fiscalYear),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }

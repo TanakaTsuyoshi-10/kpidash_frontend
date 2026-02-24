@@ -47,7 +47,9 @@ export function SWRProvider({ children }: SWRProviderProps) {
         fetcher,
         revalidateOnFocus: false,
         revalidateOnReconnect: true,
-        dedupingInterval: 5000,
+        revalidateIfStale: true,
+        dedupingInterval: 60000,
+        keepPreviousData: true,
         errorRetryCount: 3,
         errorRetryInterval: 3000,
         shouldRetryOnError: (error) => {

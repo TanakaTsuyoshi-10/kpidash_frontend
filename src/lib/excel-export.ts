@@ -2,7 +2,6 @@
  * Excel出力ユーティリティ
  * xlsxライブラリを使用してExcelファイルを生成・ダウンロード
  */
-import * as XLSX from 'xlsx'
 
 /**
  * シートデータの型定義
@@ -64,7 +63,9 @@ export function getFiscalYearMonths(fiscalYear: number): string[] {
 /**
  * Excelファイルを生成してダウンロード
  */
-export function downloadExcel(options: ExcelExportOptions): void {
+export async function downloadExcel(options: ExcelExportOptions): Promise<void> {
+  const XLSX = (await import('xlsx')).default
+
   const workbook = XLSX.utils.book_new()
 
   for (const sheet of options.sheets) {

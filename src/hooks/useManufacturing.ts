@@ -1,9 +1,10 @@
 /**
- * 製造分析データ取得カスタムフック
+ * 製造分析データ取得カスタムフック（SWR版）
  */
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
+import useSWR from 'swr'
 import {
   getManufacturingAnalysis,
   uploadManufacturingData,
@@ -14,33 +15,28 @@ import type {
   ManufacturingQueryParams,
 } from '@/types/manufacturing'
 
+function buildManufacturingKey(params: ManufacturingQueryParams) {
+  const p = new URLSearchParams()
+  if (params.period_type) p.append('period_type', params.period_type)
+  if (params.year !== undefined) p.append('year', params.year.toString())
+  if (params.month !== undefined) p.append('month', params.month.toString())
+  if (params.quarter !== undefined) p.append('quarter', params.quarter.toString())
+  return `/api/v1/manufacturing${p.toString() ? `?${p}` : ''}`
+}
+
 /**
  * 製造分析データ取得フック
  */
 export function useManufacturingAnalysis(params: ManufacturingQueryParams = {}) {
-  const [data, setData] = useState<ManufacturingAnalysisResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = buildManufacturingKey(params)
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getManufacturingAnalysis(params)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [params.period_type, params.year, params.month, params.quarter])
+  const { data, error, isLoading, mutate } = useSWR<ManufacturingAnalysisResponse>(
+    key,
+    () => getManufacturingAnalysis(params),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
 }
 
 /**
