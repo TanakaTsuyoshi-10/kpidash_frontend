@@ -12,12 +12,14 @@ import { TargetOverviewCard } from '@/components/targets/TargetOverviewCard'
 import { useTargetOverview } from '@/hooks/useTarget'
 import { Loading } from '@/components/common/Loading'
 import { ErrorMessage } from '@/components/common/ErrorMessage'
+import { PermissionGuard } from '@/components/PermissionGuard'
 
 export default function TargetsPage() {
   const [month, setMonth] = useState(format(subMonths(new Date(), 1), 'yyyy-MM-01'))
   const { data, loading, error, refetch } = useTargetOverview(month)
 
   return (
+    <PermissionGuard pageKey="targets">
     <div className="space-y-6">
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -79,5 +81,6 @@ export default function TargetsPage() {
         </div>
       )}
     </div>
+    </PermissionGuard>
   )
 }

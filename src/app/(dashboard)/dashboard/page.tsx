@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import { ExecutiveDashboard } from '@/components/dashboard/ExecutiveDashboard'
+import { PermissionGuard } from '@/components/PermissionGuard'
 import {
   getCurrentFiscalYear,
   getPreviousMonth,
@@ -21,15 +22,17 @@ export default function DashboardPage() {
   const [quarter, setQuarter] = useState(getCurrentQuarter())
 
   return (
-    <ExecutiveDashboard
-      periodType={periodType}
-      year={year}
-      month={month}
-      quarter={quarter}
-      onPeriodTypeChange={setPeriodType}
-      onYearChange={setYear}
-      onMonthChange={setMonth}
-      onQuarterChange={setQuarter}
-    />
+    <PermissionGuard pageKey="dashboard">
+      <ExecutiveDashboard
+        periodType={periodType}
+        year={year}
+        month={month}
+        quarter={quarter}
+        onPeriodTypeChange={setPeriodType}
+        onYearChange={setYear}
+        onMonthChange={setMonth}
+        onQuarterChange={setQuarter}
+      />
+    </PermissionGuard>
   )
 }

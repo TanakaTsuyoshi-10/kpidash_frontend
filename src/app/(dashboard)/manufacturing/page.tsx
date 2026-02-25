@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import { ManufacturingAnalysisContainer } from '@/components/manufacturing/ManufacturingAnalysisContainer'
+import { PermissionGuard } from '@/components/PermissionGuard'
 import {
   getCurrentFiscalYear,
   getPreviousMonth,
@@ -21,15 +22,17 @@ export default function ManufacturingPage() {
   const [quarter, setQuarter] = useState(getCurrentQuarter())
 
   return (
-    <ManufacturingAnalysisContainer
-      periodType={periodType}
-      year={year}
-      month={month}
-      quarter={quarter}
-      onPeriodTypeChange={setPeriodType}
-      onYearChange={setYear}
-      onMonthChange={setMonth}
-      onQuarterChange={setQuarter}
-    />
+    <PermissionGuard pageKey="manufacturing">
+      <ManufacturingAnalysisContainer
+        periodType={periodType}
+        year={year}
+        month={month}
+        quarter={quarter}
+        onPeriodTypeChange={setPeriodType}
+        onYearChange={setYear}
+        onMonthChange={setMonth}
+        onQuarterChange={setQuarter}
+      />
+    </PermissionGuard>
   )
 }

@@ -12,6 +12,7 @@ import { ComplaintDetailDialog } from '@/components/complaints/ComplaintDetailDi
 import { useComplaints, useComplaint, useComplaintMutation, useComplaintMaster } from '@/hooks/useComplaint'
 import { Plus, LayoutGrid, List } from 'lucide-react'
 import type { ComplaintFilterParams, ComplaintListItem, ComplaintCreate } from '@/types/complaint'
+import { PermissionGuard } from '@/components/PermissionGuard'
 
 export default function ComplaintsPage() {
   // フィルター状態
@@ -74,6 +75,7 @@ export default function ComplaintsPage() {
   }
 
   return (
+    <PermissionGuard pageKey="manufacturing">
     <div className="space-y-6">
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -146,5 +148,6 @@ export default function ComplaintsPage() {
         error={error}
       />
     </div>
+    </PermissionGuard>
   )
 }

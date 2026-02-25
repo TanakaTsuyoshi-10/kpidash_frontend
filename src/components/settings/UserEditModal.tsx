@@ -3,7 +3,7 @@
  */
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,9 @@ import { Loader2, Trash2 } from 'lucide-react'
 import { useUserOperations, useUserRoles } from '@/hooks/useUsers'
 import { useUserContext } from '@/contexts/UserContext'
 import { toast } from 'sonner'
-import type { UserProfileResponse, UserRole, UserRoleInfo } from '@/types/user'
+import { getUserPermissions, updateUserPermissions } from '@/lib/api/users'
+import { PAGE_KEYS, PAGE_LABELS } from '@/types/user'
+import type { UserProfileResponse, UserRole, UserRoleInfo, PageKey } from '@/types/user'
 
 interface UserEditModalProps {
   open: boolean
@@ -43,9 +45,24 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
     role: 'user',
     isActive: true,
   })
+  const [selectedPages, setSelectedPages] = useState<PageKey[]>([])
+  const [permissionsLoading, setPermissionsLoading] = useState(false)
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
 
   const isSelf = currentUser?.id === user?.id
+  const isTargetAdmin = user?.role === 'admin'
+
+  const fetchPermissions = useCallback(async (userId: string) => {
+    setPermissionsLoading(true)
+    try {
+      const result = await getUserPermissions(userId)
+      setSelectedPages(result.allowed_pages)
+    } catch {
+      setSelectedPages([])
+    } finally {
+      setPermissionsLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (open && user) {
@@ -56,8 +73,20 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
         isActive: user.is_active,
       })
       setShowDeactivateConfirm(false)
+      // 管理者以外のページ権限を取得
+      if (user.role !== 'admin') {
+        fetchPermissions(user.id)
+      } else {
+        setSelectedPages([])
+      }
     }
-  }, [open, user, fetchRoles])
+  }, [open, user, fetchRoles, fetchPermissions])
+
+  const togglePage = (pageKey: PageKey) => {
+    setSelectedPages((prev) =>
+      prev.includes(pageKey) ? prev.filter((k) => k !== pageKey) : [...prev, pageKey]
+    )
+  }
 
   const handleSubmit = async () => {
     if (!user) return
@@ -68,6 +97,10 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
         role: formData.role,
         is_active: formData.isActive,
       })
+      // 管理者でなく、本人編集でもない場合はページ権限も更新
+      if (!isSelf && formData.role !== 'admin') {
+        await updateUserPermissions(user.id, selectedPages)
+      }
       toast.success('利用者情報を更新しました')
       onOpenChange(false)
       onSuccess()
@@ -99,7 +132,7 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>利用者情報編集</DialogTitle>
           <DialogDescription>
@@ -229,6 +262,50 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
               </p>
             )}
           </div>
+
+          {/* ページ閲覧権限（管理者・本人編集時は非表示） */}
+          {!isSelf && !isTargetAdmin && (
+            <div className="space-y-2">
+              <Label>閲覧許可ページ</Label>
+              {permissionsLoading ? (
+                <div className="flex items-center gap-2 p-3 text-gray-500 text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  読み込み中...
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50">
+                  {PAGE_KEYS.map((key) => {
+                    const active = selectedPages.includes(key)
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => togglePage(key)}
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
+                          active
+                            ? 'bg-green-600 text-white border-green-600'
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
+                        }`}
+                      >
+                        {PAGE_LABELS[key]}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              <p className="text-xs text-gray-500">
+                選択されたページのみ閲覧可能になります（管理者は常に全ページ閲覧可）
+              </p>
+            </div>
+          )}
+          {isTargetAdmin && (
+            <div className="space-y-2">
+              <Label>閲覧許可ページ</Label>
+              <p className="text-sm text-gray-500 p-3 border rounded-lg bg-gray-50">
+                管理者は常に全ページを閲覧できます
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex-col gap-4 sm:flex-col">

@@ -5,6 +5,22 @@
 // 権限
 export type UserRole = 'admin' | 'user'
 
+// ページキー
+export const PAGE_KEYS = [
+  'dashboard', 'finance', 'ecommerce', 'manufacturing', 'products', 'upload', 'targets'
+] as const
+export type PageKey = typeof PAGE_KEYS[number]
+
+export const PAGE_LABELS: Record<PageKey, string> = {
+  dashboard: 'ダッシュボード',
+  finance: '財務分析',
+  ecommerce: '通販分析',
+  manufacturing: '製造分析',
+  products: '商品別分析',
+  upload: 'データアップロード',
+  targets: '目標管理',
+}
+
 // 現在のユーザー情報
 export interface CurrentUserResponse {
   id: string
@@ -12,6 +28,13 @@ export interface CurrentUserResponse {
   display_name: string | null
   role: UserRole
   is_admin: boolean
+  allowed_pages: PageKey[]
+}
+
+// ページ権限
+export interface UserPagePermissionsResponse {
+  user_id: string
+  allowed_pages: PageKey[]
 }
 
 // ユーザープロファイル

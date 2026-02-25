@@ -20,6 +20,7 @@ import { useStoreAnalysisExport } from '@/hooks/useExport'
 import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
 import { getFiscalYearFromPeriod } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/regional'
+import { PermissionGuard } from '@/components/PermissionGuard'
 
 export default function ProductsPage() {
   const [month, setMonth] = useState(format(subMonths(new Date(), 1), 'yyyy-MM-01'))
@@ -41,6 +42,7 @@ export default function ProductsPage() {
   }
 
   return (
+    <PermissionGuard pageKey="products">
     <div className="space-y-6">
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -138,5 +140,6 @@ export default function ProductsPage() {
         onExport={handleExport}
       />
     </div>
+    </PermissionGuard>
   )
 }

@@ -19,6 +19,7 @@ import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
 import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
 import { useEcommerceExport } from '@/hooks/useExport'
 import { cn } from '@/lib/utils'
+import { PermissionGuard } from '@/components/PermissionGuard'
 
 export default function EcommercePage() {
   const [month, setMonth] = useState(format(subMonths(new Date(), 1), 'yyyy-MM-01'))
@@ -62,6 +63,7 @@ export default function EcommercePage() {
   }
 
   return (
+    <PermissionGuard pageKey="ecommerce">
     <div className="space-y-6" key={refreshKey}>
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -160,5 +162,6 @@ export default function EcommercePage() {
         onExport={handleExport}
       />
     </div>
+    </PermissionGuard>
   )
 }

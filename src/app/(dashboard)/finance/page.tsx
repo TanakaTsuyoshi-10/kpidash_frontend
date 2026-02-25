@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import { FinancialAnalysisContainer } from '@/components/financial/FinancialAnalysisContainer'
+import { PermissionGuard } from '@/components/PermissionGuard'
 import {
   getCurrentFiscalYear,
   getPreviousMonth,
@@ -21,15 +22,17 @@ export default function FinancePage() {
   const [quarter, setQuarter] = useState(getCurrentQuarter())
 
   return (
-    <FinancialAnalysisContainer
-      periodType={periodType}
-      year={year}
-      month={month}
-      quarter={quarter}
-      onPeriodTypeChange={setPeriodType}
-      onYearChange={setYear}
-      onMonthChange={setMonth}
-      onQuarterChange={setQuarter}
-    />
+    <PermissionGuard pageKey="finance">
+      <FinancialAnalysisContainer
+        periodType={periodType}
+        year={year}
+        month={month}
+        quarter={quarter}
+        onPeriodTypeChange={setPeriodType}
+        onYearChange={setYear}
+        onMonthChange={setMonth}
+        onQuarterChange={setQuarter}
+      />
+    </PermissionGuard>
   )
 }

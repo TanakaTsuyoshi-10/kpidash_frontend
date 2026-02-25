@@ -11,6 +11,7 @@ import { UploadResultDisplay } from '@/components/upload/UploadResultDisplay'
 import { UploadHistory } from '@/components/upload/UploadHistory'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { UploadResult } from '@/types/upload'
+import { PermissionGuard } from '@/components/PermissionGuard'
 
 export default function UploadPage() {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null)
@@ -27,6 +28,7 @@ export default function UploadPage() {
   }
 
   return (
+    <PermissionGuard pageKey="upload">
     <div className="space-y-6">
       {/* ヘッダー */}
       <div>
@@ -73,5 +75,6 @@ export default function UploadPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </PermissionGuard>
   )
 }

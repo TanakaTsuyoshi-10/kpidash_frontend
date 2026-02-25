@@ -3,7 +3,7 @@
  */
 'use client'
 
-import { Sidebar, navItems } from '@/components/layout/Sidebar'
+import { Sidebar, menuItems } from '@/components/layout/Sidebar'
 import { MobileSidebar } from '@/components/layout/MobileSidebar'
 import { Header } from '@/components/layout/Header'
 import { UserProvider, useUserContext } from '@/contexts/UserContext'
@@ -12,13 +12,21 @@ import { useAuth } from '@/hooks/useAuth'
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth()
-  const { user } = useUserContext()
+  const { user, allowedPages, isAdmin } = useUserContext()
 
   const handleLogout = async () => {
     await signOut()
   }
 
   const userName = user?.display_name || user?.email?.split('@')[0]
+
+  const filteredNavItems = menuItems
+    .filter((item) => !item.pageKey || isAdmin || allowedPages.includes(item.pageKey))
+    .map((item) => ({
+      href: item.href,
+      label: item.label,
+      icon: <item.icon className="h-5 w-5" />,
+    }))
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -27,7 +35,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
       {/* モバイル用サイドバー */}
       <MobileSidebar
-        navItems={navItems}
+        navItems={filteredNavItems}
         userName={userName}
         onLogout={handleLogout}
       />

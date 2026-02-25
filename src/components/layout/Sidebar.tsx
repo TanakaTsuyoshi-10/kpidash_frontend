@@ -19,25 +19,33 @@ import {
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useUserContext } from '@/contexts/UserContext'
+import type { PageKey } from '@/types/user'
 
 // ナビゲーション項目の定義（エクスポートしてMobileSidebarでも使用）
-export const menuItems = [
-  { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard },
-  { href: '/finance', label: '財務分析', icon: TrendingUp },
-  { href: '/products', label: '店舗分析', icon: Store },
-  { href: '/ecommerce', label: '通販分析', icon: ShoppingCart },
-  { href: '/manufacturing', label: '製造分析', icon: Factory },
-  { href: '/manufacturing/complaints', label: 'クレーム管理', icon: AlertTriangle },
-  { href: '/upload', label: 'データアップロード', icon: Upload },
-  { href: '/targets', label: '目標設定', icon: Target },
+export const menuItems: Array<{
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  pageKey?: PageKey
+}> = [
+  { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard, pageKey: 'dashboard' },
+  { href: '/finance', label: '財務分析', icon: TrendingUp, pageKey: 'finance' },
+  { href: '/products', label: '店舗分析', icon: Store, pageKey: 'products' },
+  { href: '/ecommerce', label: '通販分析', icon: ShoppingCart, pageKey: 'ecommerce' },
+  { href: '/manufacturing', label: '製造分析', icon: Factory, pageKey: 'manufacturing' },
+  { href: '/manufacturing/complaints', label: 'クレーム管理', icon: AlertTriangle, pageKey: 'manufacturing' },
+  { href: '/upload', label: 'データアップロード', icon: Upload, pageKey: 'upload' },
+  { href: '/targets', label: '目標設定', icon: Target, pageKey: 'targets' },
   { href: '/settings', label: '設定', icon: Settings },
 ]
 
-// MobileSidebar用のnavItems形式に変換
+// MobileSidebar用のnavItems形式に変換（pageKeyを含める）
 export const navItems = menuItems.map((item) => ({
   href: item.href,
   label: item.label,
   icon: <item.icon className="h-5 w-5" />,
+  pageKey: item.pageKey,
 }))
 
 interface SidebarProps {
@@ -47,6 +55,15 @@ interface SidebarProps {
 
 export function Sidebar({ userName, onLogout }: SidebarProps) {
   const pathname = usePathname()
+  const { allowedPages, isAdmin } = useUserContext()
+
+  const visibleItems = menuItems.filter((item) => {
+    // pageKeyなし（設定など）は常時表示
+    if (!item.pageKey) return true
+    // 管理者は全て表示
+    if (isAdmin) return true
+    return allowedPages.includes(item.pageKey)
+  })
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-gray-50 border-r border-gray-200">
@@ -64,7 +81,7 @@ export function Sidebar({ userName, onLogout }: SidebarProps) {
       {/* ナビゲーション */}
       <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-1">
-          {menuItems.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = pathname === item.href
             return (
               <li key={item.href}>

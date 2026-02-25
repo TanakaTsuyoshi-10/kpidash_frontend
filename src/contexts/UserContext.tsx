@@ -6,11 +6,12 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { apiClient } from '@/lib/api/client'
-import type { CurrentUserResponse } from '@/types/user'
+import type { CurrentUserResponse, PageKey } from '@/types/user'
 
 interface UserContextType {
   user: CurrentUserResponse | null
   isAdmin: boolean
+  allowedPages: PageKey[]
   isLoading: boolean
   error: string | null
   refreshUser: () => Promise<void>
@@ -47,6 +48,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         isAdmin: user?.is_admin ?? false,
+        allowedPages: user?.allowed_pages ?? [],
         isLoading,
         error,
         refreshUser: fetchUser,
