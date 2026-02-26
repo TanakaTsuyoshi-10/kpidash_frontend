@@ -75,7 +75,7 @@ export default function ComplaintsPage() {
   }
 
   return (
-    <PermissionGuard pageKey="manufacturing">
+    <PermissionGuard pageKey="complaints">
     <div className="space-y-6">
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

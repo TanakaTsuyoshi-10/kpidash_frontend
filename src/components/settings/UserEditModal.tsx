@@ -50,7 +50,7 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
 
   const isSelf = currentUser?.id === user?.id
-  const isTargetAdmin = user?.role === 'admin'
+  const isFormRoleAdmin = formData.role === 'admin'
 
   const fetchPermissions = useCallback(async (userId: string) => {
     setPermissionsLoading(true)
@@ -81,6 +81,13 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
       }
     }
   }, [open, user, fetchRoles, fetchPermissions])
+
+  // ロールが管理者→一般利用者に変更された場合、ページ権限を取得
+  useEffect(() => {
+    if (open && user && formData.role !== 'admin' && user.role === 'admin') {
+      fetchPermissions(user.id)
+    }
+  }, [open, user, formData.role, fetchPermissions])
 
   const togglePage = (pageKey: PageKey) => {
     setSelectedPages((prev) =>
@@ -264,7 +271,7 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
           </div>
 
           {/* ページ閲覧権限（管理者・本人編集時は非表示） */}
-          {!isSelf && !isTargetAdmin && (
+          {!isSelf && !isFormRoleAdmin && (
             <div className="space-y-2">
               <Label>閲覧許可ページ</Label>
               {permissionsLoading ? (
@@ -298,7 +305,7 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
               </p>
             </div>
           )}
-          {isTargetAdmin && (
+          {isFormRoleAdmin && (
             <div className="space-y-2">
               <Label>閲覧許可ページ</Label>
               <p className="text-sm text-gray-500 p-3 border rounded-lg bg-gray-50">

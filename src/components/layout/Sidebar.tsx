@@ -34,7 +34,7 @@ export const menuItems: Array<{
   { href: '/products', label: '店舗分析', icon: Store, pageKey: 'products' },
   { href: '/ecommerce', label: '通販分析', icon: ShoppingCart, pageKey: 'ecommerce' },
   { href: '/manufacturing', label: '製造分析', icon: Factory, pageKey: 'manufacturing' },
-  { href: '/manufacturing/complaints', label: 'クレーム管理', icon: AlertTriangle, pageKey: 'manufacturing' },
+  { href: '/manufacturing/complaints', label: 'クレーム管理', icon: AlertTriangle, pageKey: 'complaints' },
   { href: '/upload', label: 'データアップロード', icon: Upload, pageKey: 'upload' },
   { href: '/targets', label: '目標設定', icon: Target, pageKey: 'targets' },
   { href: '/settings', label: '設定', icon: Settings },
