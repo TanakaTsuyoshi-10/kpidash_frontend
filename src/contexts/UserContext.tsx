@@ -1,11 +1,13 @@
 /**
  * ユーザー情報コンテキスト
  * 現在のユーザー情報を管理し、アプリ全体で共有
+ * SWRで楽観的レンダリング：isLoading中でも子コンポーネントをレンダリングし、
+ * SWRデータフェッチを先行開始させる
  */
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
-import { apiClient } from '@/lib/api/client'
+import { createContext, useContext, ReactNode } from 'react'
+import useSWR from 'swr'
 import type { CurrentUserResponse, PageKey } from '@/types/user'
 
 interface UserContextType {
@@ -20,38 +22,19 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<CurrentUserResponse | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchUser = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      const response = await apiClient.get<CurrentUserResponse>('/api/v1/users/me')
-      setUser(response)
-    } catch (err) {
-      console.error('ユーザー情報の取得に失敗:', err)
-      setUser(null)
-      setError(err instanceof Error ? err.message : 'ユーザー情報の取得に失敗しました')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchUser()
-  }, [fetchUser])
+  const { data: user, error, isLoading, mutate } = useSWR<CurrentUserResponse>(
+    '/api/v1/users/me'
+  )
 
   return (
     <UserContext.Provider
       value={{
-        user,
+        user: user ?? null,
         isAdmin: user?.is_admin ?? false,
         allowedPages: user?.allowed_pages ?? [],
         isLoading,
-        error,
-        refreshUser: fetchUser,
+        error: error?.message ?? null,
+        refreshUser: async () => { await mutate() },
       }}
     >
       {children}

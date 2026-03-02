@@ -8,6 +8,9 @@ import { User, Session } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { preload } from 'swr'
+import { fetcher } from '@/lib/swr-config'
+import { getCurrentFiscalYear, getPreviousMonth } from '@/lib/fiscal-year'
 
 // 非アクティブタイムアウト（30分）
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000
@@ -113,6 +116,14 @@ export function useAuth() {
       password,
     })
     if (error) throw error
+
+    // ダッシュボードデータをプリロード（ページ遷移と並行してフェッチ開始）
+    const year = getCurrentFiscalYear()
+    const month = getPreviousMonth()
+    preload('/api/v1/users/me', fetcher)
+    preload(`/api/v1/dashboard?period_type=monthly&year=${year}&month=${month}`, fetcher)
+    preload('/api/v1/dashboard/chart?months=12', fetcher)
+
     router.push('/dashboard')
   }
 

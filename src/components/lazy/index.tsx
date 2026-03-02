@@ -65,3 +65,36 @@ export const LazyChannelTrendChart = dynamic(
     ssr: false
   }
 )
+
+// ダッシュボード below-the-fold コンポーネント
+export const LazyCashFlowCard = dynamic(
+  () => import('@/components/dashboard/CashFlowCard').then(mod => ({ default: mod.CashFlowCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyManagementIndicatorsCard = dynamic(
+  () => import('@/components/dashboard/ManagementIndicatorsCard').then(mod => ({ default: mod.ManagementIndicatorsCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyComplaintSummaryCard = dynamic(
+  () => import('@/components/dashboard/ComplaintSummaryCard').then(mod => ({ default: mod.ComplaintSummaryCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyDashboardAlertList = dynamic(
+  () => import('@/components/dashboard/DashboardAlertList').then(mod => ({ default: mod.DashboardAlertList })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)

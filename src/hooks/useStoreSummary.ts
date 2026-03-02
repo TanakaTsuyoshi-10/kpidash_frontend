@@ -1,8 +1,7 @@
 /**
- * 店舗別売上集計データ取得フック
+ * 店舗別売上集計データ取得フック（SWR版）
  */
-import { useState, useEffect, useCallback } from 'react'
-import { apiClient } from '@/lib/api/client'
+import useSWR from 'swr'
 
 // 店舗別集計データの型
 export interface StoreSummaryItem {
@@ -65,35 +64,20 @@ export function useStoreSummary(
   departmentSlug: string = 'store',
   periodType: PeriodType = 'monthly'
 ) {
-  const [data, setData] = useState<StoreSummaryResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const params = new URLSearchParams({
+    month,
+    department_slug: departmentSlug,
+    period_type: periodType,
+  })
+  const key = `/products/store-summary?${params.toString()}`
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StoreSummaryResponse>(key)
 
-    try {
-      const params = new URLSearchParams({
-        month,
-        department_slug: departmentSlug,
-        period_type: periodType,
-      })
-      const result = await apiClient.get<StoreSummaryResponse>(
-        `/products/store-summary?${params.toString()}`
-      )
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month, departmentSlug, periodType])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return {
+    data: data ?? null,
+    loading: isLoading,
+    validating: isValidating,
+    error: error?.message ?? null,
+    refetch: mutate,
+  }
 }

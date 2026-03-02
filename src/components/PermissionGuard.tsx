@@ -1,6 +1,7 @@
 /**
  * ページ閲覧権限ガード
  * 許可されていないページへのアクセスをリダイレクトする
+ * isLoading中は子コンポーネントをレンダリングし、SWRフェッチを先行開始させる
  */
 'use client'
 
@@ -28,7 +29,13 @@ export function PermissionGuard({ pageKey, children }: PermissionGuardProps) {
     }
   }, [isLoading, hasPermission, router])
 
-  if (isLoading || !hasPermission) {
+  // ローディング中は子コンポーネントを表示（各コンポーネントのスケルトンが表示される）
+  if (isLoading) {
+    return <>{children}</>
+  }
+
+  // 権限なし確定時はスピナー表示（リダイレクト中）
+  if (!hasPermission) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />

@@ -8,12 +8,14 @@ import { useState } from 'react'
 import { PeriodSelector } from './PeriodSelector'
 import { CompanySummaryCard } from './CompanySummaryCard'
 import { DepartmentTable } from './DepartmentTable'
-import { SalesChart } from './SalesChart'
-import { CashFlowCard } from './CashFlowCard'
-import { ManagementIndicatorsCard } from './ManagementIndicatorsCard'
 import type { DepartmentCustomerData } from './ManagementIndicatorsCard'
-import { DashboardAlertList } from './DashboardAlertList'
-import { ComplaintSummaryCard } from './ComplaintSummaryCard'
+import {
+  LazySalesChart,
+  LazyCashFlowCard,
+  LazyManagementIndicatorsCard,
+  LazyComplaintSummaryCard,
+  LazyDashboardAlertList,
+} from '@/components/lazy'
 import { useDashboardData, useDashboardChart } from '@/hooks/useDashboard'
 import { useStoreSummary } from '@/hooks/useStoreSummary'
 import { useChannelSummary } from '@/hooks/useEcommerce'
@@ -201,15 +203,15 @@ export function ExecutiveDashboard({
 
       {/* グラフ & キャッシュフロー（2カラム） */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SalesChart chartData={chartData} loading={chartLoading} />
-        <CashFlowCard cashFlow={data?.cash_flow ?? null} loading={loading} />
+        <LazySalesChart chartData={chartData} loading={chartLoading} />
+        <LazyCashFlowCard cashFlow={data?.cash_flow ?? null} loading={loading} />
       </section>
 
       {/* 経営指標 & クレーム（2カラム） */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <h2 className="text-lg font-semibold mb-3">経営指標</h2>
-          <ManagementIndicatorsCard
+          <LazyManagementIndicatorsCard
             indicators={data?.management_indicators ?? null}
             storeData={storeCustomerData}
             ecommerceData={ecommerceCustomerData}
@@ -218,7 +220,7 @@ export function ExecutiveDashboard({
         </div>
         <div>
           <h2 className="text-lg font-semibold mb-3">&nbsp;</h2>
-          <ComplaintSummaryCard
+          <LazyComplaintSummaryCard
             summary={data?.complaint_summary}
             loading={loading}
           />
@@ -227,7 +229,7 @@ export function ExecutiveDashboard({
 
       {/* アラート */}
       <section>
-        <DashboardAlertList alerts={data?.alerts ?? []} loading={loading} />
+        <LazyDashboardAlertList alerts={data?.alerts ?? []} loading={loading} />
       </section>
 
       {/* エクスポートダイアログ */}

@@ -6,28 +6,43 @@ import { createClient } from '@/lib/supabase/client'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-// Supabaseセッションを使用したグローバルフェッチャー
-async function fetcher(url: string) {
+// セッショントークンの短期メモリキャッシュ（5秒）
+// 同時に複数のSWRフェッチが走った際の重複getSession()呼び出しを防ぐ
+let cachedSession: { token: string; expires: number } | null = null
+
+async function getSessionToken(): Promise<string> {
+  if (cachedSession && Date.now() < cachedSession.expires) {
+    return cachedSession.token
+  }
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
-
   if (!session?.access_token) {
     throw new Error('認証が必要です')
   }
+  cachedSession = { token: session.access_token, expires: Date.now() + 5000 }
+  return session.access_token
+}
+
+// Supabaseセッションを使用したグローバルフェッチャー
+export async function fetcher(url: string) {
+  const token = await getSessionToken()
 
   const res = await fetch(`${API_BASE_URL}${url}`, {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`
+      'Authorization': `Bearer ${token}`
     },
   })
 
-  // 401の場合、トークンリフレッシュして1回リトライ
+  // 401の場合、キャッシュを破棄してトークンリフレッシュして1回リトライ
   if (res.status === 401) {
+    cachedSession = null
+    const supabase = createClient()
     const { data: { session: refreshedSession } } = await supabase.auth.refreshSession()
     if (!refreshedSession?.access_token) {
       throw new Error('認証が必要です。再度ログインしてください。')
     }
+    cachedSession = { token: refreshedSession.access_token, expires: Date.now() + 5000 }
 
     const retryRes = await fetch(`${API_BASE_URL}${url}`, {
       headers: {
