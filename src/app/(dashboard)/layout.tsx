@@ -97,10 +97,10 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <UserProvider>
-      <SWRProvider>
+    <SWRProvider>
+      <UserProvider>
         <DashboardContent>{children}</DashboardContent>
-      </SWRProvider>
-    </UserProvider>
+      </UserProvider>
+    </SWRProvider>
   )
 }
