@@ -30,13 +30,13 @@ function buildManufacturingKey(params: ManufacturingQueryParams) {
 export function useManufacturingAnalysis(params: ManufacturingQueryParams = {}) {
   const key = buildManufacturingKey(params)
 
-  const { data, error, isLoading, mutate } = useSWR<ManufacturingAnalysisResponse>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ManufacturingAnalysisResponse>(
     key,
     () => getManufacturingAnalysis(params),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**

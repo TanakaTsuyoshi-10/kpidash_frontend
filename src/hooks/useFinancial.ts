@@ -37,13 +37,13 @@ function buildFinancialKey(params: FinancialQueryParams) {
 export function useFinancialAnalysis(params: FinancialQueryParams = {}) {
   const key = buildFinancialKey(params)
 
-  const { data, error, isLoading, mutate } = useSWR<FinancialAnalysisData>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<FinancialAnalysisData>(
     key,
     () => getFinancialAnalysis(params),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -124,13 +124,13 @@ export function useFinanceAnalysisV2(month: string, periodType: 'monthly' | 'cum
     ? `/api/v1/finance/analysis?month=${month}&period_type=${periodType}`
     : null
 
-  const { data, error, isLoading, mutate } = useSWR<FinancialAnalysisResponseV2>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<FinancialAnalysisResponseV2>(
     key,
     () => getFinanceAnalysisV2(month, periodType),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -145,13 +145,13 @@ export function useStorePLList(
     ? `/api/v1/finance/store-pl?month=${month}&department_slug=${departmentSlug}&period_type=${periodType}`
     : null
 
-  const { data, error, isLoading, mutate } = useSWR<StorePLListResponse>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StorePLListResponse>(
     key,
     () => getStorePLList(month, departmentSlug, periodType),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -162,11 +162,11 @@ export function useStorePL(segmentId: string, month: string) {
     ? `/api/v1/finance/store-pl/${segmentId}?month=${month}`
     : null
 
-  const { data, error, isLoading, mutate } = useSWR<StorePL>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StorePL>(
     key,
     () => getStorePLBySegment(segmentId, month),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }

@@ -80,7 +80,7 @@ export default function EcommercePage() {
                 'px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap',
                 periodType === 'monthly'
                   ? 'bg-green-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  : 'bg-card text-gray-600 hover:bg-gray-50'
               )}
             >
               単月
@@ -91,7 +91,7 @@ export default function EcommercePage() {
                 'px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200 whitespace-nowrap',
                 periodType === 'cumulative'
                   ? 'bg-green-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  : 'bg-card text-gray-600 hover:bg-gray-50'
               )}
             >
               累計

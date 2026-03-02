@@ -166,7 +166,7 @@ export function StoreSummaryTable({ month, departmentSlug = 'store' }: Props) {
           'px-3 py-1 text-sm font-medium transition-colors whitespace-nowrap',
           periodType === 'monthly'
             ? 'bg-green-600 text-white'
-            : 'bg-white text-gray-600 hover:bg-gray-50'
+            : 'bg-card text-gray-600 hover:bg-gray-50'
         )}
       >
         単月
@@ -177,7 +177,7 @@ export function StoreSummaryTable({ month, departmentSlug = 'store' }: Props) {
           'px-3 py-1 text-sm font-medium transition-colors border-l border-gray-200 whitespace-nowrap',
           periodType === 'cumulative'
             ? 'bg-green-600 text-white'
-            : 'bg-white text-gray-600 hover:bg-gray-50'
+            : 'bg-card text-gray-600 hover:bg-gray-50'
         )}
       >
         累計
@@ -254,7 +254,7 @@ export function StoreSummaryTable({ month, departmentSlug = 'store' }: Props) {
               <TableRow className="border-b-0">
                 <TableHead
                   rowSpan={2}
-                  className="sticky left-0 z-20 bg-white border-r-2 border-gray-300 align-bottom cursor-pointer hover:bg-gray-50 min-w-[100px]"
+                  className="sticky left-0 z-20 bg-card border-r-2 border-gray-300 align-bottom cursor-pointer hover:bg-gray-50 min-w-[100px]"
                   onClick={() => handleSort('segment_name')}
                 >
                   <div className="flex items-center py-1">
@@ -377,7 +377,7 @@ export function StoreSummaryTable({ month, departmentSlug = 'store' }: Props) {
             <TableBody>
               {sortedStores.map((store) => (
                 <TableRow key={store.segment_id} className="hover:bg-gray-50">
-                  <TableCell className="sticky left-0 z-10 bg-white border-r-2 border-gray-300 font-medium py-1.5 px-2">
+                  <TableCell className="sticky left-0 z-10 bg-card border-r-2 border-gray-300 font-medium py-1.5 px-2">
                     <Link
                       href={`/products/${store.segment_id}?month=${month}`}
                       className="text-green-600 hover:text-green-800 hover:underline whitespace-nowrap"

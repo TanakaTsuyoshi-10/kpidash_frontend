@@ -46,7 +46,7 @@ export function ExecutiveDashboard({
   onQuarterChange,
 }: Props) {
   // ダッシュボードデータ取得
-  const { data, loading, error, refetch } = useDashboardData({
+  const { data, loading, validating, error, refetch } = useDashboardData({
     period_type: periodType,
     year,
     month: periodType === 'monthly' ? month : undefined,
@@ -142,6 +142,13 @@ export function ExecutiveDashboard({
 
   return (
     <div className="space-y-6">
+      {/* ローディングバー */}
+      {validating && !loading && (
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <div className="h-1 bg-green-500 animate-pulse rounded-full" />
+        </div>
+      )}
+
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -169,7 +176,7 @@ export function ExecutiveDashboard({
             <Download className="h-4 w-4 mr-1" />
             出力
           </Button>
-          <Button onClick={() => refetch()} variant="outline" size="sm" disabled={loading}>
+          <Button onClick={() => refetch()} variant="outline" size="sm" disabled={loading} aria-label="データを再読み込み">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>

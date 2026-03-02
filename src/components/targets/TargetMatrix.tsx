@@ -32,6 +32,7 @@ import {
 } from '@/types/target'
 import type { CellChange, TargetMatrixCell } from '@/types/target'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import { Save, RefreshCw, Loader2 } from 'lucide-react'
 
 interface Props {
@@ -151,13 +152,13 @@ export function TargetMatrix({ departmentSlug = 'store' }: Props) {
     try {
       const result = await saveBulk(changes, selectedMonth)
       if (result.success) {
-        alert(`${result.created_count}件作成、${result.updated_count}件更新しました`)
+        toast.success(`目標値を保存しました（${result.created_count}件作成、${result.updated_count}件更新）`)
         refetch()
       } else {
-        alert(`エラー: ${result.errors.join(', ')}`)
+        toast.error(`エラー: ${result.errors.join(', ')}`)
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : '保存に失敗しました')
+      toast.error(err instanceof Error ? err.message : '保存に失敗しました')
     }
   }, [data, editState, originalState, selectedMonth, saveBulk, refetch])
 
@@ -278,7 +279,7 @@ export function TargetMatrix({ departmentSlug = 'store' }: Props) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="sticky left-0 bg-white min-w-[120px]">
+                <TableHead className="sticky left-0 bg-card min-w-[120px]">
                   店舗名
                 </TableHead>
                 {data.kpis.map((kpi) => (
@@ -301,7 +302,7 @@ export function TargetMatrix({ departmentSlug = 'store' }: Props) {
             <TableBody>
               {data.rows.map((row) => (
                 <TableRow key={row.segment_id}>
-                  <TableCell className="sticky left-0 bg-white font-medium">
+                  <TableCell className="sticky left-0 bg-card font-medium">
                     {row.segment_name}
                   </TableCell>
                   {data.kpis.map((kpi) => {

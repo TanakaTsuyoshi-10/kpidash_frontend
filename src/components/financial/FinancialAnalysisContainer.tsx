@@ -243,7 +243,7 @@ export function FinancialAnalysisContainer({
   const v2PeriodType = periodType === 'monthly' ? 'monthly' : 'cumulative'
 
   // 財務分析データ取得（既存API - 部門別売上等）
-  const { data, loading, error, refetch } = useFinancialAnalysis({
+  const { data, loading, validating, error, refetch } = useFinancialAnalysis({
     period_type: periodType,
     year,
     month: periodType === 'monthly' ? month : undefined,
@@ -327,6 +327,13 @@ export function FinancialAnalysisContainer({
 
   return (
     <div className="space-y-6">
+      {/* ローディングバー */}
+      {validating && !loading && (
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <div className="h-1 bg-green-500 animate-pulse rounded-full" />
+        </div>
+      )}
+
       {/* ヘッダー */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

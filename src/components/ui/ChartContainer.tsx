@@ -4,19 +4,24 @@
 'use client'
 
 import { ReactNode, useRef, useEffect, useState } from 'react'
+import { EmptyState } from '@/components/common/EmptyState'
 
 interface ChartContainerProps {
   title: string
   children: ReactNode
   minHeight?: number
   className?: string
+  hasData?: boolean
+  emptyMessage?: string
 }
 
 export function ChartContainer({
   title,
   children,
   minHeight = 250,
-  className = ''
+  className = '',
+  hasData = true,
+  emptyMessage = 'データがありません',
 }: ChartContainerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 0, height: minHeight })
@@ -37,7 +42,7 @@ export function ChartContainer({
   }, [minHeight])
 
   return (
-    <div className={`bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6 ${className}`}>
+    <div className={`bg-card rounded-lg shadow p-3 sm:p-4 lg:p-6 ${className}`}>
       <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-3 sm:mb-4">
         {title}
       </h3>
@@ -46,7 +51,13 @@ export function ChartContainer({
         style={{ height: dimensions.height }}
         className="w-full"
       >
-        {dimensions.width > 0 && children}
+        {!hasData ? (
+          <div className="flex items-center justify-center h-full">
+            <EmptyState title={emptyMessage} description="" />
+          </div>
+        ) : (
+          dimensions.width > 0 && children
+        )}
       </div>
     </div>
   )

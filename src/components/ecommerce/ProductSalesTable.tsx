@@ -72,7 +72,7 @@ export function ProductSalesTable({ month, periodType }: Props) {
               <TableRow className="border-b-0">
                 <TableHead
                   rowSpan={2}
-                  className="sticky left-0 z-20 bg-white border-r-2 border-gray-300 align-bottom w-[140px] min-w-[140px] max-w-[180px]"
+                  className="sticky left-0 z-20 bg-card border-r-2 border-gray-300 align-bottom w-[140px] min-w-[140px] max-w-[180px]"
                 >
                   <div className="py-1">商品名</div>
                 </TableHead>
@@ -129,7 +129,7 @@ export function ProductSalesTable({ month, periodType }: Props) {
                 <>
                   {data.products.map((product) => (
                 <TableRow key={product.product_name} className="hover:bg-gray-50">
-                  <TableCell className="sticky left-0 z-10 bg-white border-r-2 border-gray-300 font-medium py-1.5 px-2 w-[140px] min-w-[140px] max-w-[180px]">
+                  <TableCell className="sticky left-0 z-10 bg-card border-r-2 border-gray-300 font-medium py-1.5 px-2 w-[140px] min-w-[140px] max-w-[180px]">
                     <div className="truncate" title={product.product_name}>
                       {product.product_name}
                     </div>

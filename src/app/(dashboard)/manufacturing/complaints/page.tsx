@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { ComplaintFilters } from '@/components/complaints/ComplaintFilters'
 import { ComplaintList, type ViewMode } from '@/components/complaints/ComplaintList'
@@ -41,23 +42,38 @@ export default function ComplaintsPage() {
 
   // 新規作成
   const handleCreate = async (formData: ComplaintCreate) => {
-    await create(formData)
-    setCreateDialogOpen(false)
-    refetch()
+    try {
+      await create(formData)
+      toast.success('クレームを登録しました')
+      setCreateDialogOpen(false)
+      refetch()
+    } catch {
+      toast.error('クレームの登録に失敗しました')
+    }
   }
 
   // 更新
   const handleUpdate = async (id: string, formData: Parameters<typeof update>[1]) => {
-    await update(id, formData)
-    refetch()
+    try {
+      await update(id, formData)
+      toast.success('クレームを更新しました')
+      refetch()
+    } catch {
+      toast.error('クレームの更新に失敗しました')
+    }
   }
 
   // 削除
   const handleDelete = async (id: string) => {
-    await remove(id)
-    setDetailDialogOpen(false)
-    setSelectedComplaintId(null)
-    refetch()
+    try {
+      await remove(id)
+      toast.success('クレームを削除しました')
+      setDetailDialogOpen(false)
+      setSelectedComplaintId(null)
+      refetch()
+    } catch {
+      toast.error('クレームの削除に失敗しました')
+    }
   }
 
   // 新規作成ダイアログを開く
@@ -95,6 +111,7 @@ export default function ComplaintsPage() {
               size="sm"
               onClick={() => setViewMode('table')}
               className="rounded-r-none"
+              aria-label="テーブル表示"
             >
               <List className="h-4 w-4" />
             </Button>
@@ -103,6 +120,7 @@ export default function ComplaintsPage() {
               size="sm"
               onClick={() => setViewMode('card')}
               className="rounded-l-none"
+              aria-label="カード表示"
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>

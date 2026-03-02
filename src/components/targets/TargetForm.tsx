@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -66,10 +67,13 @@ export function TargetForm({ fiscalYear, departmentId, onSaveComplete, onError }
         department_id: departmentId,
       }
       await upsertTarget(data)
+      toast.success('目標値を保存しました')
       onSaveComplete?.()
       setTargetValue('')
     } catch (err) {
-      onError?.(err instanceof Error ? err.message : '保存に失敗しました')
+      const message = err instanceof Error ? err.message : '保存に失敗しました'
+      toast.error(message)
+      onError?.(message)
     } finally {
       setSaving(false)
     }

@@ -6,6 +6,8 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { toast } from 'sonner'
+import { invalidateKPICache } from '@/lib/cache-invalidation'
 import {
   Dialog,
   DialogContent,
@@ -95,9 +97,11 @@ export function FinancialUploadDialog({
 
     try {
       await upload(file)
+      toast.success(uploadType === 'store-pl' ? '店舗別収支データをアップロードしました' : '財務データをアップロードしました')
+      invalidateKPICache()
       onUploadSuccess()
     } catch {
-      // エラーはuseFinancialUploadで処理
+      toast.error('アップロードに失敗しました')
     }
   }
 

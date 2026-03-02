@@ -5,11 +5,14 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { User, Session } from '@supabase/supabase-js'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 // 非アクティブタイムアウト（30分）
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000
+// 警告表示（タイムアウト5分前）
+const WARNING_BEFORE = 5 * 60 * 1000
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -19,6 +22,7 @@ export function useAuth() {
   const supabase = createClient()
   const lastActivityRef = useRef<number>(Date.now())
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const warningShownRef = useRef(false)
 
   // アクティビティを記録
   const recordActivity = useCallback(() => {
@@ -50,6 +54,17 @@ export function useAuth() {
       const inactiveTime = Date.now() - lastActivityRef.current
       if (inactiveTime > INACTIVITY_TIMEOUT) {
         signOut('セッションがタイムアウトしました。再度ログインしてください。')
+      } else if (inactiveTime > INACTIVITY_TIMEOUT - WARNING_BEFORE && !warningShownRef.current) {
+        toast.warning('5分以内に操作がない場合、自動ログアウトされます', {
+          duration: 10000,
+          action: {
+            label: '延長する',
+            onClick: () => recordActivity(),
+          },
+        })
+        warningShownRef.current = true
+      } else if (inactiveTime < INACTIVITY_TIMEOUT - WARNING_BEFORE) {
+        warningShownRef.current = false
       }
     }
 

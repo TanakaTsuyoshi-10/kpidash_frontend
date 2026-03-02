@@ -4,6 +4,8 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { toast } from 'sonner'
+import { invalidateEcommerceCache } from '@/lib/cache-invalidation'
 import {
   Dialog,
   DialogContent,
@@ -87,10 +89,14 @@ export function ExcelUploadModal({ open, onOpenChange, onUploadSuccess }: Props)
       const response = await uploadEcommerceExcel(file)
       setResult(response)
       if (response.success) {
+        toast.success('通販データをアップロードしました')
+        invalidateEcommerceCache()
         onUploadSuccess?.()
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'アップロードに失敗しました')
+      const message = err instanceof Error ? err.message : 'アップロードに失敗しました'
+      toast.error(message)
+      setError(message)
     } finally {
       setUploading(false)
     }

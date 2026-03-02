@@ -5,6 +5,8 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { toast } from 'sonner'
+import { invalidateManufacturingCache } from '@/lib/cache-invalidation'
 import {
   Dialog,
   DialogContent,
@@ -52,9 +54,11 @@ export function ManufacturingUploadDialog({
 
     try {
       await upload(selectedFile)
+      toast.success('製造データをアップロードしました')
+      invalidateManufacturingCache()
       onUploadSuccess?.()
     } catch {
-      // エラーはhook側で処理
+      toast.error('アップロードに失敗しました')
     }
   }
 

@@ -276,7 +276,7 @@ export function StorePLTable({ data, loading }: Props) {
             {/* ヘッダー: 店舗名 */}
             <TableHeader>
               <TableRow className="border-b-2">
-                <TableHead className="sticky left-0 bg-white z-20 min-w-[140px] border-r">
+                <TableHead className="sticky left-0 bg-card z-20 min-w-[140px] border-r">
                   項目
                 </TableHead>
                 {hasStores && stores.map((store, idx) => {
@@ -356,7 +356,7 @@ export function StorePLTable({ data, loading }: Props) {
 
                   {/* 売上高 前年同月差額 */}
                   <TableRow className="text-xs">
-                    <TableCell className="sticky left-0 bg-white z-10 border-r pl-4 text-gray-500">
+                    <TableCell className="sticky left-0 bg-card z-10 border-r pl-4 text-gray-500">
                       前年同月差額
                     </TableCell>
                     {stores.map((store, idx) => {
@@ -384,7 +384,7 @@ export function StorePLTable({ data, loading }: Props) {
 
                   {/* 売上高 前年比（%） */}
                   <TableRow className="text-xs">
-                    <TableCell className="sticky left-0 bg-white z-10 border-r pl-4 text-gray-500">
+                    <TableCell className="sticky left-0 bg-card z-10 border-r pl-4 text-gray-500">
                       前年比
                     </TableCell>
                     {stores.map((store, idx) => {
@@ -413,7 +413,7 @@ export function StorePLTable({ data, loading }: Props) {
 
                   {/* 売上高 目標達成率 */}
                   <TableRow className="text-xs border-b">
-                    <TableCell className="sticky left-0 bg-white z-10 border-r pl-4 text-gray-500">
+                    <TableCell className="sticky left-0 bg-card z-10 border-r pl-4 text-gray-500">
                       目標達成率
                     </TableCell>
                     {stores.map((store, idx) => {
@@ -438,7 +438,7 @@ export function StorePLTable({ data, loading }: Props) {
 
                   {/* 売上原価 */}
                   <TableRow>
-                    <TableCell className="sticky left-0 bg-white z-10 border-r font-medium">
+                    <TableCell className="sticky left-0 bg-card z-10 border-r font-medium">
                       売上原価
                     </TableCell>
                     {stores.map((store, idx) => {
@@ -485,7 +485,7 @@ export function StorePLTable({ data, loading }: Props) {
 
                   {/* 販管費 */}
                   <TableRow className="border-t">
-                    <TableCell className="sticky left-0 bg-white z-10 border-r font-medium">
+                    <TableCell className="sticky left-0 bg-card z-10 border-r font-medium">
                       販管費計
                     </TableCell>
                     {stores.map((store, idx) => {
@@ -674,7 +674,7 @@ export function StorePLTable({ data, loading }: Props) {
 
                   {/* 営業利益 前年同月差額 */}
                   <TableRow className="text-xs">
-                    <TableCell className="sticky left-0 bg-white z-10 border-r pl-4 text-gray-500">
+                    <TableCell className="sticky left-0 bg-card z-10 border-r pl-4 text-gray-500">
                       前年同月差額
                     </TableCell>
                     {stores.map((store, idx) => {
@@ -701,7 +701,7 @@ export function StorePLTable({ data, loading }: Props) {
 
                   {/* 営業利益 前年比（%） */}
                   <TableRow className="text-xs">
-                    <TableCell className="sticky left-0 bg-white z-10 border-r pl-4 text-gray-500">
+                    <TableCell className="sticky left-0 bg-card z-10 border-r pl-4 text-gray-500">
                       前年比
                     </TableCell>
                     {stores.map((store, idx) => {
@@ -730,7 +730,7 @@ export function StorePLTable({ data, loading }: Props) {
 
                   {/* 営業利益 目標達成率 */}
                   <TableRow className="text-xs">
-                    <TableCell className="sticky left-0 bg-white z-10 border-r pl-4 text-gray-500">
+                    <TableCell className="sticky left-0 bg-card z-10 border-r pl-4 text-gray-500">
                       目標達成率
                     </TableCell>
                     {stores.map((store, idx) => {

@@ -72,7 +72,7 @@ export function PeriodSelector({
             'px-3 py-1.5 text-sm font-medium transition-colors',
             periodType === 'monthly'
               ? 'bg-green-600 text-white'
-              : 'bg-white text-gray-600 hover:bg-gray-50'
+              : 'bg-card text-gray-600 hover:bg-gray-50'
           )}
         >
           月次
@@ -83,7 +83,7 @@ export function PeriodSelector({
             'px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200',
             periodType === 'quarterly'
               ? 'bg-green-600 text-white'
-              : 'bg-white text-gray-600 hover:bg-gray-50'
+              : 'bg-card text-gray-600 hover:bg-gray-50'
           )}
         >
           四半期
@@ -94,7 +94,7 @@ export function PeriodSelector({
             'px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200',
             periodType === 'yearly'
               ? 'bg-green-600 text-white'
-              : 'bg-white text-gray-600 hover:bg-gray-50'
+              : 'bg-card text-gray-600 hover:bg-gray-50'
           )}
         >
           年度

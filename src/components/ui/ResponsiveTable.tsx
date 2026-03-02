@@ -5,6 +5,7 @@
 'use client'
 
 import { ReactNode } from 'react'
+import { EmptyState } from '@/components/common/EmptyState'
 
 interface Column<T> {
   key: keyof T | string
@@ -19,6 +20,7 @@ interface ResponsiveTableProps<T> {
   data: T[]
   keyField: keyof T
   emptyMessage?: string
+  emptyState?: ReactNode
   mobileCardRender?: (item: T) => ReactNode
 }
 
@@ -27,12 +29,13 @@ export function ResponsiveTable<T extends Record<string, unknown>>({
   data,
   keyField,
   emptyMessage = 'データがありません',
+  emptyState,
   mobileCardRender,
 }: ResponsiveTableProps<T>) {
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-        {emptyMessage}
+      <div className="bg-card rounded-lg shadow p-8 text-center text-gray-500">
+        {emptyState || <EmptyState title={emptyMessage} description="" />}
       </div>
     )
   }
@@ -41,7 +44,7 @@ export function ResponsiveTable<T extends Record<string, unknown>>({
   const renderMobileCards = () => (
     <div className="lg:hidden space-y-4">
       {data.map((item) => (
-        <div key={String(item[keyField])} className="bg-white rounded-lg shadow p-4">
+        <div key={String(item[keyField])} className="bg-card rounded-lg shadow p-4">
           {mobileCardRender ? (
             mobileCardRender(item)
           ) : (
@@ -63,7 +66,7 @@ export function ResponsiveTable<T extends Record<string, unknown>>({
 
   // デスクトップ用テーブル表示
   const renderDesktopTable = () => (
-    <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
+    <div className="hidden lg:block bg-card rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -78,7 +81,7 @@ export function ResponsiveTable<T extends Record<string, unknown>>({
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-card divide-y divide-gray-200">
             {data.map((item) => (
               <tr key={String(item[keyField])} className="hover:bg-gray-50">
                 {columns.map((col) => (

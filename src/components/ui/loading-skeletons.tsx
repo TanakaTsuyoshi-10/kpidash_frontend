@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 // カード用スケルトン
 export function CardSkeleton() {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-card rounded-lg shadow p-6">
       <Skeleton className="h-5 w-3/5 mb-4" />
       <Skeleton className="h-8 w-4/5 mb-2" />
       <Skeleton className="h-4 w-2/5" />
@@ -18,7 +18,7 @@ export function CardSkeleton() {
 // テーブル用スケルトン
 export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-card rounded-lg shadow overflow-hidden">
       <div className="p-4 border-b">
         <Skeleton className="h-6 w-1/4" />
       </div>
@@ -40,7 +40,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
 // チャート用スケルトン
 export function ChartSkeleton() {
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-card rounded-lg shadow p-6">
       <Skeleton className="h-6 w-2/5 mb-4" />
       <Skeleton className="h-[200px] w-full" />
     </div>

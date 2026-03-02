@@ -114,7 +114,7 @@ export function RegionalSummaryTable({ month, periodType }: Props) {
               <TableRow className="border-b-0">
                 <TableHead
                   rowSpan={2}
-                  className="sticky left-0 z-20 bg-white border-r-2 border-gray-300 align-bottom w-[120px]"
+                  className="sticky left-0 z-20 bg-card border-r-2 border-gray-300 align-bottom w-[120px]"
                 >
                   <div className="py-1">地区/店舗</div>
                 </TableHead>
@@ -273,9 +273,9 @@ export function RegionalSummaryTable({ month, periodType }: Props) {
                           region.stores.map((store) => (
                             <TableRow
                               key={`${region.region_id}-${store.segment_id}`}
-                              className="hover:bg-gray-50 bg-white text-gray-600"
+                              className="hover:bg-gray-50 bg-card text-gray-600"
                             >
-                              <TableCell className="sticky left-0 z-10 bg-white border-r-2 border-gray-300 py-1 px-2 pl-8 w-[120px]">
+                              <TableCell className="sticky left-0 z-10 bg-card border-r-2 border-gray-300 py-1 px-2 pl-8 w-[120px]">
                                 <div className="truncate text-xs" title={store.segment_name}>
                                   {store.segment_name}
                                 </div>

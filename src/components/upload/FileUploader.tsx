@@ -4,6 +4,8 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import { toast } from 'sonner'
+import { invalidateAllCache } from '@/lib/cache-invalidation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -97,13 +99,17 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
     setUploading(true)
     try {
       const result = await uploadCSV(file, fileType)
+      toast.success('データをアップロードしました')
+      invalidateAllCache()
       onUploadComplete?.(result)
       setFile(null)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
     } catch (error) {
-      onUploadError?.(error instanceof Error ? error.message : 'アップロードに失敗しました')
+      const message = error instanceof Error ? error.message : 'アップロードに失敗しました'
+      toast.error(message)
+      onUploadError?.(message)
     } finally {
       setUploading(false)
     }

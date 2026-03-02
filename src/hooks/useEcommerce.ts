@@ -27,13 +27,13 @@ import type {
 export function useChannelSummary(month: string, periodType: PeriodType = 'monthly') {
   const key = month ? `/ecommerce/channel-summary?month=${month}&period_type=${periodType}` : null
 
-  const { data, error, isLoading, mutate } = useSWR<ChannelSummaryResponse>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ChannelSummaryResponse>(
     key,
     () => getChannelSummary(month, periodType),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -48,13 +48,13 @@ export function useProductSummary(
     ? `/ecommerce/product-summary?month=${month}&period_type=${periodType}&limit=${limit}`
     : null
 
-  const { data, error, isLoading, mutate } = useSWR<ProductSummaryResponse>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ProductSummaryResponse>(
     key,
     () => getProductSummary(month, periodType, limit),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -63,13 +63,13 @@ export function useProductSummary(
 export function useCustomerSummary(month: string, periodType: PeriodType = 'monthly') {
   const key = month ? `/ecommerce/customer-summary?month=${month}&period_type=${periodType}` : null
 
-  const { data, error, isLoading, mutate } = useSWR<CustomerSummaryResponse>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<CustomerSummaryResponse>(
     key,
     () => getCustomerSummary(month, periodType),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -78,13 +78,13 @@ export function useCustomerSummary(month: string, periodType: PeriodType = 'mont
 export function useWebsiteStats(month: string, periodType: PeriodType = 'monthly') {
   const key = month ? `/ecommerce/website-stats?month=${month}&period_type=${periodType}` : null
 
-  const { data, error, isLoading, mutate } = useSWR<WebsiteStatsResponse>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<WebsiteStatsResponse>(
     key,
     () => getWebsiteStats(month, periodType),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -98,11 +98,11 @@ export function useEcommerceTrend(
     ? `/ecommerce/trend?metric=${metric}&fiscal_year=${fiscalYear}`
     : `/ecommerce/trend?metric=${metric}`
 
-  const { data, error, isLoading, mutate } = useSWR<TrendResponse>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<TrendResponse>(
     key,
     () => getEcommerceTrend(metric, fiscalYear),
     { dedupingInterval: 60000 }
   )
 
-  return { data: data ?? null, loading: isLoading, error: error?.message || null, refetch: mutate }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }

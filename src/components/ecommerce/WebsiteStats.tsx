@@ -111,7 +111,7 @@ export function WebsiteStats({ month, periodType }: Props) {
               <TableRow className="border-b-0">
                 <TableHead
                   rowSpan={2}
-                  className="bg-white border-r-2 border-gray-300 align-bottom w-[120px] min-w-[100px]"
+                  className="bg-card border-r-2 border-gray-300 align-bottom w-[120px] min-w-[100px]"
                 >
                   <div className="py-1">項目</div>
                 </TableHead>
@@ -144,7 +144,7 @@ export function WebsiteStats({ month, periodType }: Props) {
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.label} className="hover:bg-gray-50">
-                  <TableCell className="bg-white border-r-2 border-gray-300 font-medium py-1.5 px-2">
+                  <TableCell className="bg-card border-r-2 border-gray-300 font-medium py-1.5 px-2">
                     {row.label}
                   </TableCell>
                   <TableCell className="text-right font-mono py-1.5 px-2">

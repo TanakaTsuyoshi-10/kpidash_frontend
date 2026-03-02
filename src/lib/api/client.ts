@@ -76,134 +76,107 @@ export class ApiClient {
     throw new Error(`API Error: ${status}`)
   }
 
-  async get<T>(endpoint: string, timeout?: number): Promise<T> {
+  /**
+   * 401時にトークンリフレッシュして1回リトライするリクエストラッパー
+   */
+  private async requestWithRetry<T>(
+    url: string,
+    options: RequestInit,
+    timeout?: number,
+    timeoutMessage: string = 'リクエストがタイムアウトしました。'
+  ): Promise<Response> {
     const headers = await this.getAuthHeader()
+    const mergedOptions = { ...options, headers: { ...headers, ...options.headers } }
 
     try {
-      const response = await fetchWithTimeout(
-        `${API_URL}${endpoint}`,
-        { method: 'GET', headers },
-        timeout
-      )
+      const response = await fetchWithTimeout(url, mergedOptions, timeout)
+
+      // 401の場合、トークンリフレッシュして1回リトライ
+      if (response.status === 401) {
+        const supabase = getSupabase()
+        const { data: { session } } = await supabase.auth.refreshSession()
+        if (!session?.access_token) {
+          this.handleErrorResponse(401)
+        }
+        const retryHeaders = {
+          ...mergedOptions.headers,
+          'Authorization': `Bearer ${session.access_token}`,
+        }
+        const retryResponse = await fetchWithTimeout(
+          url, { ...mergedOptions, headers: retryHeaders }, timeout
+        )
+        if (!retryResponse.ok) {
+          const errorData = await retryResponse.json().catch(() => ({}))
+          this.handleErrorResponse(retryResponse.status, errorData)
+        }
+        return retryResponse
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         this.handleErrorResponse(response.status, errorData)
       }
 
-      return response.json()
+      return response
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('リクエストがタイムアウトしました。')
+        throw new Error(timeoutMessage)
       }
       throw error
     }
+  }
+
+  async get<T>(endpoint: string, timeout?: number): Promise<T> {
+    const response = await this.requestWithRetry<T>(
+      `${API_URL}${endpoint}`,
+      { method: 'GET' },
+      timeout
+    )
+    return response.json()
   }
 
   async post<T>(endpoint: string, data?: unknown, timeout?: number): Promise<T> {
-    const headers = await this.getAuthHeader()
-
-    try {
-      const response = await fetchWithTimeout(
-        `${API_URL}${endpoint}`,
-        {
-          method: 'POST',
-          headers,
-          body: data ? JSON.stringify(data) : undefined,
-        },
-        timeout
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        this.handleErrorResponse(response.status, errorData)
-      }
-
-      return response.json()
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('リクエストがタイムアウトしました。')
-      }
-      throw error
-    }
+    const response = await this.requestWithRetry<T>(
+      `${API_URL}${endpoint}`,
+      {
+        method: 'POST',
+        body: data ? JSON.stringify(data) : undefined,
+      },
+      timeout
+    )
+    return response.json()
   }
 
   async put<T>(endpoint: string, data?: unknown, timeout?: number): Promise<T> {
-    const headers = await this.getAuthHeader()
-
-    try {
-      const response = await fetchWithTimeout(
-        `${API_URL}${endpoint}`,
-        {
-          method: 'PUT',
-          headers,
-          body: data ? JSON.stringify(data) : undefined,
-        },
-        timeout
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        this.handleErrorResponse(response.status, errorData)
-      }
-
-      return response.json()
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('リクエストがタイムアウトしました。')
-      }
-      throw error
-    }
+    const response = await this.requestWithRetry<T>(
+      `${API_URL}${endpoint}`,
+      {
+        method: 'PUT',
+        body: data ? JSON.stringify(data) : undefined,
+      },
+      timeout
+    )
+    return response.json()
   }
 
   async patch<T>(endpoint: string, data?: unknown, timeout?: number): Promise<T> {
-    const headers = await this.getAuthHeader()
-
-    try {
-      const response = await fetchWithTimeout(
-        `${API_URL}${endpoint}`,
-        {
-          method: 'PATCH',
-          headers,
-          body: data ? JSON.stringify(data) : undefined,
-        },
-        timeout
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        this.handleErrorResponse(response.status, errorData)
-      }
-
-      return response.json()
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('リクエストがタイムアウトしました。')
-      }
-      throw error
-    }
+    const response = await this.requestWithRetry<T>(
+      `${API_URL}${endpoint}`,
+      {
+        method: 'PATCH',
+        body: data ? JSON.stringify(data) : undefined,
+      },
+      timeout
+    )
+    return response.json()
   }
 
   async delete(endpoint: string, timeout?: number): Promise<void> {
-    const headers = await this.getAuthHeader()
-
-    try {
-      const response = await fetchWithTimeout(
-        `${API_URL}${endpoint}`,
-        { method: 'DELETE', headers },
-        timeout
-      )
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        this.handleErrorResponse(response.status, errorData)
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('リクエストがタイムアウトしました。')
-      }
-      throw error
-    }
+    await this.requestWithRetry(
+      `${API_URL}${endpoint}`,
+      { method: 'DELETE' },
+      timeout
+    )
   }
 
   async uploadFile<T>(endpoint: string, file: File, timeout: number = 60000): Promise<T> {
@@ -232,6 +205,28 @@ export class ApiClient {
         },
         timeout
       )
+
+      // 401の場合、トークンリフレッシュして1回リトライ
+      if (response.status === 401) {
+        const { data: { session: refreshed } } = await supabase.auth.refreshSession()
+        if (!refreshed?.access_token) {
+          this.handleErrorResponse(401)
+        }
+        const retryResponse = await fetchWithTimeout(
+          `${API_URL}${endpoint}`,
+          {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${refreshed.access_token}` },
+            body: formData,
+          },
+          timeout
+        )
+        if (!retryResponse.ok) {
+          const errorData = await retryResponse.json().catch(() => ({}))
+          this.handleErrorResponse(retryResponse.status, errorData)
+        }
+        return retryResponse.json()
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))

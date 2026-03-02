@@ -137,7 +137,7 @@ export function EcommerceChannelTable({ channels, onChange }: Props) {
               <TableRow>
                 <TableHead
                   rowSpan={2}
-                  className="sticky left-0 z-10 bg-white min-w-[120px] border-r"
+                  className="sticky left-0 z-10 bg-card min-w-[120px] border-r"
                 >
                   チャネル
                 </TableHead>
@@ -172,7 +172,7 @@ export function EcommerceChannelTable({ channels, onChange }: Props) {
             <TableBody>
               {channels.map((ch) => (
                 <TableRow key={ch.channel}>
-                  <TableCell className="sticky left-0 z-10 bg-white font-medium border-r">
+                  <TableCell className="sticky left-0 z-10 bg-card font-medium border-r">
                     {ch.channel}
                   </TableCell>
                   {/* 売上 */}

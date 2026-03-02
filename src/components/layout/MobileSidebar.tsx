@@ -19,10 +19,17 @@ interface MobileSidebarProps {
   navItems: NavItem[]
   userName?: string
   onLogout: () => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function MobileSidebar({ navItems, userName, onLogout }: MobileSidebarProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function MobileSidebar({ navItems, userName, onLogout, open, onOpenChange }: MobileSidebarProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isOpen = open ?? internalOpen
+  const setIsOpen = (v: boolean) => {
+    setInternalOpen(v)
+    onOpenChange?.(v)
+  }
   const pathname = usePathname()
 
   // ページ遷移時にメニューを閉じる
@@ -47,7 +54,7 @@ export function MobileSidebar({ navItems, userName, onLogout }: MobileSidebarPro
       {/* ハンバーガーボタン */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md hover:bg-gray-100 transition-colors"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-card shadow-md hover:bg-gray-100 transition-colors"
         aria-label="メニュー"
       >
         {isOpen ? (
@@ -68,7 +75,7 @@ export function MobileSidebar({ navItems, userName, onLogout }: MobileSidebarPro
       {/* サイドバー */}
       <aside
         className={cn(
-          'lg:hidden fixed top-0 left-0 h-full w-72 bg-white shadow-xl z-50',
+          'lg:hidden fixed top-0 left-0 h-full w-72 bg-card shadow-xl z-50',
           'transform transition-transform duration-300 ease-in-out',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}

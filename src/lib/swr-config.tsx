@@ -22,10 +22,32 @@ async function fetcher(url: string) {
     },
   })
 
-  if (!res.ok) {
-    if (res.status === 401) {
+  // 401の場合、トークンリフレッシュして1回リトライ
+  if (res.status === 401) {
+    const { data: { session: refreshedSession } } = await supabase.auth.refreshSession()
+    if (!refreshedSession?.access_token) {
       throw new Error('認証が必要です。再度ログインしてください。')
     }
+
+    const retryRes = await fetch(`${API_BASE_URL}${url}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${refreshedSession.access_token}`
+      },
+    })
+
+    if (!retryRes.ok) {
+      if (retryRes.status === 401) {
+        throw new Error('認証が必要です。再度ログインしてください。')
+      }
+      const error = await retryRes.json().catch(() => ({}))
+      throw new Error(error.detail || `APIエラーが発生しました (${retryRes.status})`)
+    }
+
+    return retryRes.json()
+  }
+
+  if (!res.ok) {
     if (res.status === 429) {
       throw new Error('リクエスト数が制限を超えました。しばらく待ってから再試行してください。')
     }

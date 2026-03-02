@@ -3,10 +3,11 @@
  */
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Sidebar, menuItems } from '@/components/layout/Sidebar'
 import { MobileSidebar } from '@/components/layout/MobileSidebar'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { Header } from '@/components/layout/Header'
 import { UserProvider, useUserContext } from '@/contexts/UserContext'
 import { SWRProvider } from '@/lib/swr-config'
@@ -46,6 +47,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, user, isAdmin, allowedPages, pathname, router])
 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
   const handleLogout = async () => {
     await signOut()
   }
@@ -70,12 +73,17 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         navItems={filteredNavItems}
         userName={userName}
         onLogout={handleLogout}
+        open={mobileSidebarOpen}
+        onOpenChange={setMobileSidebarOpen}
       />
+
+      {/* モバイル用ボトムナビ */}
+      <BottomNav onMoreClick={() => setMobileSidebarOpen(true)} />
 
       {/* メインコンテンツ */}
       <div className="lg:pl-64">
         <Header />
-        <main className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <main id="main-content" className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           {children}
         </main>
       </div>

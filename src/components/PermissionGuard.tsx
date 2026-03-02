@@ -6,6 +6,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { useUserContext } from '@/contexts/UserContext'
 import type { PageKey } from '@/types/user'
 
@@ -22,6 +23,7 @@ export function PermissionGuard({ pageKey, children }: PermissionGuardProps) {
 
   useEffect(() => {
     if (!isLoading && !hasPermission) {
+      toast.error('このページへのアクセス権限がありません')
       router.replace('/dashboard')
     }
   }, [isLoading, hasPermission, router])

@@ -96,7 +96,7 @@ export function ChannelSummaryTable({ month, periodType }: Props) {
           <Table className="text-xs">
             <TableHeader>
               <TableRow className="border-b-0">
-                <TableHead rowSpan={2} className="sticky left-0 z-20 bg-white border-r-2 border-gray-300 align-bottom w-[70px]">
+                <TableHead rowSpan={2} className="sticky left-0 z-20 bg-card border-r-2 border-gray-300 align-bottom w-[70px]">
                   <div className="py-1">チャネル</div>
                 </TableHead>
                 <TableHead colSpan={salesColSpan} className="text-center bg-emerald-50 text-emerald-800 font-bold border-r-2 border-gray-300 py-1">

@@ -251,7 +251,7 @@ export function StoreTargetTable({ month, onSaveSuccess }: Props) {
                 <TableRow>
                   <TableHead
                     rowSpan={2}
-                    className="sticky left-0 z-10 bg-white min-w-[120px] border-r"
+                    className="sticky left-0 z-10 bg-card min-w-[120px] border-r"
                   >
                     店舗
                   </TableHead>
@@ -287,7 +287,7 @@ export function StoreTargetTable({ month, onSaveSuccess }: Props) {
               <TableBody>
                 {data.rows.map((row) => (
                   <TableRow key={row.segment_id}>
-                    <TableCell className="sticky left-0 z-10 bg-white font-medium border-r">
+                    <TableCell className="sticky left-0 z-10 bg-card font-medium border-r">
                       {row.segment_name}
                     </TableCell>
                     {data.kpis.map((kpi) => {
