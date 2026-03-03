@@ -16,7 +16,7 @@ import { WebsiteStats } from '@/components/ecommerce/WebsiteStats'
 import { LazyChannelTrendChart as ChannelTrendChart } from '@/components/lazy'
 import { ExcelUploadModal } from '@/components/ecommerce/ExcelUploadModal'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
-import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
+import { ExportDialog, type ExportParams } from '@/components/common/ExportDialog'
 import { useEcommerceExport } from '@/hooks/useExport'
 import { cn } from '@/lib/utils'
 import { PermissionGuard } from '@/components/PermissionGuard'
@@ -58,8 +58,8 @@ export default function EcommercePage() {
     : `${year}年${monthNum}月`
 
   // エクスポート実行
-  const handleExport = async (scope: ExportScope) => {
-    await exportData(scope, fiscalYear, month, periodType)
+  const handleExport = async (params: ExportParams) => {
+    await exportData(params, fiscalYear, month, periodType)
   }
 
   return (

@@ -17,7 +17,7 @@ import { PeriodTypeSelector } from '@/components/dashboard/PeriodTypeSelector'
 import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
 import { useStoreAnalysisExport } from '@/hooks/useExport'
-import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
+import { ExportDialog, type ExportParams } from '@/components/common/ExportDialog'
 import { getFiscalYearFromPeriod } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/regional'
 import { PermissionGuard } from '@/components/PermissionGuard'
@@ -37,8 +37,8 @@ export default function ProductsPage() {
   const currentPeriodLabel = `${yearStr}年${parseInt(monthStr)}月`
 
   // エクスポート実行
-  const handleExport = async (scope: ExportScope) => {
-    await exportData(scope, fiscalYear, month)
+  const handleExport = async (params: ExportParams) => {
+    await exportData(params, fiscalYear, month)
   }
 
   return (

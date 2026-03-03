@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { RefreshCw, Upload, Download } from 'lucide-react'
 import { formatPeriod, formatDisplayPeriod } from '@/lib/fiscal-year'
 import { useFinancialExport } from '@/hooks/useExport'
-import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
+import { ExportDialog, type ExportParams } from '@/components/common/ExportDialog'
 import type { PeriodType } from '@/types/dashboard'
 import type { ExpenseItem, FinancialAnalysisResponseV2, ProfitabilityMetric } from '@/types/financial'
 
@@ -275,8 +275,8 @@ export function FinancialAnalysisContainer({
   }
 
   // エクスポート実行
-  const handleExport = async (scope: ExportScope) => {
-    await exportData(scope, year, month, periodType, quarter)
+  const handleExport = async (params: ExportParams) => {
+    await exportData(params, year, month, periodType, quarter)
   }
 
   // エラー表示

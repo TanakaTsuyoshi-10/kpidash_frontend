@@ -13,9 +13,11 @@ import { ProductivityChart } from './ProductivityChart'
 import { DailyDataTable } from './DailyDataTable'
 import { ManufacturingUploadDialog } from './ManufacturingUploadDialog'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
+import { ExportDialog, type ExportParams } from '@/components/common/ExportDialog'
 import { useManufacturingAnalysis } from '@/hooks/useManufacturing'
+import { useManufacturingExport } from '@/hooks/useExport'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Upload } from 'lucide-react'
+import { RefreshCw, Upload, Download } from 'lucide-react'
 import { formatPeriod, formatDisplayPeriod } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/dashboard'
 
@@ -41,6 +43,8 @@ export function ManufacturingAnalysisContainer({
   onQuarterChange,
 }: Props) {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const { exportData } = useManufacturingExport()
 
   // コメント用の期間文字列（YYYY-MM-01形式）
   // 年度からカレンダー年に変換（例: 2025年度9月 → 2024-09-01）
@@ -57,6 +61,22 @@ export function ManufacturingAnalysisContainer({
   // アップロード成功時の処理
   const handleUploadSuccess = () => {
     refetch()
+  }
+
+  // エクスポート実行
+  const handleExport = async (params: ExportParams) => {
+    await exportData(params, year, month, periodType, quarter)
+  }
+
+  // 現在の表示期間ラベル
+  const getCurrentPeriodLabel = () => {
+    if (periodType === 'monthly') {
+      return formatDisplayPeriod(year, month)
+    } else if (periodType === 'quarterly') {
+      return `${year}年度 Q${quarter}`
+    } else {
+      return `${year}年度`
+    }
   }
 
   // エラー表示
@@ -129,6 +149,10 @@ export function ManufacturingAnalysisContainer({
             <Upload className="h-4 w-4 mr-2" />
             アップロード
           </Button>
+          <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            出力
+          </Button>
           <Button onClick={() => refetch()} variant="outline" size="icon" disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
@@ -187,6 +211,16 @@ export function ManufacturingAnalysisContainer({
         year={year}
         month={month}
         onUploadSuccess={handleUploadSuccess}
+      />
+
+      {/* エクスポートダイアログ */}
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        title="製造分析"
+        fiscalYear={year}
+        currentPeriodLabel={getCurrentPeriodLabel()}
+        onExport={handleExport}
       />
     </div>
   )

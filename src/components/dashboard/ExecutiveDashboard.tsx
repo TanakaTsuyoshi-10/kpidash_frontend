@@ -20,7 +20,7 @@ import { useDashboardData, useDashboardChart } from '@/hooks/useDashboard'
 import { useStoreSummary } from '@/hooks/useStoreSummary'
 import { useChannelSummary } from '@/hooks/useEcommerce'
 import { useDashboardExport } from '@/hooks/useExport'
-import { ExportDialog, type ExportScope } from '@/components/common/ExportDialog'
+import { ExportDialog, type ExportParams } from '@/components/common/ExportDialog'
 import { RefreshCw, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatDisplayPeriod, formatPeriod } from '@/lib/fiscal-year'
@@ -107,8 +107,8 @@ export function ExecutiveDashboard({
   }
 
   // エクスポート実行
-  const handleExport = async (scope: ExportScope) => {
-    await exportData(scope, year, month, periodType, quarter)
+  const handleExport = async (params: ExportParams) => {
+    await exportData(params, year, month, periodType, quarter)
   }
 
   // エラー表示
