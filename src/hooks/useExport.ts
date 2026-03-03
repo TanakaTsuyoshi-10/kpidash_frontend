@@ -822,6 +822,26 @@ export function useStoreAnalysisExport() {
 }
 
 // --- 店舗分析シート ---
+// フロントエンド StoreSummaryTable.tsx の形式に合わせた出力
+// グループヘッダー: 売上高(緑) | 客数(青) | 客単価(黄)
+// サブヘッダー: 実績 | 前年 | 前年差 | 前年比
+
+const SALES_GROUP_FILL: ExcelJS.FillPattern = {
+  type: 'pattern' as const,
+  pattern: 'solid' as const,
+  fgColor: { argb: 'FFE2EFDA' }, // 緑系
+}
+const CUSTOMERS_GROUP_FILL: ExcelJS.FillPattern = {
+  type: 'pattern' as const,
+  pattern: 'solid' as const,
+  fgColor: { argb: 'FFDCE6F1' }, // 青系
+}
+const UNITPRICE_GROUP_FILL: ExcelJS.FillPattern = {
+  type: 'pattern' as const,
+  pattern: 'solid' as const,
+  fgColor: { argb: 'FFFFF2CC' }, // 黄系
+}
+
 function buildStoreAnalysisSheet(data: { period: string; data: any }[]): StyledSheetData {
   return {
     name: '店舗別実績',
@@ -829,44 +849,115 @@ function buildStoreAnalysisSheet(data: { period: string; data: any }[]): StyledS
       const ws = wb.addWorksheet('店舗別実績')
 
       if (data.length === 1) {
+        // --- 単月表示: フロントエンドと同じグループ形式 ---
         const { stores, totals } = data[0].data
-        const colCount = 7
+        const colCount = 13 // 店舗名 + 売上4列 + 客数4列 + 客単価4列
         addTitle(ws, '店舗別実績', getMonthLabel(data[0].period), colCount)
 
-        const hdr = ws.addRow(['店舗', '売上高', '客数', '客単価', '前年売上', '前年比', '前年差'])
-        applyHeaderStyle(hdr)
+        // グループヘッダー行（結合セル）
+        const groupRow = ws.addRow([
+          '', '売上高', '', '', '', '客数', '', '', '', '客単価', '', '', '',
+        ])
+        groupRow.height = 20
+        // 売上高グループ (B-E)
+        ws.mergeCells(groupRow.number, 2, groupRow.number, 5)
+        groupRow.getCell(2).fill = SALES_GROUP_FILL
+        groupRow.getCell(2).font = { bold: true, size: 10 }
+        groupRow.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' }
+        groupRow.getCell(2).border = { top: { style: 'medium', color: { argb: 'FF808080' } }, bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } }, left: { style: 'thin', color: { argb: 'FFD0D0D0' } }, right: { style: 'medium', color: { argb: 'FF808080' } } }
+        for (let i = 3; i <= 5; i++) {
+          groupRow.getCell(i).fill = SALES_GROUP_FILL
+          groupRow.getCell(i).border = groupRow.getCell(2).border
+        }
+        // 客数グループ (F-I)
+        ws.mergeCells(groupRow.number, 6, groupRow.number, 9)
+        groupRow.getCell(6).fill = CUSTOMERS_GROUP_FILL
+        groupRow.getCell(6).font = { bold: true, size: 10 }
+        groupRow.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' }
+        groupRow.getCell(6).border = { top: { style: 'medium', color: { argb: 'FF808080' } }, bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } }, left: { style: 'thin', color: { argb: 'FFD0D0D0' } }, right: { style: 'medium', color: { argb: 'FF808080' } } }
+        for (let i = 7; i <= 9; i++) {
+          groupRow.getCell(i).fill = CUSTOMERS_GROUP_FILL
+          groupRow.getCell(i).border = groupRow.getCell(6).border
+        }
+        // 客単価グループ (J-M)
+        ws.mergeCells(groupRow.number, 10, groupRow.number, 13)
+        groupRow.getCell(10).fill = UNITPRICE_GROUP_FILL
+        groupRow.getCell(10).font = { bold: true, size: 10 }
+        groupRow.getCell(10).alignment = { horizontal: 'center', vertical: 'middle' }
+        groupRow.getCell(10).border = { top: { style: 'medium', color: { argb: 'FF808080' } }, bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } }, left: { style: 'thin', color: { argb: 'FFD0D0D0' } }, right: { style: 'thin', color: { argb: 'FFD0D0D0' } } }
+        for (let i = 11; i <= 13; i++) {
+          groupRow.getCell(i).fill = UNITPRICE_GROUP_FILL
+          groupRow.getCell(i).border = groupRow.getCell(10).border
+        }
+        // 店舗名ヘッダーセル
+        groupRow.getCell(1).font = { bold: true, size: 10 }
+        groupRow.getCell(1).border = { top: { style: 'medium', color: { argb: 'FF808080' } }, bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } }, left: { style: 'thin', color: { argb: 'FFD0D0D0' } }, right: { style: 'medium', color: { argb: 'FF808080' } } }
+
+        // サブヘッダー行
+        const subHdr = ws.addRow([
+          '店舗名',
+          '実績', '前年', '前年差', '前年比',
+          '実績', '前年', '前年差', '前年比',
+          '実績', '前年', '前年差', '前年比',
+        ])
+        applyHeaderStyle(subHdr)
+
+        // データ行を書き出すヘルパー
+        const writeStoreRow = (
+          label: string,
+          s: any,
+          isTotal: boolean
+        ) => {
+          const salesDiff = s.sales != null && s.sales_previous_year != null
+            ? s.sales - s.sales_previous_year : null
+          const custDiff = s.customers != null && s.customers_previous_year != null
+            ? s.customers - s.customers_previous_year : null
+          const upDiff = s.unit_price != null && s.unit_price_previous_year != null
+            ? s.unit_price - s.unit_price_previous_year : null
+
+          const row = ws.addRow([label])
+          if (isTotal) applyTotalStyle(row)
+          else applyDataStyle(row)
+          row.getCell(1).font = { bold: isTotal, size: 10 }
+
+          // 売上高
+          setCurrencyCell(row.getCell(2), s.sales)
+          setCurrencyCell(row.getCell(3), s.sales_previous_year)
+          setCurrencyCell(row.getCell(4), salesDiff)
+          setPercentCell(row.getCell(5), s.sales_yoy)
+          // 客数
+          setCurrencyCell(row.getCell(6), s.customers)
+          setCurrencyCell(row.getCell(7), s.customers_previous_year)
+          setCurrencyCell(row.getCell(8), custDiff)
+          setPercentCell(row.getCell(9), s.customers_yoy)
+          // 客単価
+          setCurrencyCell(row.getCell(10), s.unit_price)
+          setCurrencyCell(row.getCell(11), s.unit_price_previous_year)
+          setCurrencyCell(row.getCell(12), upDiff)
+          setPercentCell(row.getCell(13), s.unit_price_yoy)
+        }
 
         for (const store of stores || []) {
-          const row = ws.addRow([store.store_name])
-          applyDataStyle(row)
-          setCurrencyCell(row.getCell(2), store.sales)
-          setCurrencyCell(row.getCell(3), store.customers)
-          setCurrencyCell(row.getCell(4), store.unit_price)
-          setCurrencyCell(row.getCell(5), store.sales_previous_year)
-          setPercentCell(row.getCell(6), store.sales_yoy)
-          const diff = store.sales != null && store.sales_previous_year != null
-            ? store.sales - store.sales_previous_year : null
-          setCurrencyCell(row.getCell(7), diff)
+          writeStoreRow(store.segment_name, store, false)
         }
-
         if (totals) {
-          const totalRow = ws.addRow(['合計'])
-          applyTotalStyle(totalRow)
-          setCurrencyCell(totalRow.getCell(2), totals.sales)
-          setCurrencyCell(totalRow.getCell(3), totals.customers)
-          setCurrencyCell(totalRow.getCell(4), totals.unit_price)
-          setCurrencyCell(totalRow.getCell(5), totals.sales_previous_year)
-          setPercentCell(totalRow.getCell(6), totals.sales_yoy)
-          const diff = totals.sales != null && totals.sales_previous_year != null
-            ? totals.sales - totals.sales_previous_year : null
-          setCurrencyCell(totalRow.getCell(7), diff)
+          writeStoreRow('合計', totals, true)
         }
 
-        ws.getColumn(1).width = 15
-        for (let i = 2; i <= 7; i++) ws.getColumn(i).width = 13
+        ws.getColumn(1).width = 16
+        for (let i = 2; i <= 13; i++) ws.getColumn(i).width = 12
       } else {
-        const allStoreNames = new Set<string>()
-        for (const d of data) for (const s of d.data.stores || []) allStoreNames.add(s.store_name)
+        // --- 年度全体・期間指定: 月次横並び ---
+        const allStoreNames: string[] = []
+        const nameSet = new Set<string>()
+        for (const d of data) {
+          for (const s of d.data.stores || []) {
+            if (!nameSet.has(s.segment_name)) {
+              nameSet.add(s.segment_name)
+              allStoreNames.push(s.segment_name)
+            }
+          }
+        }
 
         const colCount = data.length + 2
         addTitle(ws, '店舗別実績', `${getMonthLabel(data[0].period)}〜${getMonthLabel(data[data.length - 1].period)}`, colCount)
@@ -876,7 +967,7 @@ function buildStoreAnalysisSheet(data: { period: string; data: any }[]): StyledS
 
         for (const storeName of allStoreNames) {
           const salesRow = ws.addRow([storeName, '売上高', ...data.map((d) => {
-            const s = (d.data.stores || []).find((s: any) => s.store_name === storeName)
+            const s = (d.data.stores || []).find((s: any) => s.segment_name === storeName)
             return s?.sales ?? null
           })])
           applyDataStyle(salesRow)
@@ -884,14 +975,14 @@ function buildStoreAnalysisSheet(data: { period: string; data: any }[]): StyledS
           for (let i = 3; i <= data.length + 2; i++) salesRow.getCell(i).numFmt = CURRENCY_FMT
 
           const custRow = ws.addRow(['', '客数', ...data.map((d) => {
-            const s = (d.data.stores || []).find((s: any) => s.store_name === storeName)
+            const s = (d.data.stores || []).find((s: any) => s.segment_name === storeName)
             return s?.customers ?? null
           })])
           applyDataStyle(custRow)
           for (let i = 3; i <= data.length + 2; i++) custRow.getCell(i).numFmt = CURRENCY_FMT
 
           const upRow = ws.addRow(['', '客単価', ...data.map((d) => {
-            const s = (d.data.stores || []).find((s: any) => s.store_name === storeName)
+            const s = (d.data.stores || []).find((s: any) => s.segment_name === storeName)
             return s?.unit_price ?? null
           })])
           applyDataStyle(upRow)
@@ -900,7 +991,7 @@ function buildStoreAnalysisSheet(data: { period: string; data: any }[]): StyledS
           ws.addRow([])
         }
 
-        ws.getColumn(1).width = 15
+        ws.getColumn(1).width = 16
         ws.getColumn(2).width = 10
         for (let i = 3; i <= data.length + 2; i++) ws.getColumn(i).width = 14
       }
