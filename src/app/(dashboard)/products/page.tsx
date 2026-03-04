@@ -10,6 +10,9 @@ import { ProductSalesMatrix } from '@/components/products/ProductSalesMatrix'
 import { StoreTrendChart } from '@/components/products/StoreTrendChart'
 import { ProductSalesChart } from '@/components/products/ProductSalesChart'
 import { RegionalSummaryTable } from '@/components/products/RegionalSummaryTable'
+import { DailyStoreSalesTable } from '@/components/daily-sales/DailyStoreSalesTable'
+import { HourlyHeatmap } from '@/components/daily-sales/HourlyHeatmap'
+import { DailyTrendChart } from '@/components/daily-sales/DailyTrendChart'
 import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
@@ -19,6 +22,7 @@ import { Download } from 'lucide-react'
 import { useStoreAnalysisExport } from '@/hooks/useExport'
 import { ExportDialog, type ExportParams } from '@/components/common/ExportDialog'
 import { getFiscalYearFromPeriod } from '@/lib/fiscal-year'
+import { useDailySalesSummary } from '@/hooks/useDailySales'
 import type { PeriodType } from '@/types/regional'
 import { PermissionGuard } from '@/components/PermissionGuard'
 
@@ -28,6 +32,10 @@ export default function ProductsPage() {
   const [periodType, setPeriodType] = useState<PeriodType>('monthly')
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const { exportData } = useStoreAnalysisExport()
+
+  // 日次分析用: サマリーから日付リストを取得
+  const { data: dailySummaryData } = useDailySalesSummary(month)
+  const dailyDates = dailySummaryData?.dates || []
 
   // 年度を計算
   const fiscalYear = getFiscalYearFromPeriod(month)
@@ -63,6 +71,7 @@ export default function ProductsPage() {
           <TabsTrigger value="matrix">店舗×商品</TabsTrigger>
           <TabsTrigger value="regional">地区別</TabsTrigger>
           <TabsTrigger value="chart">推移グラフ</TabsTrigger>
+          <TabsTrigger value="daily">日次分析</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
@@ -127,6 +136,28 @@ export default function ProductsPage() {
               title="月次コメント"
             />
           </div>
+        </TabsContent>
+
+        <TabsContent value="daily">
+          <Tabs defaultValue="daily-table" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="daily-table">日別×店舗</TabsTrigger>
+              <TabsTrigger value="heatmap">時間帯別</TabsTrigger>
+              <TabsTrigger value="daily-trend">日次推移</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="daily-table">
+              <DailyStoreSalesTable month={month} />
+            </TabsContent>
+
+            <TabsContent value="heatmap">
+              <HourlyHeatmap month={month} dates={dailyDates} />
+            </TabsContent>
+
+            <TabsContent value="daily-trend">
+              <DailyTrendChart month={month} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
 

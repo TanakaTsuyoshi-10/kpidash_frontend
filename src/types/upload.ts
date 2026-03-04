@@ -5,7 +5,7 @@
 /**
  * CSVファイルの種別
  */
-export type FileType = 'store' | 'product' | 'store_pl' | 'financial' | 'manufacturing'
+export type FileType = 'store' | 'product' | 'store_pl' | 'financial' | 'manufacturing' | 'receipt_journal'
 
 /**
  * パースエラー（オブジェクト形式）
@@ -135,6 +135,12 @@ export const FILE_TYPE_OPTIONS = [
     label: '製造データ',
     description: '日次の製造量、出勤者数、有給取得時間',
     endpoint: '/upload/manufacturing'
+  },
+  {
+    value: 'receipt_journal' as FileType,
+    label: 'レシートジャーナル',
+    description: 'POSレシートジャーナル（日次・時間帯別売上分析用）',
+    endpoint: '/upload/receipt-journal'
   },
 ] as const
 
