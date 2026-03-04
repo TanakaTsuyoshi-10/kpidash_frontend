@@ -3,6 +3,8 @@
  * 行=日付(1日〜月末)、列=店舗
  * メトリクス切替: 売上/客数/客単価
  * YoY表示（前年同日比）
+ * ソート機能: 月計の選択メトリクスで店舗列をソート
+ * 順位表示: 月計の順位＋前年比順位変動
  */
 'use client'
 
@@ -11,12 +13,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useDailySalesSummary } from '@/hooks/useDailySales'
 import { cn } from '@/lib/utils'
-import type { DailySalesMetric, DailyStoreSalesData } from '@/types/daily-sales'
+import type { DailySalesMetric, DailyStoreSalesData, StoreInfo } from '@/types/daily-sales'
 
 interface Props {
   month: string
   departmentSlug?: string
 }
+
+type SortDirection = 'desc' | 'asc'
 
 const METRIC_OPTIONS: { value: DailySalesMetric; label: string; color: string }[] = [
   { value: 'sales', label: '売上', color: 'emerald' },
@@ -48,6 +52,19 @@ function getMetricValue(
   return entry.unit_price
 }
 
+function getPreviousMetricValue(
+  entry: DailyStoreSalesData | undefined,
+  metric: DailySalesMetric,
+): number {
+  if (!entry) return 0
+  if (metric === 'sales') return entry.sales_previous_year ?? 0
+  if (metric === 'customers') return entry.customers_previous_year ?? 0
+  if (entry.sales_previous_year && entry.customers_previous_year && entry.customers_previous_year > 0) {
+    return Math.round(entry.sales_previous_year / entry.customers_previous_year)
+  }
+  return 0
+}
+
 function getYoYRate(
   entry: DailyStoreSalesData | undefined,
   metric: DailySalesMetric,
@@ -55,7 +72,6 @@ function getYoYRate(
   if (!entry) return null
   if (metric === 'sales') return entry.yoy_sales_rate
   if (metric === 'customers') return entry.yoy_customers_rate
-  // 客単価のYoYは売上YoYと客数YoYから推計しない（データにない）
   if (metric === 'unit_price' && entry.sales_previous_year && entry.customers_previous_year) {
     const prevUnitPrice = entry.sales_previous_year / entry.customers_previous_year
     if (prevUnitPrice > 0) {
@@ -67,9 +83,10 @@ function getYoYRate(
 
 export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props) {
   const [metric, setMetric] = useState<DailySalesMetric>('sales')
+  const [sortDir, setSortDir] = useState<SortDirection>('desc')
   const { data, loading, error } = useDailySalesSummary(month, departmentSlug)
 
-  // データをルックアップテーブル化: { `${date}-${segment_id}`: entry }
+  // データをルックアップテーブル化
   const dataLookup = useMemo(() => {
     if (!data?.data) return new Map<string, DailyStoreSalesData>()
     const map = new Map<string, DailyStoreSalesData>()
@@ -89,7 +106,56 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
     return map
   }, [data?.totals])
 
-  const currentMetricOption = METRIC_OPTIONS.find(m => m.value === metric)!
+  // 店舗をソート（月計の選択メトリクス順）
+  const sortedStores = useMemo(() => {
+    if (!data?.stores) return []
+    const stores = [...data.stores]
+    stores.sort((a, b) => {
+      const aEntry = totalsLookup.get(a.segment_id)
+      const bEntry = totalsLookup.get(b.segment_id)
+      const aVal = getMetricValue(aEntry, metric)
+      const bVal = getMetricValue(bEntry, metric)
+      return sortDir === 'desc' ? bVal - aVal : aVal - bVal
+    })
+    return stores
+  }, [data?.stores, totalsLookup, metric, sortDir])
+
+  // 当年順位: { segment_id: rank }
+  const currentRanks = useMemo(() => {
+    const map = new Map<string, number>()
+    if (!data?.stores) return map
+    const ranked = [...data.stores].sort((a, b) => {
+      const aVal = getMetricValue(totalsLookup.get(a.segment_id), metric)
+      const bVal = getMetricValue(totalsLookup.get(b.segment_id), metric)
+      return bVal - aVal
+    })
+    ranked.forEach((s, i) => {
+      const val = getMetricValue(totalsLookup.get(s.segment_id), metric)
+      if (val > 0) map.set(s.segment_id, i + 1)
+    })
+    return map
+  }, [data?.stores, totalsLookup, metric])
+
+  // 前年順位: { segment_id: rank }
+  const previousRanks = useMemo(() => {
+    const map = new Map<string, number>()
+    if (!data?.stores) return map
+    const ranked = [...data.stores].sort((a, b) => {
+      const aVal = getPreviousMetricValue(totalsLookup.get(a.segment_id), metric)
+      const bVal = getPreviousMetricValue(totalsLookup.get(b.segment_id), metric)
+      return bVal - aVal
+    })
+    ranked.forEach((s, i) => {
+      const val = getPreviousMetricValue(totalsLookup.get(s.segment_id), metric)
+      if (val > 0) map.set(s.segment_id, i + 1)
+    })
+    return map
+  }, [data?.stores, totalsLookup, metric])
+
+  // ソート切替
+  const toggleSort = () => {
+    setSortDir(prev => prev === 'desc' ? 'asc' : 'desc')
+  }
 
   if (loading) {
     return (
@@ -128,14 +194,10 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
     )
   }
 
-  // 日付のフォーマット (YYYY-MM-DD → M/D(曜))
   const dayNames = ['日', '月', '火', '水', '木', '金', '土']
   function formatDate(dateStr: string): string {
     const d = new Date(dateStr + 'T00:00:00')
-    const m = d.getMonth() + 1
-    const day = d.getDate()
-    const dow = dayNames[d.getDay()]
-    return `${m}/${day}(${dow})`
+    return `${d.getMonth() + 1}/${d.getDate()}(${dayNames[d.getDay()]})`
   }
 
   function getDowClass(dateStr: string): string {
@@ -149,9 +211,20 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle>日別×店舗</CardTitle>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-2">
+            {/* ソートボタン */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSort}
+              className="text-xs"
+            >
+              {sortDir === 'desc' ? '降順' : '昇順'}
+              <span className="ml-1">{sortDir === 'desc' ? '↓' : '↑'}</span>
+            </Button>
+            {/* メトリクス切替 */}
             {METRIC_OPTIONS.map(opt => (
               <Button
                 key={opt.value}
@@ -175,11 +248,51 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <table className="w-full text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-white">
+              {/* 順位行 */}
+              <tr>
+                <th className="sticky left-0 z-20 bg-gray-200 px-2 py-1 text-left font-medium border-b border-r text-[10px] text-gray-500 min-w-[70px]">
+                  順位
+                </th>
+                {sortedStores.map(store => {
+                  const rank = currentRanks.get(store.segment_id)
+                  const prevRank = previousRanks.get(store.segment_id)
+                  const rankChange = (rank != null && prevRank != null) ? prevRank - rank : null
+
+                  return (
+                    <th
+                      key={store.segment_id}
+                      className="px-2 py-1 text-center border-b bg-gray-100 min-w-[80px] whitespace-nowrap"
+                    >
+                      {rank != null && (
+                        <div className="flex items-center justify-center gap-1">
+                          <span className={cn(
+                            'font-bold text-sm',
+                            rank === 1 && 'text-amber-500',
+                            rank === 2 && 'text-gray-400',
+                            rank === 3 && 'text-amber-700',
+                          )}>
+                            {rank}
+                          </span>
+                          {rankChange != null && rankChange !== 0 && (
+                            <span className={cn(
+                              'text-[10px] font-medium',
+                              rankChange > 0 ? 'text-green-600' : 'text-red-600',
+                            )}>
+                              {rankChange > 0 ? `+${rankChange}` : rankChange}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </th>
+                  )
+                })}
+              </tr>
+              {/* 店舗名行 */}
               <tr>
                 <th className="sticky left-0 z-20 bg-gray-100 px-2 py-1.5 text-left font-medium border-b border-r min-w-[70px]">
                   日付
                 </th>
-                {data.stores.map(store => (
+                {sortedStores.map(store => (
                   <th
                     key={store.segment_id}
                     className="px-2 py-1.5 text-right font-medium border-b bg-gray-50 min-w-[80px] whitespace-nowrap"
@@ -198,7 +311,7 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
                   )}>
                     {formatDate(dateStr)}
                   </td>
-                  {data.stores.map(store => {
+                  {sortedStores.map(store => {
                     const entry = dataLookup.get(`${dateStr}-${store.segment_id}`)
                     const value = getMetricValue(entry, metric)
                     const yoy = getYoYRate(entry, metric)
@@ -227,7 +340,7 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
                 <td className="sticky left-0 z-10 bg-gray-100 px-2 py-1.5 border-t-2 border-r">
                   月計
                 </td>
-                {data.stores.map(store => {
+                {sortedStores.map(store => {
                   const entry = totalsLookup.get(store.segment_id)
                   const value = getMetricValue(entry, metric)
                   const yoy = getYoYRate(entry, metric)
