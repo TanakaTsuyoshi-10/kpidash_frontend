@@ -168,6 +168,31 @@ export async function uploadManufacturing(file: File): Promise<UploadResult> {
 }
 
 /**
+ * レシートジャーナルCSVをアップロードする
+ */
+export async function uploadReceiptJournal(file: File): Promise<UploadResult> {
+  const token = await getAuthToken()
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${API_URL}/upload/receipt-journal`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`アップロードエラー: ${response.status} - ${errorText}`)
+  }
+
+  return response.json()
+}
+
+/**
  * CSVをアップロードする（共通関数）
  */
 export async function uploadCSV(
@@ -186,6 +211,8 @@ export async function uploadCSV(
       return uploadFinancial(file)
     case 'manufacturing':
       return uploadManufacturing(file)
+    case 'receipt_journal':
+      return uploadReceiptJournal(file)
     default:
       throw new Error(`不明なファイル種別: ${fileType}`)
   }
