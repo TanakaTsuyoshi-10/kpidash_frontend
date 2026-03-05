@@ -6,7 +6,7 @@
  */
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { addDays, subDays, format, parseISO } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useOrderForecast } from '@/hooks/useOrderForecast'
@@ -39,6 +39,7 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
   const [currentDate, setCurrentDate] = useState(targetDate)
   const [selectedSegmentId, setSelectedSegmentId] = useState<string>('all')
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null)
+  const hourlyTableRef = useRef<HTMLDivElement>(null)
   const { data, loading, error } = useOrderForecast(currentDate, undefined, departmentSlug)
 
   const handlePrevDay = () => {
@@ -53,11 +54,19 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
     setSelectedCalendarDate(null)
   }
 
-  const handleDateClick = (date: string) => {
+  const handleDateClick = useCallback((date: string) => {
     setSelectedCalendarDate(date)
-  }
+  }, [])
 
-  if (loading) {
+  // 時間帯テーブルが表示されたらスクロール
+  useEffect(() => {
+    if (selectedCalendarDate && hourlyTableRef.current) {
+      hourlyTableRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [selectedCalendarDate])
+
+  // 初回ロード時のみスケルトン表示（データ更新中は前のデータを表示し続ける）
+  if (!data && loading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -70,7 +79,7 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
     )
   }
 
-  if (error) {
+  if (error && !data) {
     return <ErrorMessage message={error} />
   }
 
@@ -135,11 +144,11 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
         <CardHeader>
           <CardTitle className="text-base">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrevDay}>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrevDay} disabled={loading}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span>{displayMonth}月{displayDay}日({target_weekday})</span>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNextDay}>
+              <span className={loading ? 'opacity-50' : ''}>{displayMonth}月{displayDay}日({target_weekday})</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNextDay} disabled={loading}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -284,11 +293,13 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
 
       {/* 時間帯別パック数テーブル（日付クリック時に表示） */}
       {selectedCalendarDate && (
-        <HourlyProductTable
-          targetDate={selectedCalendarDate}
-          segmentId={segmentFilter}
-          onClose={() => setSelectedCalendarDate(null)}
-        />
+        <div ref={hourlyTableRef}>
+          <HourlyProductTable
+            targetDate={selectedCalendarDate}
+            segmentId={segmentFilter}
+            onClose={() => setSelectedCalendarDate(null)}
+          />
+        </div>
       )}
     </div>
   )
