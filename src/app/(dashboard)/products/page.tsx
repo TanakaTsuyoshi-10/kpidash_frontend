@@ -13,6 +13,7 @@ import { RegionalSummaryTable } from '@/components/products/RegionalSummaryTable
 import { DailyStoreSalesTable } from '@/components/daily-sales/DailyStoreSalesTable'
 import { HourlyHeatmap } from '@/components/daily-sales/HourlyHeatmap'
 import { DailyTrendChart } from '@/components/daily-sales/DailyTrendChart'
+import { OrderForecastView } from '@/components/order-forecast/OrderForecastView'
 import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
@@ -72,6 +73,7 @@ export default function ProductsPage() {
           <TabsTrigger value="regional">地区別</TabsTrigger>
           <TabsTrigger value="chart">推移グラフ</TabsTrigger>
           <TabsTrigger value="daily">日次分析</TabsTrigger>
+          <TabsTrigger value="forecast">予想注文</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
@@ -158,6 +160,12 @@ export default function ProductsPage() {
               <DailyTrendChart month={month} />
             </TabsContent>
           </Tabs>
+        </TabsContent>
+
+        <TabsContent value="forecast">
+          <OrderForecastView
+            targetDate={format(new Date(), 'yyyy-MM-dd')}
+          />
         </TabsContent>
       </Tabs>
 
