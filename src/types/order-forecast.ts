@@ -52,6 +52,32 @@ export interface ForecastSummary {
 }
 
 // =============================================================================
+// 商品別パック数
+// =============================================================================
+
+export interface ProductRow {
+  date?: string
+  hour?: number
+  weekday?: string
+  products: Record<string, number>
+  total_bats: number
+}
+
+export interface DailyProductBreakdownResponse {
+  year: number
+  month: number
+  product_columns: string[]
+  rows: ProductRow[]
+}
+
+export interface HourlyProductBreakdownResponse {
+  date: string
+  weekday: string
+  product_columns: string[]
+  rows: ProductRow[]
+}
+
+// =============================================================================
 // レスポンス
 // =============================================================================
 

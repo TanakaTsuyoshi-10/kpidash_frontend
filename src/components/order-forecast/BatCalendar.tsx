@@ -17,6 +17,8 @@ interface BatCalendarProps {
   highlightWeekday?: number
   /** 店舗セレクタで選択中のsegment_id（指定時はその店舗のbatsのみ表示） */
   segmentId?: string
+  /** 日付クリック時のコールバック */
+  onDateClick?: (date: string) => void
 }
 
 /** バット数に応じた背景色クラスを返す */
@@ -29,7 +31,7 @@ function batBgClass(bats: number, maxBats: number): string {
   return ''
 }
 
-export function BatCalendar({ calendarData, highlightWeekday, segmentId }: BatCalendarProps) {
+export function BatCalendar({ calendarData, highlightWeekday, segmentId, onDateClick }: BatCalendarProps) {
   const { year, month, days } = calendarData
 
   if (!days || days.length === 0) {
@@ -137,7 +139,9 @@ export function BatCalendar({ calendarData, highlightWeekday, segmentId }: BatCa
                   colIdx === 6 && 'text-red-600 dark:text-red-400',
                   highlightWeekday === colIdx && 'bg-amber-50 dark:bg-amber-900/20',
                   batBgClass(bats, maxBats),
+                  onDateClick && 'cursor-pointer hover:ring-2 ring-primary',
                 )}
+                onClick={() => onDateClick?.(day.date)}
               >
                 <span className="text-[10px] leading-tight">{dateNum}</span>
                 {bats > 0 && (

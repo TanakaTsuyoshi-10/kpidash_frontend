@@ -2,8 +2,16 @@
  * 予想注文データ取得フック
  */
 import { useState, useEffect } from 'react'
-import { getOrderForecast } from '@/lib/api/order-forecast'
-import type { OrderForecastResponse } from '@/types/order-forecast'
+import {
+  getOrderForecast,
+  getDailyProductBreakdown,
+  getHourlyProductBreakdown,
+} from '@/lib/api/order-forecast'
+import type {
+  OrderForecastResponse,
+  DailyProductBreakdownResponse,
+  HourlyProductBreakdownResponse,
+} from '@/types/order-forecast'
 
 /**
  * 予想注文データを取得するフック
@@ -27,6 +35,80 @@ export function useOrderForecast(
         setLoading(true)
         setError(null)
         const result = await getOrderForecast(targetDate, segmentId, departmentSlug)
+        setData(result)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
+        setData(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [targetDate, segmentId, departmentSlug])
+
+  return { data, loading, error }
+}
+
+/**
+ * 日別×商品別パック数を取得するフック
+ */
+export function useDailyProductBreakdown(
+  year: number,
+  month: number,
+  segmentId?: string,
+  departmentSlug: string = 'store',
+) {
+  const [data, setData] = useState<DailyProductBreakdownResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!year || !month) {
+      setLoading(false)
+      return
+    }
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const result = await getDailyProductBreakdown(year, month, segmentId, departmentSlug)
+        setData(result)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
+        setData(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [year, month, segmentId, departmentSlug])
+
+  return { data, loading, error }
+}
+
+/**
+ * 時間帯別×商品別パック数を取得するフック
+ */
+export function useHourlyProductBreakdown(
+  targetDate: string | null,
+  segmentId?: string,
+  departmentSlug: string = 'store',
+) {
+  const [data, setData] = useState<HourlyProductBreakdownResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!targetDate) {
+      setData(null)
+      setLoading(false)
+      return
+    }
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const result = await getHourlyProductBreakdown(targetDate, segmentId, departmentSlug)
         setData(result)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'データの取得に失敗しました')

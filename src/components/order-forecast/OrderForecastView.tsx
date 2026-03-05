@@ -1,14 +1,20 @@
 /**
  * 予想注文メインコンポーネント
  *
- * 本日の予想バット数、店舗別内訳、前年/前々年カレンダーを表示する。
+ * 本日の予想バット数、店舗別内訳、前年/前々年カレンダー、
+ * 日別パック数テーブル、時間帯別パック数テーブルを表示する。
  */
 'use client'
 
 import { useState } from 'react'
+import { addDays, subDays, format, parseISO } from 'date-fns'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useOrderForecast } from '@/hooks/useOrderForecast'
 import { BatCalendar } from './BatCalendar'
+import { DailyProductTable } from './DailyProductTable'
+import { HourlyProductTable } from './HourlyProductTable'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -30,8 +36,26 @@ const WEEKDAY_TO_INDEX: Record<string, number> = {
 }
 
 export function OrderForecastView({ targetDate, departmentSlug = 'store' }: OrderForecastViewProps) {
+  const [currentDate, setCurrentDate] = useState(targetDate)
   const [selectedSegmentId, setSelectedSegmentId] = useState<string>('all')
-  const { data, loading, error } = useOrderForecast(targetDate, undefined, departmentSlug)
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null)
+  const { data, loading, error } = useOrderForecast(currentDate, undefined, departmentSlug)
+
+  const handlePrevDay = () => {
+    const d = parseISO(currentDate)
+    setCurrentDate(format(subDays(d, 1), 'yyyy-MM-dd'))
+    setSelectedCalendarDate(null)
+  }
+
+  const handleNextDay = () => {
+    const d = parseISO(currentDate)
+    setCurrentDate(format(addDays(d, 1), 'yyyy-MM-dd'))
+    setSelectedCalendarDate(null)
+  }
+
+  const handleDateClick = (date: string) => {
+    setSelectedCalendarDate(date)
+  }
 
   if (loading) {
     return (
@@ -81,6 +105,11 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
     return `${parseInt(parts[1])}/${parseInt(parts[2])}`
   }
 
+  // 現在の日付表示
+  const currentDateParts = currentDate.split('-')
+  const displayMonth = parseInt(currentDateParts[1])
+  const displayDay = parseInt(currentDateParts[2])
+
   return (
     <div className="space-y-4">
       {/* ヘッダー: タイトル + 店舗セレクタ */}
@@ -101,11 +130,19 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
         </Select>
       </div>
 
-      {/* 予想バット数カード */}
+      {/* 予想バット数カード（日付ナビゲーション付き） */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            本日: {parseInt(targetDate.split('-')[1])}月{parseInt(targetDate.split('-')[2])}日({target_weekday})
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrevDay}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span>{displayMonth}月{displayDay}日({target_weekday})</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNextDay}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -211,6 +248,7 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
               calendarData={previous_year}
               highlightWeekday={highlightWeekday}
               segmentId={segmentFilter}
+              onDateClick={handleDateClick}
             />
           </CardContent>
         </Card>
@@ -220,10 +258,38 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
               calendarData={two_years_ago}
               highlightWeekday={highlightWeekday}
               segmentId={segmentFilter}
+              onDateClick={handleDateClick}
             />
           </CardContent>
         </Card>
       </div>
+
+      {/* 前年 日別パック数テーブル */}
+      <DailyProductTable
+        year={previous_year.year}
+        month={previous_year.month}
+        segmentId={segmentFilter}
+        highlightWeekday={highlightWeekday}
+        onDateClick={handleDateClick}
+      />
+
+      {/* 前々年 日別パック数テーブル */}
+      <DailyProductTable
+        year={two_years_ago.year}
+        month={two_years_ago.month}
+        segmentId={segmentFilter}
+        highlightWeekday={highlightWeekday}
+        onDateClick={handleDateClick}
+      />
+
+      {/* 時間帯別パック数テーブル（日付クリック時に表示） */}
+      {selectedCalendarDate && (
+        <HourlyProductTable
+          targetDate={selectedCalendarDate}
+          segmentId={segmentFilter}
+          onClose={() => setSelectedCalendarDate(null)}
+        />
+      )}
     </div>
   )
 }
