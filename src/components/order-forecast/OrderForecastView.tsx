@@ -67,9 +67,13 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
 
   const totalBats = displayBats ? displayBats.bats : forecast.total_bats
 
-  // 参照日情報
+  // 参照日情報（日付・曜日用）
   const prevYearRef = forecast.reference_dates.find(r => r.year === previous_year.year)
   const twoYrRef = forecast.reference_dates.find(r => r.year === two_years_ago.year)
+
+  // 店舗選択時は該当店舗のバット数、全店舗時は合計を使う
+  const prevYearBats = displayBats ? displayBats.prev_year_bats : (prevYearRef?.bats ?? 0)
+  const twoYrBats = displayBats ? (displayBats.two_years_ago_bats ?? 0) : (twoYrRef?.bats ?? 0)
 
   // 日付フォーマット（YYYY-MM-DD → M/D）
   const formatShortDate = (dateStr: string) => {
@@ -120,7 +124,7 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
                 <span>
                   前年({formatShortDate(prevYearRef.date)}{prevYearRef.weekday}):
                   <span className="font-medium text-foreground ml-1">
-                    {prevYearRef.bats % 1 === 0 ? prevYearRef.bats.toFixed(0) : prevYearRef.bats.toFixed(1)}
+                    {prevYearBats % 1 === 0 ? prevYearBats.toFixed(0) : prevYearBats.toFixed(1)}
                   </span>
                 </span>
               )}
@@ -128,7 +132,7 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
                 <span>
                   前々年({formatShortDate(twoYrRef.date)}{twoYrRef.weekday}):
                   <span className="font-medium text-foreground ml-1">
-                    {twoYrRef.bats % 1 === 0 ? twoYrRef.bats.toFixed(0) : twoYrRef.bats.toFixed(1)}
+                    {twoYrBats % 1 === 0 ? twoYrBats.toFixed(0) : twoYrBats.toFixed(1)}
                   </span>
                 </span>
               )}
