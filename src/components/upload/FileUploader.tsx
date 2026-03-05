@@ -176,7 +176,7 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
               <div className="text-gray-500">
                 ファイルをドラッグ＆ドロップ
               </div>
-              <div className="text-gray-400 text-sm">対応形式: .xlsx, .xls, .csv（10MB以下）</div>
+              <div className="text-gray-400 text-sm">対応形式: .xlsx, .xls, .csv（50MB以下）</div>
               <div className="text-gray-400 text-sm">または</div>
               <label className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer">
                 ファイルを選択

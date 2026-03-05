@@ -4,7 +4,7 @@
 
 const MIN_YEAR = 2020
 const MAX_YEAR = 2100
-const MAX_FILE_SIZE = 10 * 1024 * 1024  // 10MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024  // 50MB
 const ALLOWED_EXTENSIONS = ['.xlsx', '.xls', '.csv']
 
 export function validateYear(year: number): { valid: boolean; error?: string } {
