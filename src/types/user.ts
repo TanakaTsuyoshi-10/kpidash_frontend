@@ -17,7 +17,7 @@ export const PAGE_LABELS: Record<PageKey, string> = {
   ecommerce: '通販分析',
   manufacturing: '製造分析',
   complaints: 'クレーム管理',
-  products: '商品別分析',
+  products: '店舗分析',
   upload: 'データアップロード',
   targets: '目標管理',
 }
