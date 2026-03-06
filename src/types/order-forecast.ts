@@ -27,6 +27,17 @@ export interface CalendarMonth {
 }
 
 // =============================================================================
+// 天気
+// =============================================================================
+
+export interface WeatherInfo {
+  weather_code: number
+  weather_label: string
+  temp_max: number | null
+  temp_min: number | null
+}
+
+// =============================================================================
 // 予測
 // =============================================================================
 
@@ -35,6 +46,7 @@ export interface ForecastReference {
   date: string
   weekday: string
   bats: number
+  weather?: WeatherInfo | null
 }
 
 export interface ForecastStoreBats {
@@ -61,6 +73,7 @@ export interface ProductRow {
   weekday?: string
   products: Record<string, number>
   total_bats: number
+  weather?: WeatherInfo | null
 }
 
 export interface DailyProductBreakdownResponse {
@@ -88,4 +101,5 @@ export interface OrderForecastResponse {
   forecast: ForecastSummary
   previous_year: CalendarMonth
   two_years_ago: CalendarMonth
+  weather?: WeatherInfo | null
 }

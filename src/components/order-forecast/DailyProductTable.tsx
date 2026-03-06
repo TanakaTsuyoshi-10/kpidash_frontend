@@ -6,6 +6,8 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { getJapaneseHoliday } from '@/lib/japanese-holidays'
+import { weatherEmoji } from '@/lib/weather'
 import { useDailyProductBreakdown } from '@/hooks/useOrderForecast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -65,6 +67,7 @@ export function DailyProductTable({
               <tr className="border-b">
                 <th className="text-left py-1.5 pr-2 font-medium whitespace-nowrap">日付</th>
                 <th className="text-center py-1.5 px-1 font-medium w-8">曜</th>
+                <th className="text-center py-1.5 px-1 font-medium whitespace-nowrap">天気</th>
                 {product_columns.map(col => (
                   <th key={col} className="text-right py-1.5 px-1.5 font-medium whitespace-nowrap">
                     {SHORT_NAMES[col] ?? col}
@@ -81,6 +84,8 @@ export function DailyProductTable({
                 const isHighlighted = highlightWeekday !== undefined && wdIdx === highlightWeekday
                 const isSat = wdIdx === 5
                 const isSun = wdIdx === 6
+                const holidayName = getJapaneseHoliday(row.date)
+                const isHoliday = !!holidayName
 
                 return (
                   <tr
@@ -88,6 +93,7 @@ export function DailyProductTable({
                     className={cn(
                       'border-b border-border/50',
                       isHighlighted && 'bg-amber-50 dark:bg-amber-900/20',
+                      isHoliday && 'text-red-600 dark:text-red-400',
                       onDateClick && 'cursor-pointer hover:bg-muted/50',
                     )}
                     onClick={() => onDateClick?.(row.date!)}
@@ -96,11 +102,25 @@ export function DailyProductTable({
                     <td
                       className={cn(
                         'text-center py-1.5 px-1',
-                        isSat && 'text-blue-600 dark:text-blue-400',
-                        isSun && 'text-red-600 dark:text-red-400',
+                        isSat && !isHoliday && 'text-blue-600 dark:text-blue-400',
+                        (isSun || isHoliday) && 'text-red-600 dark:text-red-400',
                       )}
+                      title={holidayName ?? undefined}
                     >
                       {row.weekday}
+                      {isHoliday && <span className="text-[9px] ml-0.5">祝</span>}
+                    </td>
+                    <td className="text-center py-1.5 px-1 whitespace-nowrap">
+                      {row.weather ? (
+                        <span title={`${row.weather.weather_label} ${row.weather.temp_max ?? '-'}/${row.weather.temp_min ?? '-'}℃`}>
+                          {weatherEmoji(row.weather.weather_code)}
+                          <span className="text-[10px] tabular-nums text-muted-foreground ml-0.5">
+                            {row.weather.temp_max != null ? Math.round(row.weather.temp_max) : '-'}
+                            /
+                            {row.weather.temp_min != null ? Math.round(row.weather.temp_min) : '-'}
+                          </span>
+                        </span>
+                      ) : '-'}
                     </td>
                     {product_columns.map(col => (
                       <td key={col} className="text-right py-1.5 px-1.5 tabular-nums">

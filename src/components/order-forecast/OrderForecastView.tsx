@@ -10,6 +10,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { addDays, subDays, format, parseISO } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useOrderForecast } from '@/hooks/useOrderForecast'
+import { weatherEmoji } from '@/lib/weather'
 import { BatCalendar } from './BatCalendar'
 import { DailyProductTable } from './DailyProductTable'
 import { HourlyProductTable } from './HourlyProductTable'
@@ -147,7 +148,17 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrevDay} disabled={loading}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className={loading ? 'opacity-50' : ''}>{displayMonth}月{displayDay}日({target_weekday})</span>
+              <span className={loading ? 'opacity-50' : ''}>
+                {displayMonth}月{displayDay}日({target_weekday})
+              </span>
+              {data.weather && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  {weatherEmoji(data.weather.weather_code)} {data.weather.weather_label}
+                  {data.weather.temp_max != null && (
+                    <span className="ml-1">{Math.round(data.weather.temp_max)}/{Math.round(data.weather.temp_min ?? 0)}℃</span>
+                  )}
+                </span>
+              )}
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNextDay} disabled={loading}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -172,6 +183,14 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
                   <span className="font-medium text-foreground ml-1">
                     {prevYearBats % 1 === 0 ? prevYearBats.toFixed(0) : prevYearBats.toFixed(1)}
                   </span>
+                  {prevYearRef.weather && (
+                    <span className="ml-1">
+                      {weatherEmoji(prevYearRef.weather.weather_code)}
+                      {prevYearRef.weather.temp_max != null && (
+                        <span className="text-[11px]">{Math.round(prevYearRef.weather.temp_max)}℃</span>
+                      )}
+                    </span>
+                  )}
                 </span>
               )}
               {twoYrRef && (
@@ -180,6 +199,14 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
                   <span className="font-medium text-foreground ml-1">
                     {twoYrBats % 1 === 0 ? twoYrBats.toFixed(0) : twoYrBats.toFixed(1)}
                   </span>
+                  {twoYrRef.weather && (
+                    <span className="ml-1">
+                      {weatherEmoji(twoYrRef.weather.weather_code)}
+                      {twoYrRef.weather.temp_max != null && (
+                        <span className="text-[11px]">{Math.round(twoYrRef.weather.temp_max)}℃</span>
+                      )}
+                    </span>
+                  )}
                 </span>
               )}
             </div>
