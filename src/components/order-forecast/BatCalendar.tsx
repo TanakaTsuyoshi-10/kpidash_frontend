@@ -7,6 +7,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { getJapaneseHoliday } from '@/lib/japanese-holidays'
 import type { CalendarMonth } from '@/types/order-forecast'
 
 const WEEKDAY_LABELS = ['月', '火', '水', '木', '金', '土', '日']
@@ -129,21 +130,28 @@ export function BatCalendar({ calendarData, highlightWeekday, segmentId, onDateC
             const day = days[dayIdx]
             const bats = getBats(dayIdx)
             const dateNum = parseInt(day.date.split('-')[2], 10)
+            const holidayName = getJapaneseHoliday(day.date)
 
             return (
               <div
                 key={day.date}
                 className={cn(
                   'h-12 p-0.5 border border-border/50 flex flex-col items-center justify-center',
-                  colIdx === 5 && 'text-blue-600 dark:text-blue-400',
-                  colIdx === 6 && 'text-red-600 dark:text-red-400',
+                  colIdx === 5 && !holidayName && 'text-blue-600 dark:text-blue-400',
+                  (colIdx === 6 || holidayName) && 'text-red-600 dark:text-red-400',
                   highlightWeekday === colIdx && 'bg-amber-50 dark:bg-amber-900/20',
                   batBgClass(bats, maxBats),
                   onDateClick && 'cursor-pointer hover:ring-2 ring-primary',
                 )}
                 onClick={() => onDateClick?.(day.date)}
+                title={holidayName ?? undefined}
               >
                 <span className="text-[10px] leading-tight">{dateNum}</span>
+                {holidayName && (
+                  <span className="text-[7px] leading-tight truncate max-w-full">
+                    {holidayName.slice(0, 3)}
+                  </span>
+                )}
                 {bats > 0 && (
                   <span className="text-[11px] font-semibold leading-tight">
                     {bats % 1 === 0 ? bats.toFixed(0) : bats.toFixed(1)}
