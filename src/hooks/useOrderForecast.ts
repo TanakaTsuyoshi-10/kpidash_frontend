@@ -1,7 +1,9 @@
 /**
- * 予想注文データ取得フック
+ * 予想注文データ取得フック（SWR版）
  */
-import { useState, useEffect } from 'react'
+'use client'
+
+import useSWR from 'swr'
 import {
   getOrderForecast,
   getDailyProductBreakdown,
@@ -21,32 +23,20 @@ export function useOrderForecast(
   segmentId?: string,
   departmentSlug: string = 'store',
 ) {
-  const [data, setData] = useState<OrderForecastResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const params = new URLSearchParams({
+    target_date: targetDate,
+    department_slug: departmentSlug,
+  })
+  if (segmentId) params.append('segment_id', segmentId)
+  const key = targetDate ? `/order-forecast?${params.toString()}` : null
 
-  useEffect(() => {
-    if (!targetDate) {
-      setLoading(false)
-      return
-    }
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getOrderForecast(targetDate, segmentId, departmentSlug)
-        setData(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [targetDate, segmentId, departmentSlug])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<OrderForecastResponse>(
+    key,
+    () => getOrderForecast(targetDate, segmentId, departmentSlug),
+    { dedupingInterval: 60000 }
+  )
 
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -58,32 +48,21 @@ export function useDailyProductBreakdown(
   segmentId?: string,
   departmentSlug: string = 'store',
 ) {
-  const [data, setData] = useState<DailyProductBreakdownResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const params = new URLSearchParams({
+    year: String(year),
+    month: String(month),
+    department_slug: departmentSlug,
+  })
+  if (segmentId) params.append('segment_id', segmentId)
+  const key = year && month ? `/order-forecast/daily-products?${params.toString()}` : null
 
-  useEffect(() => {
-    if (!year || !month) {
-      setLoading(false)
-      return
-    }
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getDailyProductBreakdown(year, month, segmentId, departmentSlug)
-        setData(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [year, month, segmentId, departmentSlug])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<DailyProductBreakdownResponse>(
+    key,
+    () => getDailyProductBreakdown(year, month, segmentId, departmentSlug),
+    { dedupingInterval: 60000 }
+  )
 
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -94,31 +73,16 @@ export function useHourlyProductBreakdown(
   segmentId?: string,
   departmentSlug: string = 'store',
 ) {
-  const [data, setData] = useState<HourlyProductBreakdownResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const params = new URLSearchParams({ department_slug: departmentSlug })
+  if (targetDate) params.append('target_date', targetDate)
+  if (segmentId) params.append('segment_id', segmentId)
+  const key = targetDate ? `/order-forecast/hourly-products?${params.toString()}` : null
 
-  useEffect(() => {
-    if (!targetDate) {
-      setData(null)
-      setLoading(false)
-      return
-    }
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getHourlyProductBreakdown(targetDate, segmentId, departmentSlug)
-        setData(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [targetDate, segmentId, departmentSlug])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<HourlyProductBreakdownResponse>(
+    key,
+    () => getHourlyProductBreakdown(targetDate!, segmentId, departmentSlug),
+    { dedupingInterval: 60000 }
+  )
 
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }

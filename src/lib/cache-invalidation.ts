@@ -40,10 +40,22 @@ export function invalidateManufacturingCache() {
 }
 
 /**
+ * 予想注文関連キャッシュを無効化
+ */
+export function invalidateOrderForecastCache() {
+  mutate(
+    (key: unknown) => typeof key === 'string' && key.startsWith('/order-forecast'),
+    undefined,
+    { revalidate: true }
+  )
+}
+
+/**
  * 全キャッシュを無効化（汎用アップロード用）
  */
 export function invalidateAllCache() {
   invalidateKPICache()
   invalidateEcommerceCache()
   invalidateManufacturingCache()
+  invalidateOrderForecastCache()
 }

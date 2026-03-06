@@ -8,6 +8,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { addDays, subDays, format, parseISO } from 'date-fns'
+import { ja } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useOrderForecast } from '@/hooks/useOrderForecast'
 import { weatherEmoji } from '@/lib/weather'
@@ -16,6 +17,8 @@ import { DailyProductTable } from './DailyProductTable'
 import { HourlyProductTable } from './HourlyProductTable'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
 import {
   Select,
   SelectContent,
@@ -25,6 +28,7 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorMessage } from '@/components/common/ErrorMessage'
+import { cn } from '@/lib/utils'
 
 interface OrderForecastViewProps {
   targetDate: string
@@ -40,8 +44,17 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
   const [currentDate, setCurrentDate] = useState(targetDate)
   const [selectedSegmentId, setSelectedSegmentId] = useState<string>('all')
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const hourlyTableRef = useRef<HTMLDivElement>(null)
   const { data, loading, error } = useOrderForecast(currentDate, undefined, departmentSlug)
+
+  const handleCalendarSelect = (date: Date | undefined) => {
+    if (date) {
+      setCurrentDate(format(date, 'yyyy-MM-dd'))
+      setSelectedCalendarDate(null)
+      setCalendarOpen(false)
+    }
+  }
 
   const handlePrevDay = () => {
     const d = parseISO(currentDate)
@@ -148,21 +161,47 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrevDay} disabled={loading}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className={loading ? 'opacity-50' : ''}>
-                {displayMonth}月{displayDay}日({target_weekday})
-              </span>
-              {data.weather && (
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  {weatherEmoji(data.weather.weather_code)} {data.weather.weather_label}
-                  {data.weather.temp_max != null && (
-                    <span className="ml-1">{Math.round(data.weather.temp_max)}/{Math.round(data.weather.temp_min ?? 0)}℃</span>
-                  )}
-                </span>
-              )}
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      'cursor-pointer rounded-md px-2 py-1 hover:bg-accent hover:text-accent-foreground transition-colors',
+                      loading && 'opacity-50'
+                    )}
+                  >
+                    {displayMonth}月{displayDay}日({target_weekday})
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="center">
+                  <Calendar
+                    mode="single"
+                    selected={parseISO(currentDate)}
+                    onSelect={handleCalendarSelect}
+                    locale={ja}
+                    defaultMonth={parseISO(currentDate)}
+                  />
+                </PopoverContent>
+              </Popover>
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNextDay} disabled={loading}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
+            {data.weather && (
+              <div className="flex items-center gap-2 mt-2 font-normal">
+                <span className="text-2xl">{weatherEmoji(data.weather.weather_code)}</span>
+                <div className="flex flex-col">
+                  <span className="text-sm">{data.weather.weather_label}</span>
+                  {data.weather.temp_max != null && (
+                    <span className="text-sm">
+                      <span className="text-red-500 font-medium">{Math.round(data.weather.temp_max)}℃</span>
+                      <span className="mx-1">/</span>
+                      <span className="text-blue-500 font-medium">{Math.round(data.weather.temp_min ?? 0)}℃</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -187,7 +226,11 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
                     <span className="ml-1">
                       {weatherEmoji(prevYearRef.weather.weather_code)}
                       {prevYearRef.weather.temp_max != null && (
-                        <span className="text-[11px]">{Math.round(prevYearRef.weather.temp_max)}℃</span>
+                        <>
+                          <span className="text-red-500">{Math.round(prevYearRef.weather.temp_max)}</span>
+                          <span>/</span>
+                          <span className="text-blue-500">{Math.round(prevYearRef.weather.temp_min ?? 0)}℃</span>
+                        </>
                       )}
                     </span>
                   )}
@@ -203,7 +246,11 @@ export function OrderForecastView({ targetDate, departmentSlug = 'store' }: Orde
                     <span className="ml-1">
                       {weatherEmoji(twoYrRef.weather.weather_code)}
                       {twoYrRef.weather.temp_max != null && (
-                        <span className="text-[11px]">{Math.round(twoYrRef.weather.temp_max)}℃</span>
+                        <>
+                          <span className="text-red-500">{Math.round(twoYrRef.weather.temp_max)}</span>
+                          <span>/</span>
+                          <span className="text-blue-500">{Math.round(twoYrRef.weather.temp_min ?? 0)}℃</span>
+                        </>
                       )}
                     </span>
                   )}
