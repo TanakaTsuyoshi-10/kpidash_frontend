@@ -67,14 +67,16 @@ export default function ProductsPage() {
 
       {/* タブ */}
       <Tabs defaultValue="summary" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="summary">店舗別</TabsTrigger>
-          <TabsTrigger value="matrix">店舗×商品</TabsTrigger>
-          <TabsTrigger value="regional">地区別</TabsTrigger>
-          <TabsTrigger value="chart">推移グラフ</TabsTrigger>
-          <TabsTrigger value="daily">日次分析</TabsTrigger>
-          <TabsTrigger value="forecast">予想注文</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList>
+            <TabsTrigger value="summary">店舗別</TabsTrigger>
+            <TabsTrigger value="matrix">店舗×商品</TabsTrigger>
+            <TabsTrigger value="regional">地区別</TabsTrigger>
+            <TabsTrigger value="chart">推移グラフ</TabsTrigger>
+            <TabsTrigger value="daily">日次分析</TabsTrigger>
+            <TabsTrigger value="forecast">予想注文</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="summary">
           <div className="space-y-6">

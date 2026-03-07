@@ -81,7 +81,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       <BottomNav onMoreClick={() => setMobileSidebarOpen(true)} />
 
       {/* メインコンテンツ */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 overflow-x-hidden">
         <Header />
         <main id="main-content" className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
           {children}

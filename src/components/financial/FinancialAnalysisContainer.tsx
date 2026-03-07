@@ -342,7 +342,7 @@ export function FinancialAnalysisContainer({
             {formatDisplayPeriod(year, baseMonth)} | {year}年度
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <PeriodSelector
             periodType={periodType}
             year={year}
@@ -353,17 +353,19 @@ export function FinancialAnalysisContainer({
             onMonthChange={onMonthChange}
             onQuarterChange={onQuarterChange}
           />
-          <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            アップロード
-          </Button>
-          <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
-            <Download className="h-4 w-4 mr-2" />
-            出力
-          </Button>
-          <Button onClick={() => refetch()} variant="outline" size="icon" disabled={loading}>
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => setUploadDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              アップロード
+            </Button>
+            <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
+              <Download className="h-4 w-4 mr-2" />
+              出力
+            </Button>
+            <Button onClick={() => refetch()} variant="outline" size="icon" disabled={loading}>
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
       </div>
 
