@@ -5,7 +5,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FinancialAnalysisContainer } from '@/components/financial/FinancialAnalysisContainer'
+import { LazyFinancialAnalysis } from '@/components/lazy'
 import { PermissionGuard } from '@/components/PermissionGuard'
 import {
   getCurrentFiscalYear,
@@ -23,7 +23,7 @@ export default function FinancePage() {
 
   return (
     <PermissionGuard pageKey="finance">
-      <FinancialAnalysisContainer
+      <LazyFinancialAnalysis
         periodType={periodType}
         year={year}
         month={month}

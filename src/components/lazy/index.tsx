@@ -66,6 +66,33 @@ export const LazyChannelTrendChart = dynamic(
   }
 )
 
+// 店舗別売上推移チャート
+export const LazyStoreTrendChart = dynamic(
+  () => import('@/components/products/StoreTrendChart').then(mod => ({ default: mod.StoreTrendChart })),
+  {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+  }
+)
+
+// 商品グループ別売上推移チャート
+export const LazyProductSalesChart = dynamic(
+  () => import('@/components/products/ProductSalesChart').then(mod => ({ default: mod.ProductSalesChart })),
+  {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+  }
+)
+
+// 日次推移チャート
+export const LazyDailyTrendChart = dynamic(
+  () => import('@/components/daily-sales/DailyTrendChart').then(mod => ({ default: mod.DailyTrendChart })),
+  {
+    loading: () => <ChartSkeleton />,
+    ssr: false
+  }
+)
+
 // ダッシュボード below-the-fold コンポーネント
 export const LazyCashFlowCard = dynamic(
   () => import('@/components/dashboard/CashFlowCard').then(mod => ({ default: mod.CashFlowCard })),

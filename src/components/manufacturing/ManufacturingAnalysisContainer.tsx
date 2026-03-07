@@ -8,8 +8,7 @@ import { useState } from 'react'
 import { PeriodSelector } from '@/components/dashboard/PeriodSelector'
 import { ManufacturingSummaryCards } from './ManufacturingSummaryCards'
 import { ManufacturingComparisonTable } from './ManufacturingComparisonTable'
-import { ProductionChart } from './ProductionChart'
-import { ProductivityChart } from './ProductivityChart'
+import { LazyProductionChart, LazyProductivityChart } from '@/components/lazy'
 import { DailyDataTable } from './DailyDataTable'
 import { ManufacturingUploadDialog } from './ManufacturingUploadDialog'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
@@ -177,11 +176,11 @@ export function ManufacturingAnalysisContainer({
 
       {/* グラフ（2カラム） */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProductionChart
+        <LazyProductionChart
           data={data?.chart_data ?? []}
           loading={loading}
         />
-        <ProductivityChart
+        <LazyProductivityChart
           data={data?.chart_data ?? []}
           loading={loading}
         />

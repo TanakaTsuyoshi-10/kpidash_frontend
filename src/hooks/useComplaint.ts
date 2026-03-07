@@ -1,9 +1,10 @@
 /**
- * クレーム管理用カスタムフック
+ * クレーム管理用カスタムフック（SWR版）
  */
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
+import useSWR from 'swr'
 import {
   getComplaints,
   getComplaint,
@@ -27,114 +28,43 @@ import type {
  * マスタデータ取得フック
  */
 export function useComplaintMaster() {
-  const [data, setData] = useState<ComplaintMasterDataResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ComplaintMasterDataResponse>(
+    '/complaints/master',
+    () => getComplaintMaster(),
+    { dedupingInterval: 60000 }
+  )
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getComplaintMaster()
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'マスタデータの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * クレーム一覧取得フック
  */
 export function useComplaints(params: ComplaintFilterParams = {}) {
-  const [data, setData] = useState<ComplaintListResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/complaints/list?${JSON.stringify(params)}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getComplaints(params)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [
-    params.status,
-    params.department_type,
-    params.complaint_type,
-    params.from_date,
-    params.to_date,
-    params.search,
-    params.page,
-    params.page_size,
-  ])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ComplaintListResponse>(
+    key,
+    () => getComplaints(params),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * クレーム詳細取得フック
  */
 export function useComplaint(id: string | null) {
-  const [data, setData] = useState<ComplaintDetail | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const key = id ? `/complaints/${id}` : null
 
-  useEffect(() => {
-    if (!id) {
-      setData(null)
-      return
-    }
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ComplaintDetail>(
+    key,
+    () => getComplaint(id!),
+    { dedupingInterval: 60000 }
+  )
 
-    let cancelled = false
-    const complaintId = id
-
-    async function fetchData() {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getComplaint(complaintId)
-        if (!cancelled) {
-          setData(result)
-        }
-      } catch (err: unknown) {
-        if (!cancelled) {
-          const message = err instanceof Error ? err.message : 'データの取得に失敗しました'
-          setError(message)
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
-      }
-    }
-
-    fetchData()
-
-    return () => {
-      cancelled = true
-    }
-  }, [id])
-
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -199,27 +129,13 @@ export function useComplaintMutation() {
  * ダッシュボード用サマリー取得フック
  */
 export function useComplaintDashboardSummary(month: string) {
-  const [data, setData] = useState<ComplaintDashboardSummary | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/complaints/dashboard-summary?month=${month}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getComplaintDashboardSummary(month)
-      setData(result)
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'サマリーの取得に失敗しました'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [month])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ComplaintDashboardSummary>(
+    key,
+    () => getComplaintDashboardSummary(month),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }

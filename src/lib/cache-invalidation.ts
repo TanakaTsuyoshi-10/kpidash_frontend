@@ -51,6 +51,72 @@ export function invalidateOrderForecastCache() {
 }
 
 /**
+ * KPIフック関連キャッシュを無効化
+ */
+export function invalidateKPICacheAll() {
+  mutate(
+    (key: unknown) => typeof key === 'string' && key.startsWith('/kpi/'),
+    undefined,
+    { revalidate: true }
+  )
+}
+
+/**
+ * 商品関連キャッシュを無効化
+ */
+export function invalidateProductCache() {
+  mutate(
+    (key: unknown) => typeof key === 'string' && key.startsWith('/products/'),
+    undefined,
+    { revalidate: true }
+  )
+}
+
+/**
+ * 日次販売関連キャッシュを無効化
+ */
+export function invalidateDailySalesCache() {
+  mutate(
+    (key: unknown) => typeof key === 'string' && key.startsWith('/daily-sales/'),
+    undefined,
+    { revalidate: true }
+  )
+}
+
+/**
+ * クレーム関連キャッシュを無効化
+ */
+export function invalidateComplaintCache() {
+  mutate(
+    (key: unknown) => typeof key === 'string' && key.startsWith('/complaints/'),
+    undefined,
+    { revalidate: true }
+  )
+}
+
+/**
+ * 目標関連キャッシュを無効化
+ */
+export function invalidateTargetCache() {
+  mutate(
+    (key: unknown) => typeof key === 'string' && key.startsWith('/targets/'),
+    undefined,
+    { revalidate: true }
+  )
+}
+
+/**
+ * 地区別関連キャッシュを無効化
+ */
+export function invalidateRegionalCache() {
+  mutate(
+    (key: unknown) => typeof key === 'string' && key.startsWith('/regional/'),
+    undefined,
+    { revalidate: true }
+  )
+}
+
+/**
  * 全キャッシュを無効化（汎用アップロード用）
  */
 export function invalidateAllCache() {
@@ -58,4 +124,10 @@ export function invalidateAllCache() {
   invalidateEcommerceCache()
   invalidateManufacturingCache()
   invalidateOrderForecastCache()
+  invalidateKPICacheAll()
+  invalidateProductCache()
+  invalidateDailySalesCache()
+  invalidateComplaintCache()
+  invalidateTargetCache()
+  invalidateRegionalCache()
 }

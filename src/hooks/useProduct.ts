@@ -1,7 +1,9 @@
 /**
- * 商品別販売状況のデータ取得フック
+ * 商品別販売状況のデータ取得フック（SWR版）
  */
-import { useState, useEffect } from 'react'
+'use client'
+
+import useSWR from 'swr'
 import {
   getProductMatrix,
   getProductTrend,
@@ -23,56 +25,30 @@ export function useProductMatrix(
   departmentSlug: string = 'store',
   periodType: PeriodType = 'monthly'
 ) {
-  const [data, setData] = useState<ProductMatrixResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/products/matrix?month=${month}&dept=${departmentSlug}&period=${periodType}`
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getProductMatrix(departmentSlug, month, periodType)
-        setData(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [month, departmentSlug, periodType])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ProductMatrixResponse>(
+    key,
+    () => getProductMatrix(departmentSlug, month, periodType),
+    { dedupingInterval: 60000 }
+  )
 
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * 商品グループ一覧を取得するフック
  */
 export function useProductGroups(departmentSlug: string = 'store') {
-  const [data, setData] = useState<KPIDefinition[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/products/groups?dept=${departmentSlug}`
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getProductGroups(departmentSlug)
-        setData(result ?? [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData([])
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [departmentSlug])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<KPIDefinition[]>(
+    key,
+    () => getProductGroups(departmentSlug),
+    { dedupingInterval: 60000 }
+  )
 
-  return { data, loading, error }
+  return { data: data ?? [], loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -83,31 +59,15 @@ export function useProductTrend(
   fiscalYear?: number,
   departmentSlug: string = 'store'
 ) {
-  const [data, setData] = useState<ProductTrendResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = productGroup
+    ? `/products/trend?group=${productGroup}&fy=${fiscalYear ?? ''}&dept=${departmentSlug}`
+    : null
 
-  useEffect(() => {
-    if (!productGroup) {
-      setLoading(false)
-      return
-    }
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ProductTrendResponse>(
+    key,
+    () => getProductTrend(departmentSlug, productGroup, fiscalYear),
+    { dedupingInterval: 60000 }
+  )
 
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getProductTrend(departmentSlug, productGroup, fiscalYear)
-        setData(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [productGroup, fiscalYear, departmentSlug])
-
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }

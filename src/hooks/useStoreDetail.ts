@@ -1,7 +1,10 @@
 /**
- * 店舗詳細データ取得フック
+ * 店舗詳細データ取得フック（SWR版）
  */
-import { useState, useEffect, useCallback } from 'react'
+'use client'
+
+import { useState } from 'react'
+import useSWR from 'swr'
 import { apiClient } from '@/lib/api/client'
 
 // 商品グループ別販売データ
@@ -51,35 +54,20 @@ export interface StoreDetailResponse {
 }
 
 export function useStoreDetail(segmentId: string, initialMonth: string) {
-  const [data, setData] = useState<StoreDetailResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [month, setMonth] = useState(initialMonth)
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const params = new URLSearchParams({
-        month,
-      })
-      const result = await apiClient.get<StoreDetailResponse>(
+  const key = segmentId ? `/kpi/store/${segmentId}/detail?month=${month}` : null
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StoreDetailResponse>(
+    key,
+    () => {
+      const params = new URLSearchParams({ month })
+      return apiClient.get<StoreDetailResponse>(
         `/kpi/store/${segmentId}/detail?${params.toString()}`
       )
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [segmentId, month])
+    },
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    if (segmentId) {
-      fetchData()
-    }
-  }, [fetchData, segmentId])
-
-  return { data, loading, error, month, setMonth, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, month, setMonth, refetch: mutate }
 }

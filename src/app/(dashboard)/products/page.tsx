@@ -7,12 +7,10 @@ import { useState } from 'react'
 import { format, subMonths } from 'date-fns'
 import { StoreSummaryTable } from '@/components/products/StoreSummaryTable'
 import { ProductSalesMatrix } from '@/components/products/ProductSalesMatrix'
-import { StoreTrendChart } from '@/components/products/StoreTrendChart'
-import { ProductSalesChart } from '@/components/products/ProductSalesChart'
+import { LazyStoreTrendChart, LazyProductSalesChart, LazyDailyTrendChart } from '@/components/lazy'
 import { RegionalSummaryTable } from '@/components/products/RegionalSummaryTable'
 import { DailyStoreSalesTable } from '@/components/daily-sales/DailyStoreSalesTable'
 import { HourlyHeatmap } from '@/components/daily-sales/HourlyHeatmap'
-import { DailyTrendChart } from '@/components/daily-sales/DailyTrendChart'
 import { OrderForecastView } from '@/components/order-forecast/OrderForecastView'
 import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -125,10 +123,10 @@ export default function ProductsPage() {
         <TabsContent value="chart">
           <div className="space-y-6">
             {/* 店舗別売上推移 */}
-            <StoreTrendChart />
+            <LazyStoreTrendChart />
 
             {/* 商品グループ別売上推移 */}
-            <ProductSalesChart
+            <LazyProductSalesChart
               selectedProduct={selectedProduct}
               onProductChange={setSelectedProduct}
             />
@@ -159,7 +157,7 @@ export default function ProductsPage() {
             </TabsContent>
 
             <TabsContent value="daily-trend">
-              <DailyTrendChart month={month} />
+              <LazyDailyTrendChart month={month} />
             </TabsContent>
           </Tabs>
         </TabsContent>

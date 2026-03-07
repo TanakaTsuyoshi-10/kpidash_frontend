@@ -4,7 +4,7 @@
  */
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { PeriodSelector } from '@/components/dashboard/PeriodSelector'
 import { PLSummaryTable } from './PLSummaryTable'
 import { ExpandablePLSummaryTable } from './ExpandablePLSummaryTable'
@@ -256,6 +256,16 @@ export function FinancialAnalysisContainer({
   // 店舗別収支取得（期間タイプに応じた集計）
   const storePL = useStorePLList(commentPeriod, 'store', periodType)
 
+  // 経費・収益性のメモ化
+  const expenses = useMemo(
+    () => buildExpensesFromV2(financeV2.data, data?.expenses ?? []),
+    [financeV2.data, data?.expenses]
+  )
+  const profitability = useMemo(
+    () => buildProfitabilityFromV2(financeV2.data, data?.profitability ?? []),
+    [financeV2.data, data?.profitability]
+  )
+
   // アップロード成功時の処理
   const handleUploadSuccess = () => {
     refetch()
@@ -397,12 +407,12 @@ export function FinancialAnalysisContainer({
           {/* 経費分析 & 収益性指標（2カラム） */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ExpenseBreakdown
-              expenses={buildExpensesFromV2(financeV2.data, data?.expenses ?? [])}
+              expenses={expenses}
               salesTotal={financeV2.data?.current.sales_total ?? data?.pl_summary.items[0]?.actual ?? null}
               loading={loading || financeV2.loading}
             />
             <ProfitabilityCard
-              metrics={buildProfitabilityFromV2(financeV2.data, data?.profitability ?? [])}
+              metrics={profitability}
               loading={loading || financeV2.loading}
             />
           </section>

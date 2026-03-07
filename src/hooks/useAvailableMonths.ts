@@ -1,7 +1,9 @@
 /**
- * 利用可能な月一覧を取得するフック
+ * 利用可能な月一覧を取得するフック（SWR版）
  */
-import { useState, useEffect } from 'react'
+'use client'
+
+import useSWR from 'swr'
 import { format, subMonths } from 'date-fns'
 import { apiClient } from '@/lib/api/client'
 
@@ -18,30 +20,20 @@ function generateFallbackMonths(): string[] {
 }
 
 export function useAvailableMonths(departmentSlug: string = 'store') {
-  const [months, setMonths] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const params = new URLSearchParams({ department_slug: departmentSlug })
+  const key = `/products/available-months?${params}`
 
-  useEffect(() => {
-    const fetchMonths = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const params = new URLSearchParams({ department_slug: departmentSlug })
-        const result = await apiClient.get<AvailableMonthsResponse>(
-          `/products/available-months?${params.toString()}`
-        )
-        setMonths(result.months || [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        // エラー時はフォールバックとして過去12ヶ月を使用
-        setMonths(generateFallbackMonths())
-      } finally {
-        setLoading(false)
-      }
+  const { data, error, isLoading, isValidating, mutate } = useSWR<AvailableMonthsResponse>(
+    key,
+    () => apiClient.get<AvailableMonthsResponse>(`/products/available-months?${params.toString()}`),
+    {
+      dedupingInterval: 60000,
+      onError: () => {
+        // エラー時はSWRのキャッシュにフォールバックデータをセット
+        mutate({ months: generateFallbackMonths() }, false)
+      },
     }
-    fetchMonths()
-  }, [departmentSlug])
+  )
 
-  return { months, loading, error }
+  return { months: data?.months ?? [], loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }

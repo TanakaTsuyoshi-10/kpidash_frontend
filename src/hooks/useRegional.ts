@@ -1,9 +1,10 @@
 /**
- * 地区別分析のデータ取得フック
+ * 地区別分析のデータ取得フック（SWR版）
  */
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
+import useSWR from 'swr'
 import {
   getRegions,
   getStoreMappings,
@@ -24,140 +25,72 @@ import type {
  * 地区一覧を取得するフック
  */
 export function useRegions() {
-  const [regions, setRegions] = useState<Region[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data, error, isLoading, isValidating, mutate } = useSWR<{ regions: Region[] }>(
+    '/regional/regions',
+    () => getRegions(),
+    { dedupingInterval: 60000 }
+  )
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getRegions()
-      setRegions(result.regions)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '地区一覧の取得に失敗しました')
-      setRegions([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { regions, loading, error, refetch: fetchData }
+  return { regions: data?.regions ?? [], loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * 店舗マッピングを取得するフック
  */
 export function useStoreMappings() {
-  const [mappings, setMappings] = useState<StoreMapping[]>([])
-  const [loading, setLoading] = useState(true)
   const [initializing, setInitializing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getStoreMappings()
-      setMappings(result.mappings)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '店舗マッピングの取得に失敗しました')
-      setMappings([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<{ mappings: StoreMapping[] }>(
+    '/regional/store-mappings',
+    () => getStoreMappings(),
+    { dedupingInterval: 60000 }
+  )
 
   const initialize = useCallback(async () => {
     try {
       setInitializing(true)
-      setError(null)
       const result = await initializeStoreMappings()
-      setMappings(result.mappings)
+      mutate({ mappings: result.mappings }, false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '店舗マッピングの初期化に失敗しました')
       throw err
     } finally {
       setInitializing(false)
     }
-  }, [])
+  }, [mutate])
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { mappings, loading, initializing, error, refetch: fetchData, initialize }
+  return { mappings: data?.mappings ?? [], loading: isLoading, validating: isValidating, initializing, error: error?.message || null, refetch: mutate, initialize }
 }
 
 /**
  * 地区別集計を取得するフック
  */
 export function useRegionalSummary(month: string, periodType: PeriodType = 'monthly') {
-  const [data, setData] = useState<RegionalSummaryResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = month ? `/regional/summary?month=${month}&period_type=${periodType}` : null
 
-  const fetchData = useCallback(async () => {
-    if (!month) return
+  const { data, error, isLoading, isValidating, mutate } = useSWR<RegionalSummaryResponse>(
+    key,
+    () => getRegionalSummary(month, periodType),
+    { dedupingInterval: 60000 }
+  )
 
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getRegionalSummary(month, periodType)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '地区別集計の取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month, periodType])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * 地区別目標を取得するフック（読み取り専用: 目標は店舗目標から自動集計）
  */
 export function useRegionalTargets(month: string) {
-  const [targets, setTargets] = useState<RegionalTarget[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const key = month ? `/regional/targets?month=${month}` : null
 
-  const fetchData = useCallback(async () => {
-    if (!month) return
-
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getRegionalTargets(month)
-      setTargets(result.targets)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '地区別目標の取得に失敗しました')
-      setTargets([])
-    } finally {
-      setLoading(false)
-    }
-  }, [month])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<{ targets: RegionalTarget[] }>(
+    key,
+    () => getRegionalTargets(month),
+    { dedupingInterval: 60000 }
+  )
 
   const save = useCallback(async (_targetData: SaveRegionalTargetRequest[]) => {
-    setSaving(true)
-    setSaving(false)
     throw new Error('地区別目標の直接設定は廃止されました。目標設定ページから店舗別に設定してください。')
   }, [])
 
-  return { targets, loading, saving, error, save, refetch: fetchData }
+  return { targets: data?.targets ?? [], loading: isLoading, validating: isValidating, saving: false, error: error?.message || null, save, refetch: mutate }
 }

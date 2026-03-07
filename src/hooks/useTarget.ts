@@ -1,7 +1,10 @@
 /**
- * 目標値管理のフック
+ * 目標値管理のフック（SWR版）
  */
-import { useState, useEffect, useCallback } from 'react'
+'use client'
+
+import { useState, useCallback } from 'react'
+import useSWR from 'swr'
 import {
   getTargetMatrix,
   createTarget,
@@ -33,29 +36,15 @@ import type {
  * 目標値マトリックスを取得するフック
  */
 export function useTargetMatrix(departmentSlug: string, month: string) {
-  const [data, setData] = useState<TargetMatrixResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/targets/matrix?dept=${departmentSlug}&month=${month}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getTargetMatrix(departmentSlug, month)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [departmentSlug, month])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<TargetMatrixResponse>(
+    key,
+    () => getTargetMatrix(departmentSlug, month),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -172,58 +161,30 @@ export function useTargetMutations() {
  * 目標概要を取得するフック
  */
 export function useTargetOverview(month: string) {
-  const [data, setData] = useState<TargetOverview | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/targets/overview?month=${month}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getTargetOverview(month)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<TargetOverview>(
+    key,
+    () => getTargetOverview(month),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
  * 店舗目標を取得するフック
  */
 export function useStoreTargets(month: string) {
-  const [data, setData] = useState<TargetMatrixResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/targets/store?month=${month}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getStoreTargets(month)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<TargetMatrixResponse>(
+    key,
+    () => getStoreTargets(month),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -255,29 +216,15 @@ export function useStoreTargetMutation() {
  * 財務目標を取得するフック
  */
 export function useFinancialTargets(month: string) {
-  const [data, setData] = useState<FinancialTargetResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/targets/financial?month=${month}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getFinancialTargets(month)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<FinancialTargetResponse>(
+    key,
+    () => getFinancialTargets(month),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -309,29 +256,15 @@ export function useFinancialTargetMutation() {
  * 通販目標を取得するフック
  */
 export function useEcommerceTargets(month: string) {
-  const [data, setData] = useState<EcommerceTargetResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/targets/ecommerce?month=${month}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await getEcommerceTargets(month)
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [month])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<EcommerceTargetResponse>(
+    key,
+    () => getEcommerceTargets(month),
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**

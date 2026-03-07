@@ -1,7 +1,10 @@
 /**
- * 日次販売分析のデータ取得フック
+ * 日次販売分析のデータ取得フック（SWR版）
  */
-import { useState, useEffect, useCallback } from 'react'
+'use client'
+
+import { useState, useCallback } from 'react'
+import useSWR from 'swr'
 import {
   getDailySalesSummary,
   getHourlySales,
@@ -22,28 +25,15 @@ export function useDailySalesSummary(
   month: string,
   departmentSlug: string = 'store',
 ) {
-  const [data, setData] = useState<DailySalesSummaryResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/daily-sales/summary?month=${month}&dept=${departmentSlug}`
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getDailySalesSummary(month, departmentSlug)
-        setData(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [month, departmentSlug])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<DailySalesSummaryResponse>(
+    key,
+    () => getDailySalesSummary(month, departmentSlug),
+    { dedupingInterval: 60000 }
+  )
 
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -53,32 +43,15 @@ export function useHourlySales(
   date: string,
   departmentSlug: string = 'store',
 ) {
-  const [data, setData] = useState<HourlySalesResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = date ? `/daily-sales/hourly?date=${date}&dept=${departmentSlug}` : null
 
-  useEffect(() => {
-    if (!date) {
-      setLoading(false)
-      return
-    }
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getHourlySales(date, departmentSlug)
-        setData(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [date, departmentSlug])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<HourlySalesResponse>(
+    key,
+    () => getHourlySales(date, departmentSlug),
+    { dedupingInterval: 60000 }
+  )
 
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -89,28 +62,15 @@ export function useDailyTrend(
   segmentId?: string,
   departmentSlug: string = 'store',
 ) {
-  const [data, setData] = useState<DailyTrendResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const key = `/daily-sales/trend?month=${month}&segment=${segmentId ?? ''}&dept=${departmentSlug}`
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const result = await getDailyTrend(month, segmentId, departmentSlug)
-        setData(result)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-        setData(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [month, segmentId, departmentSlug])
+  const { data, error, isLoading, isValidating, mutate } = useSWR<DailyTrendResponse>(
+    key,
+    () => getDailyTrend(month, segmentId, departmentSlug),
+    { dedupingInterval: 60000 }
+  )
 
-  return { data, loading, error }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**

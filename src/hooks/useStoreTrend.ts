@@ -1,7 +1,9 @@
 /**
- * 店舗別売上推移データ取得フック
+ * 店舗別売上推移データ取得フック（SWR版）
  */
-import { useState, useEffect, useCallback } from 'react'
+'use client'
+
+import useSWR from 'swr'
 import { apiClient } from '@/lib/api/client'
 
 // 店舗推移データ（全店舗）
@@ -42,37 +44,24 @@ function getCurrentFiscalYear(): number {
  * 全店舗の推移データを取得
  */
 export function useStoreTrendAll(departmentSlug: string = 'store', fiscalYear?: number) {
-  const [data, setData] = useState<StoreTrendAllData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
   const targetFiscalYear = fiscalYear ?? getCurrentFiscalYear()
+  const key = `/products/store-trend-all?dept=${departmentSlug}&fy=${targetFiscalYear}`
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StoreTrendAllData>(
+    key,
+    () => {
       const params = new URLSearchParams({
         department_slug: departmentSlug,
         fiscal_year: targetFiscalYear.toString(),
       })
-      const result = await apiClient.get<StoreTrendAllData>(
+      return apiClient.get<StoreTrendAllData>(
         `/products/store-trend-all?${params.toString()}`
       )
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [departmentSlug, targetFiscalYear])
+    },
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
 
 /**
@@ -83,40 +72,24 @@ export function useStoreTrendSingle(
   departmentSlug: string = 'store',
   fiscalYear?: number
 ) {
-  const [data, setData] = useState<StoreTrendSingleData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const targetFiscalYear = fiscalYear ?? getCurrentFiscalYear()
+  const key = segmentId
+    ? `/products/store-trend/${segmentId}?dept=${departmentSlug}&fy=${targetFiscalYear}`
+    : null
 
-  const fetchData = useCallback(async () => {
-    if (!segmentId) {
-      setData(null)
-      return
-    }
-
-    try {
-      setLoading(true)
-      setError(null)
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StoreTrendSingleData>(
+    key,
+    () => {
       const params = new URLSearchParams({
         department_slug: departmentSlug,
         fiscal_year: targetFiscalYear.toString(),
       })
-      const result = await apiClient.get<StoreTrendSingleData>(
+      return apiClient.get<StoreTrendSingleData>(
         `/products/store-trend/${segmentId}?${params.toString()}`
       )
-      setData(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'データの取得に失敗しました')
-      setData(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [segmentId, departmentSlug, targetFiscalYear])
+    },
+    { dedupingInterval: 60000 }
+  )
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  return { data, loading, error, refetch: fetchData }
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
