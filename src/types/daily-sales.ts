@@ -18,6 +18,7 @@ export interface StoreInfo {
 
 export interface DailyStoreSalesData {
   date: string
+  comparison_date?: string | null
   segment_id: string
   sales: number
   customers: number

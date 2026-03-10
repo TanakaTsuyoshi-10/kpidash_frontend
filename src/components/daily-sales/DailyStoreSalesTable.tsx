@@ -330,6 +330,11 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
                             {formatYoY(yoy)}
                           </div>
                         )}
+                        {entry?.comparison_date && (
+                          <div className="text-[9px] text-gray-400">
+                            vs {new Date(entry.comparison_date + 'T00:00:00').getMonth() + 1}/{new Date(entry.comparison_date + 'T00:00:00').getDate()}
+                          </div>
+                        )}
                       </td>
                     )
                   })}
