@@ -16,6 +16,7 @@ import {
 import { ComplaintStatusBadge } from './ComplaintStatusBadge'
 import { ComplaintTypeBadge } from './ComplaintTypeBadge'
 import { ComplaintCard } from './ComplaintCard'
+import { AlertTriangle } from 'lucide-react'
 import { format } from 'date-fns'
 import type { ComplaintListItem } from '@/types/complaint'
 
@@ -77,6 +78,7 @@ export function ComplaintList({ items, loading, viewMode, onSelect }: Props) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]"></TableHead>
                 <TableHead className="w-[100px]">発生日</TableHead>
                 <TableHead className="min-w-[100px]">発生部署</TableHead>
                 <TableHead className="min-w-[100px]">種類</TableHead>
@@ -92,6 +94,11 @@ export function ComplaintList({ items, loading, viewMode, onSelect }: Props) {
                   className="cursor-pointer hover:bg-gray-50"
                   onClick={() => onSelect(complaint)}
                 >
+                  <TableCell className="px-2">
+                    {!complaint.response_summary && (
+                      <AlertTriangle className="h-4 w-4 text-amber-500" title="対応結果が未入力です" />
+                    )}
+                  </TableCell>
                   <TableCell className="font-mono text-sm">
                     {format(new Date(complaint.incident_date), 'yyyy/MM/dd')}
                   </TableCell>

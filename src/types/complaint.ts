@@ -10,7 +10,7 @@ export type DepartmentType = 'store' | 'ecommerce' | 'headquarters'
 export type CustomerType = 'new' | 'repeat' | 'unknown'
 
 // クレーム種類
-export type ComplaintType = 'customer_service' | 'facility' | 'operation' | 'product' | 'other'
+export type ComplaintType = 'store_service' | 'packing_error' | 'price_discrepancy' | 'phone_support' | 'date_error' | 'address_error' | 'quantity_error' | 'delay' | 'contamination' | 'taste' | 'other'
 
 // 対応状況
 export type ComplaintStatus = 'in_progress' | 'completed'
@@ -19,7 +19,9 @@ export type ComplaintStatus = 'in_progress' | 'completed'
 export interface ComplaintCreate {
   incident_date: string        // YYYY-MM-DD
   department_type: DepartmentType
-  segment_id?: string | null   // 店舗IDst（店舗の場合のみ）
+  segment_id?: string | null   // 店舗ID（店舗の場合のみ）
+  store_name?: string | null   // 店舗名（店舗の場合、任意）
+  slip_number?: string | null  // 伝票番号（通販の場合、任意）
   customer_type: CustomerType
   customer_name?: string | null
   contact_info?: string | null
@@ -28,6 +30,7 @@ export interface ComplaintCreate {
   responder_name?: string | null
   status?: ComplaintStatus     // default: 'in_progress'
   response_summary?: string | null
+  handling_notes?: string | null  // 対応中メモ
   resolution_cost?: number     // default: 0
 }
 
@@ -36,6 +39,8 @@ export interface ComplaintUpdate {
   incident_date?: string
   department_type?: DepartmentType
   segment_id?: string | null
+  store_name?: string | null
+  slip_number?: string | null
   customer_type?: CustomerType
   customer_name?: string | null
   contact_info?: string | null
@@ -44,6 +49,7 @@ export interface ComplaintUpdate {
   responder_name?: string | null
   status?: ComplaintStatus
   response_summary?: string | null
+  handling_notes?: string | null
   resolution_cost?: number
 }
 
@@ -61,6 +67,8 @@ export interface ComplaintListItem {
   status: string
   status_name: string
   responder_name: string | null
+  response_summary: string | null
+  handling_notes: string | null
   resolution_cost: number
   created_at: string
 }
@@ -74,6 +82,8 @@ export interface ComplaintDetail {
   department_type_name: string
   segment_id: string | null
   segment_name: string | null
+  store_name: string | null
+  slip_number: string | null
   customer_type: string
   customer_type_name: string
   customer_name: string | null
@@ -85,6 +95,7 @@ export interface ComplaintDetail {
   status: string
   status_name: string
   response_summary: string | null
+  handling_notes: string | null
   resolution_cost: number
   completed_at: string | null
   created_by_email: string | null

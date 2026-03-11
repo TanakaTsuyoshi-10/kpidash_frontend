@@ -56,10 +56,16 @@ const defaultCustomerOptions: { value: CustomerType; label: string }[] = [
 ]
 
 const defaultComplaintTypeOptions: { value: ComplaintType; label: string }[] = [
-  { value: 'customer_service', label: '接客関連' },
-  { value: 'facility', label: '店舗設備' },
-  { value: 'operation', label: '操作方法' },
-  { value: 'product', label: '味・商品' },
+  { value: 'store_service', label: '店舗接客' },
+  { value: 'packing_error', label: '梱包ミス' },
+  { value: 'price_discrepancy', label: '金額相違' },
+  { value: 'phone_support', label: '電話対応' },
+  { value: 'date_error', label: '日時違い' },
+  { value: 'address_error', label: '住所違い' },
+  { value: 'quantity_error', label: '注文数違い' },
+  { value: 'delay', label: '遅延' },
+  { value: 'contamination', label: '異物混入' },
+  { value: 'taste', label: '味のクレーム' },
   { value: 'other', label: 'その他' },
 ]
 
@@ -67,7 +73,7 @@ const initialFormData: ComplaintCreate = {
   incident_date: format(new Date(), 'yyyy-MM-dd'),
   department_type: 'store',
   customer_type: 'unknown',
-  complaint_type: 'product',
+  complaint_type: 'store_service',
   complaint_content: '',
 }
 
@@ -131,6 +137,8 @@ export function ComplaintCreateDialog({
         customer_name: formData.customer_name?.trim() || null,
         contact_info: formData.contact_info?.trim() || null,
         responder_name: formData.responder_name?.trim() || null,
+        store_name: formData.department_type === 'store' ? (formData.store_name?.trim() || null) : null,
+        slip_number: formData.department_type === 'ecommerce' ? (formData.slip_number?.trim() || null) : null,
       })
     } catch {
       // エラーは親コンポーネントで処理
@@ -205,6 +213,38 @@ export function ComplaintCreateDialog({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* 店舗名（店舗の場合のみ） */}
+            {formData.department_type === 'store' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="store_name">店舗名</Label>
+                <Input
+                  id="store_name"
+                  type="text"
+                  value={formData.store_name || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, store_name: e.target.value })
+                  }
+                  placeholder="店舗名（任意）"
+                />
+              </div>
+            )}
+
+            {/* 伝票番号（通販の場合のみ） */}
+            {formData.department_type === 'ecommerce' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="slip_number">伝票番号</Label>
+                <Input
+                  id="slip_number"
+                  type="text"
+                  value={formData.slip_number || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, slip_number: e.target.value })
+                  }
+                  placeholder="伝票番号（任意）"
+                />
+              </div>
+            )}
 
             {/* クレーム種類 */}
             <div className="space-y-1.5">

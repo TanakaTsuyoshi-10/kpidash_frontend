@@ -4,6 +4,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { ComplaintStatusBadge } from './ComplaintStatusBadge'
 import { ComplaintTypeBadge } from './ComplaintTypeBadge'
+import { AlertTriangle } from 'lucide-react'
 import { format } from 'date-fns'
 import type { ComplaintListItem } from '@/types/complaint'
 
@@ -26,6 +27,12 @@ export function ComplaintCard({ complaint, onClick }: Props) {
           <div className="flex items-center gap-2 flex-wrap">
             <ComplaintStatusBadge status={complaint.status} statusName={complaint.status_name} />
             <ComplaintTypeBadge complaintType={complaint.complaint_type} typeName={complaint.complaint_type_name} />
+            {!complaint.response_summary && (
+              <span className="inline-flex items-center gap-1 text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 text-xs">
+                <AlertTriangle className="h-3 w-3" />
+                未対応
+              </span>
+            )}
           </div>
 
           {/* 内容 */}

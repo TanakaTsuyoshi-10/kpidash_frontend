@@ -11,19 +11,31 @@ interface Props {
 
 // クレーム種類の色設定
 const typeColors: Record<string, string> = {
-  customer_service: 'bg-blue-100 text-blue-800 border-blue-200',
-  facility: 'bg-orange-100 text-orange-800 border-orange-200',
-  operation: 'bg-purple-100 text-purple-800 border-purple-200',
-  product: 'bg-red-100 text-red-800 border-red-200',
+  store_service: 'bg-blue-100 text-blue-800 border-blue-200',
+  packing_error: 'bg-orange-100 text-orange-800 border-orange-200',
+  price_discrepancy: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  phone_support: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+  date_error: 'bg-purple-100 text-purple-800 border-purple-200',
+  address_error: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  quantity_error: 'bg-pink-100 text-pink-800 border-pink-200',
+  delay: 'bg-amber-100 text-amber-800 border-amber-200',
+  contamination: 'bg-red-100 text-red-800 border-red-200',
+  taste: 'bg-emerald-100 text-emerald-800 border-emerald-200',
   other: 'bg-gray-100 text-gray-800 border-gray-200',
 }
 
 // デフォルトのラベル
 const defaultLabels: Record<string, string> = {
-  customer_service: '接客関連',
-  facility: '店舗設備',
-  operation: '操作方法',
-  product: '味・商品',
+  store_service: '店舗接客',
+  packing_error: '梱包ミス',
+  price_discrepancy: '金額相違',
+  phone_support: '電話対応',
+  date_error: '日時違い',
+  address_error: '住所違い',
+  quantity_error: '注文数違い',
+  delay: '遅延',
+  contamination: '異物混入',
+  taste: '味のクレーム',
   other: 'その他',
 }
 

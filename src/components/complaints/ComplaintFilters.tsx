@@ -44,10 +44,16 @@ const defaultDepartmentOptions: { value: DepartmentType | 'all'; label: string }
 
 const defaultComplaintTypeOptions: { value: ComplaintType | 'all'; label: string }[] = [
   { value: 'all', label: 'すべて' },
-  { value: 'customer_service', label: '接客関連' },
-  { value: 'facility', label: '店舗設備' },
-  { value: 'operation', label: '操作方法' },
-  { value: 'product', label: '味・商品' },
+  { value: 'store_service', label: '店舗接客' },
+  { value: 'packing_error', label: '梱包ミス' },
+  { value: 'price_discrepancy', label: '金額相違' },
+  { value: 'phone_support', label: '電話対応' },
+  { value: 'date_error', label: '日時違い' },
+  { value: 'address_error', label: '住所違い' },
+  { value: 'quantity_error', label: '注文数違い' },
+  { value: 'delay', label: '遅延' },
+  { value: 'contamination', label: '異物混入' },
+  { value: 'taste', label: '味のクレーム' },
   { value: 'other', label: 'その他' },
 ]
 
