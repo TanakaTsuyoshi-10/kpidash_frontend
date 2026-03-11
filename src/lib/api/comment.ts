@@ -5,7 +5,9 @@ import { apiClient } from './client'
 import type {
   CommentCategory,
   MonthlyComment,
-  MonthlyCommentResponse,
+  MonthlyCommentsResponse,
+  CommentEditHistoryEntry,
+  CommentEditHistoryResponse,
   SaveCommentRequest,
 } from '@/types/comment'
 
@@ -21,59 +23,61 @@ export class ApiError extends Error {
 }
 
 /**
- * 月次コメントを取得する
+ * 月次コメント一覧を取得する
  */
-export async function getMonthlyComment(
+export async function getMonthlyComments(
   category: CommentCategory,
   period: string
-): Promise<MonthlyComment | null> {
+): Promise<MonthlyComment[]> {
   try {
-    const response = await apiClient.get<MonthlyCommentResponse>(
+    const response = await apiClient.get<MonthlyCommentsResponse>(
       `/comments/${category}?period=${period}`
     )
-    return response.comment
+    return response.comments ?? []
   } catch (err) {
-    // 404の場合はnullを返す
     if (err instanceof Error && err.message.includes('404')) {
-      return null
+      return []
     }
     throw err
   }
 }
 
 /**
- * 月次コメントを保存する（新規作成または更新）
+ * 新規コメントを追加する
  */
-export async function saveMonthlyComment(
+export async function addComment(
   data: SaveCommentRequest
 ): Promise<MonthlyComment> {
-  try {
-    return await apiClient.post<MonthlyComment>('/comments', data)
-  } catch (err) {
-    if (err instanceof Error) {
-      if (err.message.includes('403')) {
-        throw new ApiError('このコメントを編集する権限がありません', 403)
-      }
-    }
-    throw err
-  }
+  return await apiClient.post<MonthlyComment>('/comments', data)
 }
 
 /**
- * 月次コメントを削除する
+ * コメントを編集する
  */
-export async function deleteMonthlyComment(
-  category: CommentCategory,
-  period: string
+export async function updateComment(
+  commentId: string,
+  comment: string
+): Promise<MonthlyComment> {
+  return await apiClient.put<MonthlyComment>(`/comments/${commentId}`, { comment })
+}
+
+/**
+ * コメントを削除する
+ */
+export async function deleteComment(
+  commentId: string
 ): Promise<void> {
-  try {
-    await apiClient.delete(`/comments/${category}?period=${period}`)
-  } catch (err) {
-    if (err instanceof Error) {
-      if (err.message.includes('403')) {
-        throw new ApiError('このコメントを削除する権限がありません', 403)
-      }
-    }
-    throw err
-  }
+  await apiClient.delete(`/comments/${commentId}`)
+}
+
+/**
+ * コメントの編集履歴を取得する
+ */
+export async function getCommentHistory(
+  commentId: string
+): Promise<CommentEditHistoryEntry[]> {
+  const response = await apiClient.get<CommentEditHistoryResponse>(
+    `/comments/${commentId}/history`
+  )
+  return response.history ?? []
 }

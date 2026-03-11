@@ -13,14 +13,15 @@ export interface MonthlyComment {
   comment: string
   created_by?: string | null       // 作成者ユーザーID
   created_by_email?: string | null // 作成者メールアドレス
-  is_owner?: boolean               // 現在のユーザーが作成者か
+  updated_by?: string | null       // 最終編集者ユーザーID
+  updated_by_email?: string | null // 最終編集者メールアドレス
   created_at?: string
   updated_at?: string
 }
 
-// コメント取得レスポンス
-export interface MonthlyCommentResponse {
-  comment: MonthlyComment | null
+// 複数コメント取得レスポンス
+export interface MonthlyCommentsResponse {
+  comments: MonthlyComment[]
 }
 
 // コメント保存リクエスト
@@ -28,4 +29,23 @@ export interface SaveCommentRequest {
   category: CommentCategory
   period: string
   comment: string
+}
+
+// コメント更新リクエスト
+export interface UpdateCommentRequest {
+  comment: string
+}
+
+// 編集履歴エントリ
+export interface CommentEditHistoryEntry {
+  id: string
+  previous_comment: string
+  edited_by?: string | null
+  edited_by_email?: string | null
+  edited_at?: string
+}
+
+// 編集履歴レスポンス
+export interface CommentEditHistoryResponse {
+  history: CommentEditHistoryEntry[]
 }
