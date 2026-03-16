@@ -22,6 +22,7 @@ import {
   formatAchievementRate,
   PeriodType,
 } from '@/types/ecommerce'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -78,6 +79,7 @@ export function CustomerStats({ month, periodType }: Props) {
   const rows = [
     {
       label: '新規顧客',
+      href: '/ecommerce/customers/new',
       value: stats.new_customers,
       target: stats.new_customers_target,
       achievementRate: stats.new_customers_achievement_rate,
@@ -88,6 +90,7 @@ export function CustomerStats({ month, periodType }: Props) {
     },
     {
       label: 'リピーター',
+      href: '/ecommerce/customers/repeat',
       value: stats.repeat_customers,
       target: stats.repeat_customers_target,
       achievementRate: stats.repeat_customers_achievement_rate,
@@ -98,6 +101,7 @@ export function CustomerStats({ month, periodType }: Props) {
     },
     {
       label: '合計顧客数',
+      href: null,
       value: stats.total_customers,
       target: stats.total_customers_target,
       achievementRate: stats.total_customers_achievement_rate,
@@ -156,7 +160,13 @@ export function CustomerStats({ month, periodType }: Props) {
               {rows.map((row) => (
                 <TableRow key={row.label} className="hover:bg-gray-50">
                   <TableCell className="bg-card border-r-2 border-gray-300 font-medium py-1.5 px-2">
-                    {row.label}
+                    {row.href ? (
+                      <Link href={row.href} className="hover:underline text-blue-700">
+                        {row.label}
+                      </Link>
+                    ) : (
+                      row.label
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-mono py-1.5 px-2">
                     {row.value != null ? `${formatNumber(row.value)}人` : '-'}

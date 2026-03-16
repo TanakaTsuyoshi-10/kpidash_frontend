@@ -4,7 +4,7 @@
 
 // チャネル別実績
 export interface ChannelData {
-  channel: string  // "EC", "電話", "FAX", "店舗受付"
+  channel: string  // "EC", "電話", "FAX", "店舗受付", "ふるさと納税"
   sales: number | null
   sales_target: number | null              // 売上高目標
   sales_achievement_rate: number | null    // 売上高達成率（%）
@@ -151,6 +151,46 @@ export interface TrendResponse {
   data: TrendDataItem[]
 }
 
+// チャネル別商品データ
+export interface ChannelProductData {
+  product_name: string
+  sales: number | null
+  sales_previous_year: number | null
+  sales_yoy: number | null
+  quantity: number | null
+  quantity_previous_year: number | null
+  quantity_yoy: number | null
+}
+
+export interface ChannelProductSummaryResponse {
+  channel: string
+  period: string
+  period_type: 'monthly' | 'cumulative'
+  fiscal_year: number | null
+  products: ChannelProductData[]
+}
+
+// 顧客別詳細データ
+export interface CustomerDetailData {
+  sales: number | null
+  sales_previous_year: number | null
+  sales_yoy: number | null
+  quantity: number | null
+  quantity_previous_year: number | null
+  quantity_yoy: number | null
+  unit_price: number | null
+  unit_price_previous_year: number | null
+  unit_price_yoy: number | null
+}
+
+export interface CustomerDetailSummaryResponse {
+  customer_type: string
+  period: string
+  period_type: 'monthly' | 'cumulative'
+  fiscal_year: number | null
+  data: CustomerDetailData
+}
+
 // アップロードレスポンス
 export interface EcommerceBulkUploadResponse {
   success: boolean
@@ -159,6 +199,7 @@ export interface EcommerceBulkUploadResponse {
   channel_records: number
   product_records: number
   customer_records: number
+  customer_detail_records: number
   website_records: number
 }
 

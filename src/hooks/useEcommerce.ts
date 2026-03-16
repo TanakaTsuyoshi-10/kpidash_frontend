@@ -11,6 +11,8 @@ import {
   getCustomerSummary,
   getWebsiteStats,
   getEcommerceTrend,
+  getChannelProducts,
+  getCustomerDetail,
 } from '@/lib/api/ecommerce'
 import type {
   ChannelSummaryResponse,
@@ -18,6 +20,8 @@ import type {
   CustomerSummaryResponse,
   WebsiteStatsResponse,
   TrendResponse,
+  ChannelProductSummaryResponse,
+  CustomerDetailSummaryResponse,
   PeriodType,
 } from '@/types/ecommerce'
 
@@ -101,6 +105,40 @@ export function useEcommerceTrend(
   const { data, error, isLoading, isValidating, mutate } = useSWR<TrendResponse>(
     key,
     () => getEcommerceTrend(metric, fiscalYear),
+    { dedupingInterval: 60000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}
+
+/**
+ * チャネル別商品売上を取得するフック
+ */
+export function useChannelProducts(channel: string, month: string, periodType: PeriodType = 'monthly') {
+  const key = channel && month
+    ? `/ecommerce/channel/${channel}/products?month=${month}&period_type=${periodType}`
+    : null
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR<ChannelProductSummaryResponse>(
+    key,
+    () => getChannelProducts(channel, month, periodType),
+    { dedupingInterval: 60000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}
+
+/**
+ * 顧客別詳細を取得するフック
+ */
+export function useCustomerDetail(customerType: string, month: string, periodType: PeriodType = 'monthly') {
+  const key = customerType && month
+    ? `/ecommerce/customer-detail/${customerType}?month=${month}&period_type=${periodType}`
+    : null
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR<CustomerDetailSummaryResponse>(
+    key,
+    () => getCustomerDetail(customerType, month, periodType),
     { dedupingInterval: 60000 }
   )
 

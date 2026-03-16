@@ -22,6 +22,7 @@ import {
   formatAchievementRate,
   PeriodType,
 } from '@/types/ecommerce'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -35,6 +36,7 @@ const CHANNEL_COLORS: Record<string, { bg: string; text: string }> = {
   '電話': { bg: 'bg-green-50', text: 'text-green-800' },
   'FAX': { bg: 'bg-amber-50', text: 'text-amber-800' },
   '店舗受付': { bg: 'bg-purple-50', text: 'text-purple-800' },
+  'ふるさと納税': { bg: 'bg-rose-50', text: 'text-rose-800' },
 }
 
 export function ChannelSummaryTable({ month, periodType }: Props) {
@@ -140,7 +142,12 @@ export function ChannelSummaryTable({ month, periodType }: Props) {
                 return (
                   <TableRow key={channel.channel} className="hover:bg-gray-50">
                     <TableCell className={cn("sticky left-0 z-10 border-r-2 border-gray-300 font-medium py-1.5 px-2 w-[70px]", color.bg, color.text)}>
-                      {channel.channel}
+                      <Link
+                        href={`/ecommerce/channel/${encodeURIComponent(channel.channel)}`}
+                        className="hover:underline"
+                      >
+                        {channel.channel}
+                      </Link>
                     </TableCell>
                     {/* 売上高 */}
                     <TableCell className="text-right font-mono py-1.5 px-2">{formatCurrency(channel.sales)}</TableCell>

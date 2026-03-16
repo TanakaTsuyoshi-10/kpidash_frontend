@@ -27,6 +27,7 @@ const CHANNEL_COLORS: Record<string, string> = {
   '電話': '#22c55e',
   'FAX': '#f59e0b',
   '店舗受付': '#8b5cf6',
+  'ふるさと納税': '#f43f5e',
 }
 
 export function ChannelTrendChart({ fiscalYear }: Props) {

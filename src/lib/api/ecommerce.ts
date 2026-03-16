@@ -9,6 +9,8 @@ import type {
   WebsiteStatsResponse,
   TrendResponse,
   EcommerceBulkUploadResponse,
+  ChannelProductSummaryResponse,
+  CustomerDetailSummaryResponse,
   PeriodType,
 } from '@/types/ecommerce'
 
@@ -82,6 +84,40 @@ export async function getEcommerceTrend(
     params.append('fiscal_year', fiscalYear.toString())
   }
   return apiClient.get<TrendResponse>(`/ecommerce/trend?${params.toString()}`)
+}
+
+/**
+ * チャネル別商品売上を取得
+ */
+export async function getChannelProducts(
+  channel: string,
+  month: string,
+  periodType: PeriodType = 'monthly'
+): Promise<ChannelProductSummaryResponse> {
+  const params = new URLSearchParams({
+    month,
+    period_type: periodType,
+  })
+  return apiClient.get<ChannelProductSummaryResponse>(
+    `/ecommerce/channel/${encodeURIComponent(channel)}/products?${params.toString()}`
+  )
+}
+
+/**
+ * 顧客別詳細を取得
+ */
+export async function getCustomerDetail(
+  customerType: string,
+  month: string,
+  periodType: PeriodType = 'monthly'
+): Promise<CustomerDetailSummaryResponse> {
+  const params = new URLSearchParams({
+    month,
+    period_type: periodType,
+  })
+  return apiClient.get<CustomerDetailSummaryResponse>(
+    `/ecommerce/customer-detail/${customerType}?${params.toString()}`
+  )
 }
 
 /**
