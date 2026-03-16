@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { format, subMonths } from 'date-fns'
 import { Upload, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { ChannelSummaryTable } from '@/components/ecommerce/ChannelSummaryTable'
 import { ProductSalesTable } from '@/components/ecommerce/ProductSalesTable'
@@ -15,6 +16,8 @@ import { CustomerStats } from '@/components/ecommerce/CustomerStats'
 import { WebsiteStats } from '@/components/ecommerce/WebsiteStats'
 import { LazyChannelTrendChart as ChannelTrendChart } from '@/components/lazy'
 import { ExcelUploadModal } from '@/components/ecommerce/ExcelUploadModal'
+import { FurusatoUploadModal } from '@/components/furusato/FurusatoUploadModal'
+import { FurusatoContent } from '@/components/furusato/FurusatoContent'
 import { MonthlyCommentCard } from '@/components/dashboard/MonthlyCommentCard'
 import { ExportDialog, type ExportParams } from '@/components/common/ExportDialog'
 import { useEcommerceExport } from '@/hooks/useExport'
@@ -25,8 +28,10 @@ export default function EcommercePage() {
   const [month, setMonth] = useState(format(subMonths(new Date(), 1), 'yyyy-MM-01'))
   const [periodType, setPeriodType] = useState<PeriodType>('monthly')
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [furusatoUploadModalOpen, setFurusatoUploadModalOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [activeTab, setActiveTab] = useState('ecommerce')
   const { exportData } = useEcommerceExport()
 
   // 日付をパース
@@ -60,6 +65,15 @@ export default function EcommercePage() {
   // エクスポート実行
   const handleExport = async (params: ExportParams) => {
     await exportData(params, fiscalYear, month, periodType)
+  }
+
+  // アップロードボタン押下
+  const handleUploadClick = () => {
+    if (activeTab === 'furusato') {
+      setFurusatoUploadModalOpen(true)
+    } else {
+      setUploadModalOpen(true)
+    }
   }
 
   return (
@@ -104,51 +118,76 @@ export default function EcommercePage() {
           {/* アップロードボタン */}
           <Button
             variant="outline"
-            onClick={() => setUploadModalOpen(true)}
+            onClick={handleUploadClick}
             className="shrink-0"
           >
             <Upload className="h-4 w-4 mr-2" />
             アップロード
           </Button>
 
-          {/* 出力ボタン */}
-          <Button
-            variant="outline"
-            onClick={() => setExportDialogOpen(true)}
-            className="shrink-0"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            出力
-          </Button>
+          {/* 出力ボタン（通販実績タブ時のみ） */}
+          {activeTab === 'ecommerce' && (
+            <Button
+              variant="outline"
+              onClick={() => setExportDialogOpen(true)}
+              className="shrink-0"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              出力
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* チャネル別実績 */}
-      <ChannelSummaryTable month={month} periodType={periodType} />
+      {/* タブ */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="ecommerce">通販実績</TabsTrigger>
+          <TabsTrigger value="furusato">ふるさと納税</TabsTrigger>
+        </TabsList>
 
-      {/* 商品別売上 */}
-      <ProductSalesTable month={month} periodType={periodType} />
+        <TabsContent value="ecommerce">
+          <div className="space-y-6">
+            {/* チャネル別実績 */}
+            <ChannelSummaryTable month={month} periodType={periodType} />
 
-      {/* 顧客統計 */}
-      <CustomerStats month={month} periodType={periodType} />
+            {/* 商品別売上 */}
+            <ProductSalesTable month={month} periodType={periodType} />
 
-      {/* HPアクセス数 */}
-      <WebsiteStats month={month} periodType={periodType} />
+            {/* 顧客統計 */}
+            <CustomerStats month={month} periodType={periodType} />
 
-      {/* 推移グラフ */}
-      <ChannelTrendChart fiscalYear={fiscalYear} />
+            {/* HPアクセス数 */}
+            <WebsiteStats month={month} periodType={periodType} />
 
-      {/* 月次コメント */}
-      <MonthlyCommentCard
-        category="ecommerce"
-        period={month}
-        title="月次コメント"
-      />
+            {/* 推移グラフ */}
+            <ChannelTrendChart fiscalYear={fiscalYear} />
 
-      {/* Excelアップロードモーダル */}
+            {/* 月次コメント */}
+            <MonthlyCommentCard
+              category="ecommerce"
+              period={month}
+              title="月次コメント"
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="furusato">
+          <FurusatoContent month={month} periodType={periodType} />
+        </TabsContent>
+      </Tabs>
+
+      {/* 通販Excelアップロードモーダル */}
       <ExcelUploadModal
         open={uploadModalOpen}
         onOpenChange={setUploadModalOpen}
+        onUploadSuccess={handleUploadSuccess}
+      />
+
+      {/* ふるさと納税Excelアップロードモーダル */}
+      <FurusatoUploadModal
+        open={furusatoUploadModalOpen}
+        onOpenChange={setFurusatoUploadModalOpen}
         onUploadSuccess={handleUploadSuccess}
       />
 

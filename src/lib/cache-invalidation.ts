@@ -117,6 +117,17 @@ export function invalidateRegionalCache() {
 }
 
 /**
+ * ふるさと納税関連キャッシュを無効化
+ */
+export function invalidateFurusatoCache() {
+  mutate(
+    (key: unknown) => typeof key === 'string' && key.startsWith('/furusato/'),
+    undefined,
+    { revalidate: true }
+  )
+}
+
+/**
  * 全キャッシュを無効化（汎用アップロード用）
  */
 export function invalidateAllCache() {
@@ -130,4 +141,5 @@ export function invalidateAllCache() {
   invalidateComplaintCache()
   invalidateTargetCache()
   invalidateRegionalCache()
+  invalidateFurusatoCache()
 }
