@@ -2,6 +2,9 @@
  * ふるさと納税分析の型定義
  */
 
+// 週次データ（各指標に対して第1〜5週の配列）
+export type WeeklyData = Record<string, (number | null)[]> | null
+
 // 販売実績
 export interface FurusatoSalesData {
   inventory: number | null
@@ -15,6 +18,7 @@ export interface FurusatoSalesData {
   orders_other: number | null
   cumulative_orders: number | null
   cumulative_sales: number | null
+  weekly: WeeklyData
 }
 
 // リピート情報
@@ -25,18 +29,21 @@ export interface FurusatoRepeatData {
   repeat_buyers: number | null
   repeat_single_month: number | null
   repeat_multi_month: number | null
+  weekly: WeeklyData
 }
 
 // 返品・苦情
 export interface FurusatoComplaintData {
   reshipping_count: number | null
   complaint_count: number | null
+  weekly: WeeklyData
 }
 
 // 口コミ
 export interface FurusatoReviewData {
   positive_reviews: number | null
   negative_reviews: number | null
+  weekly: WeeklyData
 }
 
 // サマリーレスポンス
