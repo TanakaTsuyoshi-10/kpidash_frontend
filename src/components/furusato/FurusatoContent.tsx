@@ -120,7 +120,7 @@ export function FurusatoContent({ month, periodType }: Props) {
       {/* 販売実績                                                      */}
       {/* ============================================================ */}
       <Card>
-        <CardHeader className={`pb-3 ${sectionColors.sales.headerBg} rounded-t-lg`}>
+        <CardHeader className={`py-4 ${sectionColors.sales.headerBg} rounded-t-lg`}>
           <CardTitle className={`text-lg flex items-center gap-2 ${sectionColors.sales.headerText}`}>
             <ShoppingCart className="h-5 w-5" />
             販売実績
@@ -208,7 +208,7 @@ export function FurusatoContent({ month, periodType }: Props) {
       {/* リピート情報                                                   */}
       {/* ============================================================ */}
       <Card>
-        <CardHeader className={`pb-3 ${sectionColors.repeat.headerBg} rounded-t-lg`}>
+        <CardHeader className={`py-4 ${sectionColors.repeat.headerBg} rounded-t-lg`}>
           <CardTitle className={`text-lg flex items-center gap-2 ${sectionColors.repeat.headerText}`}>
             <Users className="h-5 w-5" />
             リピート情報
@@ -278,7 +278,7 @@ export function FurusatoContent({ month, periodType }: Props) {
       {/* 返品・苦情情報                                                 */}
       {/* ============================================================ */}
       <Card>
-        <CardHeader className={`pb-3 ${sectionColors.complaint.headerBg} rounded-t-lg`}>
+        <CardHeader className={`py-4 ${sectionColors.complaint.headerBg} rounded-t-lg`}>
           <CardTitle className={`text-lg flex items-center gap-2 ${sectionColors.complaint.headerText}`}>
             <AlertTriangle className="h-5 w-5" />
             返品・苦情情報
@@ -322,7 +322,7 @@ export function FurusatoContent({ month, periodType }: Props) {
       {/* 口コミ情報                                                     */}
       {/* ============================================================ */}
       <Card>
-        <CardHeader className={`pb-3 ${sectionColors.review.headerBg} rounded-t-lg`}>
+        <CardHeader className={`py-4 ${sectionColors.review.headerBg} rounded-t-lg`}>
           <CardTitle className={`text-lg flex items-center gap-2 ${sectionColors.review.headerText}`}>
             <MessageCircle className="h-5 w-5" />
             口コミ情報
