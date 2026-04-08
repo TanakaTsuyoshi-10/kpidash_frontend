@@ -6,21 +6,34 @@ import { createClient } from '@/lib/supabase/client'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-// セッショントークンの短期メモリキャッシュ（5秒）
+// セッショントークンのメモリキャッシュ（30秒）
 // 同時に複数のSWRフェッチが走った際の重複getSession()呼び出しを防ぐ
+// JWTの有効期限（通常1時間）よりはるかに短いため安全
 let cachedSession: { token: string; expires: number } | null = null
+let pendingSessionPromise: Promise<string> | null = null
 
 async function getSessionToken(): Promise<string> {
   if (cachedSession && Date.now() < cachedSession.expires) {
     return cachedSession.token
   }
-  const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.access_token) {
-    throw new Error('認証が必要です')
+  // 同時呼出し時に1つのgetSession()を共有する
+  if (pendingSessionPromise) {
+    return pendingSessionPromise
   }
-  cachedSession = { token: session.access_token, expires: Date.now() + 5000 }
-  return session.access_token
+  pendingSessionPromise = (async () => {
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        throw new Error('認証が必要です')
+      }
+      cachedSession = { token: session.access_token, expires: Date.now() + 30000 }
+      return session.access_token
+    } finally {
+      pendingSessionPromise = null
+    }
+  })()
+  return pendingSessionPromise
 }
 
 // Supabaseセッションを使用したグローバルフェッチャー

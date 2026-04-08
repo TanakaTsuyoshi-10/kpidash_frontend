@@ -45,22 +45,25 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // getSession()はCookieのJWTをローカル検証するだけ（~1ms）
+  // getUser()はSupabase Authサーバーに毎回問合せる（200-500ms）ため使わない
+  const { data: { session } } = await supabase.auth.getSession()
+  const isAuthenticated = !!session?.user
 
   // 未認証でダッシュボードにアクセス → ログインへ
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!isAuthenticated && request.nextUrl.pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // 未認証でその他の保護されたルートにアクセス → ログインへ
-  if (!user && (request.nextUrl.pathname.startsWith('/upload') ||
+  if (!isAuthenticated && (request.nextUrl.pathname.startsWith('/upload') ||
                 request.nextUrl.pathname.startsWith('/targets') ||
                 request.nextUrl.pathname.startsWith('/settings'))) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // 認証済みでログインページにアクセス → ダッシュボードへ
-  if (user && request.nextUrl.pathname === '/login') {
+  if (isAuthenticated && request.nextUrl.pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
