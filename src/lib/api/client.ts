@@ -3,6 +3,7 @@
  * Supabaseのアクセストークンをヘッダーに付与
  */
 import { createClient } from '@/lib/supabase/client'
+import { getSessionToken } from '@/lib/swr-config'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 const REQUEST_TIMEOUT = 30000  // 30秒
@@ -34,21 +35,9 @@ async function fetchWithTimeout(
 
 export class ApiClient {
   private async getAuthHeader(): Promise<HeadersInit> {
-    const supabase = getSupabase()
-    let { data: { session } } = await supabase.auth.getSession()
-
-    if (!session) {
-      const { data } = await supabase.auth.refreshSession()
-      session = data.session
-    }
-
-    if (!session?.access_token) {
-      throw new Error('認証が必要です')
-    }
-
-    // セキュリティ: トークンをログに出力しない
+    const token = await getSessionToken()
     return {
-      'Authorization': `Bearer ${session.access_token}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     }
   }

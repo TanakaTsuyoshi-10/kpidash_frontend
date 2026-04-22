@@ -20,7 +20,7 @@ export function setSessionTokenCache(token: string) {
   cachedSession = { token, expires: Date.now() + 30000 }
 }
 
-async function getSessionToken(): Promise<string> {
+export async function getSessionToken(): Promise<string> {
   if (cachedSession && Date.now() < cachedSession.expires) {
     return cachedSession.token
   }
