@@ -103,10 +103,10 @@ export function SWRProvider({ children }: SWRProviderProps) {
     <SWRConfig
       value={{
         fetcher,
-        revalidateOnFocus: false,
+        revalidateOnFocus: true,
         revalidateOnReconnect: true,
         revalidateIfStale: true,
-        dedupingInterval: 60000,
+        dedupingInterval: 5000,
         keepPreviousData: true,
         errorRetryCount: 3,
         errorRetryInterval: 3000,
