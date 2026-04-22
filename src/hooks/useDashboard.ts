@@ -34,7 +34,7 @@ export function useDashboardData(params: DashboardQueryParams = {}) {
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<DashboardResponse>(
     key,
-    { dedupingInterval: 300000 }
+    { dedupingInterval: 30000 }
   )
 
   return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
@@ -48,7 +48,7 @@ export function useCompanySummary(params: DashboardQueryParams = {}) {
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<CompanySummary>(
     key,
-    { dedupingInterval: 300000 }
+    { dedupingInterval: 30000 }
   )
 
   return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
@@ -62,7 +62,7 @@ export function useCashFlow(params: DashboardQueryParams = {}) {
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<CashFlowData>(
     key,
-    { dedupingInterval: 300000 }
+    { dedupingInterval: 30000 }
   )
 
   return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
@@ -74,7 +74,7 @@ export function useCashFlow(params: DashboardQueryParams = {}) {
 export function useDashboardChart(months: number = 12) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<ChartDataPoint[]>(
     `/api/v1/dashboard/chart?months=${months}`,
-    { dedupingInterval: 300000 }
+    { dedupingInterval: 30000 }
   )
 
   return { data: data ?? [], loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
@@ -88,7 +88,7 @@ export function useDashboardAlerts(params: DashboardQueryParams = {}) {
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<DashboardAlertItem[]>(
     key,
-    { dedupingInterval: 300000 }
+    { dedupingInterval: 30000 }
   )
 
   return { data: data ?? [], loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
