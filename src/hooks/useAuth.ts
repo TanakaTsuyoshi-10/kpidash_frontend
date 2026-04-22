@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { preload } from 'swr'
-import { fetcher } from '@/lib/swr-config'
+import { fetcher, setSessionTokenCache } from '@/lib/swr-config'
 import { getCurrentFiscalYear, getPreviousMonth, getCalendarYear } from '@/lib/fiscal-year'
 
 // 非アクティブタイムアウト（30分）
@@ -117,6 +117,13 @@ export function useAuth() {
     })
     if (error) throw error
 
+    // ログイン成功後、セッションからトークンを即座にキャッシュ
+    // preload()時のgetSession()呼び出しを省略し200-500ms短縮
+    const { data: { session: newSession } } = await supabase.auth.getSession()
+    if (newSession?.access_token) {
+      setSessionTokenCache(newSession.access_token)
+    }
+
     // ダッシュボードデータをプリロード（ページ遷移と並行してフェッチ開始）
     const year = getCurrentFiscalYear()
     const month = getPreviousMonth()
@@ -127,7 +134,7 @@ export function useAuth() {
     preload(`/products/store-summary?month=${periodString}&department_slug=store&period_type=monthly`, fetcher)
     preload(`/ecommerce/channel-summary?month=${periodString}&period_type=monthly`, fetcher)
 
-    router.push('/dashboard')
+    router.replace('/dashboard')
   }
 
   return {

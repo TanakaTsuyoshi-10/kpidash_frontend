@@ -5,6 +5,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useCallback } from 'react'
+import { preload } from 'swr'
+import { fetcher } from '@/lib/swr-config'
+import { getCurrentFiscalYear, getPreviousMonth, getCalendarYear } from '@/lib/fiscal-year'
 import {
   LayoutDashboard,
   Upload,
@@ -53,9 +57,39 @@ interface SidebarProps {
   onLogout?: () => void
 }
 
+// ホバー時にページデータをプリフェッチするためのURLマッピング
+function getPrefetchUrls(href: string): string[] {
+  const year = getCurrentFiscalYear()
+  const month = getPreviousMonth()
+  const periodString = `${getCalendarYear(year, month)}-${String(month).padStart(2, '0')}-01`
+
+  switch (href) {
+    case '/dashboard':
+      return [
+        `/api/v1/dashboard?period_type=monthly&year=${year}&month=${month}`,
+        '/api/v1/dashboard/chart?months=12',
+      ]
+    case '/products':
+      return [
+        `/products/store-summary?month=${periodString}&department_slug=store&period_type=monthly`,
+      ]
+    case '/ecommerce':
+      return [
+        `/ecommerce/channel-summary?month=${periodString}&period_type=monthly`,
+      ]
+    default:
+      return []
+  }
+}
+
 export function Sidebar({ userName, onLogout }: SidebarProps) {
   const pathname = usePathname()
   const { allowedPages, isAdmin } = useUserContext()
+
+  const handleMouseEnter = useCallback((href: string) => {
+    const urls = getPrefetchUrls(href)
+    urls.forEach(url => preload(url, fetcher))
+  }, [])
 
   const visibleItems = menuItems.filter((item) => {
     // pageKeyなし（設定など）は常時表示
@@ -88,6 +122,7 @@ export function Sidebar({ userName, onLogout }: SidebarProps) {
                 <Link
                   href={item.href}
                   prefetch={true}
+                  onMouseEnter={() => handleMouseEnter(item.href)}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive

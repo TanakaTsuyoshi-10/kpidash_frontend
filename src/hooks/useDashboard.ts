@@ -38,7 +38,7 @@ export function useDashboardData(params: DashboardQueryParams = {}) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<DashboardResponse>(
     key,
     () => getDashboardData(params),
-    { dedupingInterval: 60000 }
+    { dedupingInterval: 300000 }
   )
 
   return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
@@ -53,7 +53,7 @@ export function useCompanySummary(params: DashboardQueryParams = {}) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<CompanySummary>(
     key,
     () => getCompanySummary(params),
-    { dedupingInterval: 60000 }
+    { dedupingInterval: 300000 }
   )
 
   return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
@@ -68,7 +68,7 @@ export function useCashFlow(params: DashboardQueryParams = {}) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<CashFlowData>(
     key,
     () => getCashFlow(params),
-    { dedupingInterval: 60000 }
+    { dedupingInterval: 300000 }
   )
 
   return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
@@ -81,7 +81,7 @@ export function useDashboardChart(months: number = 12) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<ChartDataPoint[]>(
     `/api/v1/dashboard/chart?months=${months}`,
     () => getChartData(months),
-    { dedupingInterval: 60000 }
+    { dedupingInterval: 300000 }
   )
 
   return { data: data ?? [], loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
@@ -96,7 +96,7 @@ export function useDashboardAlerts(params: DashboardQueryParams = {}) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<DashboardAlertItem[]>(
     key,
     () => getDashboardAlerts(params),
-    { dedupingInterval: 60000 }
+    { dedupingInterval: 300000 }
   )
 
   return { data: data ?? [], loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }

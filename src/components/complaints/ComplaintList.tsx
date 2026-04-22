@@ -96,7 +96,9 @@ export function ComplaintList({ items, loading, viewMode, onSelect }: Props) {
                 >
                   <TableCell className="px-2">
                     {!complaint.response_summary && (
-                      <AlertTriangle className="h-4 w-4 text-amber-500" title="対応結果が未入力です" />
+                      <span title="対応結果が未入力です">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-sm">

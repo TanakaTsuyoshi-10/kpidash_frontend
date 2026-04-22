@@ -71,7 +71,9 @@ export function useStoreSummary(
   })
   const key = `/products/store-summary?${params.toString()}`
 
-  const { data, error, isLoading, isValidating, mutate } = useSWR<StoreSummaryResponse>(key)
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StoreSummaryResponse>(key, {
+    dedupingInterval: 300000,
+  })
 
   return {
     data: data ?? null,
