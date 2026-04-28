@@ -204,63 +204,52 @@ export function ManagementIndicatorsCard({ indicators, storeData, ecommerceData,
     )
   }
 
+  // データがあるカードのみ収集
+  const cards: React.ReactNode[] = []
+
+  if (indicators?.cost_rate && indicators.cost_rate.value !== null) {
+    cards.push(
+      <IndicatorCard key="cost" title="原価率" metric={indicators.cost_rate} type="rate" invertColor />
+    )
+  }
+
+  if (indicators?.labor_cost_rate && indicators.labor_cost_rate.value !== null) {
+    cards.push(
+      <IndicatorCard key="labor" title="人件費率" metric={indicators.labor_cost_rate} type="rate" invertColor />
+    )
+  }
+
+  if (storeData?.customers !== null) {
+    cards.push(
+      <SimpleCard key="store-cust" title="店舗客数" value={storeData?.customers ?? null} previousYear={storeData?.customers_previous_year ?? null} yoyRate={storeData?.customers_yoy ?? null} type="count" />
+    )
+  }
+
+  if (storeData?.unit_price !== null) {
+    cards.push(
+      <SimpleCard key="store-unit" title="店舗客単価" value={storeData?.unit_price ?? null} previousYear={storeData?.unit_price_previous_year ?? null} yoyRate={storeData?.unit_price_yoy ?? null} type="currency" />
+    )
+  }
+
+  if (ecommerceData?.customers !== null) {
+    cards.push(
+      <SimpleCard key="ec-cust" title="通販客数" value={ecommerceData?.customers ?? null} previousYear={ecommerceData?.customers_previous_year ?? null} yoyRate={ecommerceData?.customers_yoy ?? null} type="count" />
+    )
+  }
+
+  if (ecommerceData?.unit_price !== null) {
+    cards.push(
+      <SimpleCard key="ec-unit" title="通販客単価" value={ecommerceData?.unit_price ?? null} previousYear={ecommerceData?.unit_price_previous_year ?? null} yoyRate={ecommerceData?.unit_price_yoy ?? null} type="currency" />
+    )
+  }
+
+  if (cards.length === 0) {
+    return <div className="text-sm text-gray-400 text-center py-4">経営指標データなし</div>
+  }
+
   return (
-    <div className="grid grid-cols-3 gap-3">
-      {/* 1段目: 原価率、人件費率、店舗客数 */}
-      {indicators?.cost_rate ? (
-        <IndicatorCard
-          title="原価率"
-          metric={indicators.cost_rate}
-          type="rate"
-          invertColor
-        />
-      ) : (
-        <EmptyCard title="原価率" />
-      )}
-
-      {indicators?.labor_cost_rate ? (
-        <IndicatorCard
-          title="人件費率"
-          metric={indicators.labor_cost_rate}
-          type="rate"
-          invertColor
-        />
-      ) : (
-        <EmptyCard title="人件費率" />
-      )}
-
-      <SimpleCard
-        title="店舗客数"
-        value={storeData?.customers ?? null}
-        previousYear={storeData?.customers_previous_year ?? null}
-        yoyRate={storeData?.customers_yoy ?? null}
-        type="count"
-      />
-
-      {/* 2段目: 店舗客単価、通販客数、通販客単価 */}
-      <SimpleCard
-        title="店舗客単価"
-        value={storeData?.unit_price ?? null}
-        previousYear={storeData?.unit_price_previous_year ?? null}
-        yoyRate={storeData?.unit_price_yoy ?? null}
-        type="currency"
-      />
-
-      <SimpleCard
-        title="通販客数"
-        value={ecommerceData?.customers ?? null}
-        previousYear={ecommerceData?.customers_previous_year ?? null}
-        yoyRate={ecommerceData?.customers_yoy ?? null}
-        type="count"
-      />
-
-      <SimpleCard
-        title="通販客単価"
-        value={ecommerceData?.unit_price ?? null}
-        previousYear={ecommerceData?.unit_price_previous_year ?? null}
-        yoyRate={ecommerceData?.unit_price_yoy ?? null}
-        type="currency"
-      />
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {cards}
     </div>
   )
 }

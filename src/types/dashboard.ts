@@ -105,3 +105,39 @@ export interface DashboardQueryParams {
 
 // 期間タイプ
 export type PeriodType = 'monthly' | 'quarterly' | 'yearly'
+
+// ハイライト項目
+export interface HighlightItem {
+  icon: string
+  text: string
+  severity: 'info' | 'good' | 'warning' | 'critical'
+  link?: string | null
+}
+
+// ハイライトレスポンス
+export interface HighlightResponse {
+  date: string
+  items: HighlightItem[]
+  data_freshness?: string | null
+}
+
+// インサイト項目
+export interface InsightItem {
+  category: 'good' | 'warning' | 'critical'
+  severity: 'good' | 'warning' | 'critical'
+  text: string
+  link?: string | null
+}
+
+// インサイトレスポンス
+export interface InsightsResponse {
+  period: string
+  items: InsightItem[]
+}
+
+// データ鮮度
+export interface DataFreshnessData {
+  financial_latest: string | null
+  store_latest: string | null
+  ecommerce_latest: string | null
+}

@@ -125,3 +125,52 @@ export const LazyDashboardAlertList = dynamic(
     ssr: false
   }
 )
+
+// 新ダッシュボードコンポーネント
+export const LazyTodayHighlightCard = dynamic(
+  () => import('@/components/dashboard/TodayHighlightCard').then(mod => ({ default: mod.TodayHighlightCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyLiveSalesSection = dynamic(
+  () => import('@/components/dashboard/LiveSalesSection').then(mod => ({ default: mod.LiveSalesSection })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyEcommerceSummaryCard = dynamic(
+  () => import('@/components/dashboard/EcommerceSummaryCard').then(mod => ({ default: mod.EcommerceSummaryCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyInsightsAndActionsCard = dynamic(
+  () => import('@/components/dashboard/InsightsAndActionsCard').then(mod => ({ default: mod.InsightsAndActionsCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyStoreRankingCard = dynamic(
+  () => import('@/components/dashboard/StoreRankingCard').then(mod => ({ default: mod.StoreRankingCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyStoreWeekdayHeatmap = dynamic(
+  () => import('@/components/dashboard/StoreWeekdayHeatmap').then(mod => ({ default: mod.StoreWeekdayHeatmap })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)

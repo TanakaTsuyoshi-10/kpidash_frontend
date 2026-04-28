@@ -13,6 +13,7 @@ import type { CompanySummary, MetricWithComparison } from '@/types/dashboard'
 interface Props {
   summary: CompanySummary | null
   loading?: boolean
+  latestDataMonth?: string | null
 }
 
 interface MetricCardProps {
@@ -78,7 +79,7 @@ function MetricCard({ title, metric, isRate = false }: MetricCardProps) {
   )
 }
 
-export function CompanySummaryCard({ summary, loading }: Props) {
+export function CompanySummaryCard({ summary, loading, latestDataMonth }: Props) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -98,29 +99,34 @@ export function CompanySummaryCard({ summary, loading }: Props) {
     )
   }
 
+  // 全値nullならセクション非表示
   if (!summary) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="opacity-50">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">-</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-400">-</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
+    return null
+  }
+
+  const allNull =
+    summary.sales_total.value === null &&
+    summary.gross_profit.value === null &&
+    summary.gross_profit_rate.value === null &&
+    summary.operating_profit.value === null
+
+  if (allNull) {
+    return null
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <MetricCard title="全社売上高" metric={summary.sales_total} />
-      <MetricCard title="粗利益" metric={summary.gross_profit} />
-      <MetricCard title="粗利率" metric={summary.gross_profit_rate} isRate />
-      <MetricCard title="営業利益" metric={summary.operating_profit} />
+    <div>
+      {latestDataMonth && (
+        <div className="mb-2 text-xs bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-lg inline-block">
+          最新確定データ: {latestDataMonth}
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="全社売上高" metric={summary.sales_total} />
+        <MetricCard title="粗利益" metric={summary.gross_profit} />
+        <MetricCard title="粗利率" metric={summary.gross_profit_rate} isRate />
+        <MetricCard title="営業利益" metric={summary.operating_profit} />
+      </div>
     </div>
   )
 }

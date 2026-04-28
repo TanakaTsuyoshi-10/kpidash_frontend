@@ -5,10 +5,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { preload } from 'swr'
 import { fetcher } from '@/lib/swr-config'
 import { getCurrentFiscalYear, getPreviousMonth, getCalendarYear } from '@/lib/fiscal-year'
+import { useDashboardInsights } from '@/hooks/useDashboard'
 import {
   LayoutDashboard,
   Upload,
@@ -85,6 +86,29 @@ function getPrefetchUrls(href: string): string[] {
 export function Sidebar({ userName, onLogout }: SidebarProps) {
   const pathname = usePathname()
   const { allowedPages, isAdmin } = useUserContext()
+  const { data: insightsData } = useDashboardInsights()
+
+  // 新しいインサイト数のバッジ管理
+  const [insightBadgeCount, setInsightBadgeCount] = useState(0)
+
+  useEffect(() => {
+    if (!insightsData?.items) return
+
+    const lastViewedKey = 'dashboard_last_viewed'
+    const lastViewed = localStorage.getItem(lastViewedKey)
+    const currentCount = insightsData.items.length
+
+    if (pathname === '/dashboard') {
+      // ダッシュボード閲覧中はバッジを消す
+      localStorage.setItem(lastViewedKey, String(currentCount))
+      setInsightBadgeCount(0)
+    } else if (lastViewed !== null) {
+      const diff = currentCount - parseInt(lastViewed, 10)
+      setInsightBadgeCount(Math.max(0, diff))
+    } else {
+      setInsightBadgeCount(currentCount)
+    }
+  }, [insightsData, pathname])
 
   const handleMouseEnter = useCallback((href: string) => {
     const urls = getPrefetchUrls(href)
@@ -132,6 +156,11 @@ export function Sidebar({ userName, onLogout }: SidebarProps) {
                 >
                   <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
+                  {item.href === '/dashboard' && insightBadgeCount > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {insightBadgeCount}
+                    </span>
+                  )}
                 </Link>
               </li>
             )

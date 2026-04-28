@@ -15,6 +15,9 @@ import type {
   ChartDataPoint,
   DashboardAlertItem,
   DashboardQueryParams,
+  HighlightResponse,
+  InsightsResponse,
+  DataFreshnessData,
 } from '@/types/dashboard'
 
 function buildQueryString(params: DashboardQueryParams) {
@@ -92,4 +95,40 @@ export function useDashboardAlerts(params: DashboardQueryParams = {}) {
   )
 
   return { data: data ?? [], loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}
+
+/**
+ * 今日のハイライト取得
+ */
+export function useDashboardHighlights() {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<HighlightResponse>(
+    '/api/v1/dashboard/highlights',
+    { dedupingInterval: 30000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}
+
+/**
+ * 注目ポイント（インサイト）取得
+ */
+export function useDashboardInsights() {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<InsightsResponse>(
+    '/api/v1/dashboard/insights',
+    { dedupingInterval: 30000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}
+
+/**
+ * データ鮮度取得
+ */
+export function useDashboardFreshness() {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<DataFreshnessData>(
+    '/api/v1/dashboard/data-freshness',
+    { dedupingInterval: 60000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
 }
