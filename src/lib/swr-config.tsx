@@ -31,7 +31,16 @@ export async function getSessionToken(): Promise<string> {
   pendingSessionPromise = (async () => {
     try {
       const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
+      let { data: { session } } = await supabase.auth.getSession()
+
+      // トークンが期限切れまたは期限間近（60秒以内）の場合はリフレッシュ
+      if (session?.expires_at && session.expires_at * 1000 <= Date.now() + 60_000) {
+        const { data, error } = await supabase.auth.refreshSession()
+        if (!error && data.session) {
+          session = data.session
+        }
+      }
+
       if (!session?.access_token) {
         throw new Error('認証が必要です')
       }

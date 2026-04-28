@@ -41,6 +41,8 @@ export function FileUploader({ onUploadComplete, onUploadError }: Props) {
       setFileType('financial')
     } else if (lowerName.includes('製造') || lowerName.includes('manufacturing')) {
       setFileType('manufacturing')
+    } else if (lowerName.includes('レシートジャーナル') || lowerName.includes('販売日報') || lowerName.includes('receipt_journal') || lowerName.includes('receipt-journal')) {
+      setFileType('receipt_journal')
     } else if (lowerName.includes('商品別') || lowerName.includes('product')) {
       setFileType('product')
     } else if (lowerName.includes('店舗別') || lowerName.includes('store')) {

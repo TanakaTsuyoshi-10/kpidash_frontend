@@ -172,7 +172,8 @@ export class ApiClient {
     const supabase = getSupabase()
     let { data: { session } } = await supabase.auth.getSession()
 
-    if (!session) {
+    // セッションがない、またはトークンが期限切れ/期限間近（60秒以内）の場合はリフレッシュ
+    if (!session || (session.expires_at && session.expires_at * 1000 <= Date.now() + 60_000)) {
       const { data } = await supabase.auth.refreshSession()
       session = data.session
     }
@@ -235,7 +236,8 @@ export class ApiClient {
     const supabase = getSupabase()
     let { data: { session } } = await supabase.auth.getSession()
 
-    if (!session) {
+    // セッションがない、またはトークンが期限切れ/期限間近（60秒以内）の場合はリフレッシュ
+    if (!session || (session.expires_at && session.expires_at * 1000 <= Date.now() + 60_000)) {
       const { data } = await supabase.auth.refreshSession()
       session = data.session
     }

@@ -27,13 +27,24 @@ async function getAuthToken(): Promise<string> {
   const supabase = getSupabase()
   let { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) {
-    const { data } = await supabase.auth.refreshSession()
+  // セッションがない、またはトークンが期限切れ/期限間近（60秒以内）の場合はリフレッシュ
+  const needsRefresh = !session || (
+    session.expires_at && session.expires_at * 1000 <= Date.now() + 60_000
+  )
+
+  if (needsRefresh) {
+    const { data, error } = await supabase.auth.refreshSession()
+    if (error) {
+      // リフレッシュ失敗時はログインページへリダイレクト
+      window.location.href = '/login'
+      throw new Error('セッションの更新に失敗しました。再度ログインしてください。')
+    }
     session = data.session
   }
 
   if (!session?.access_token) {
-    throw new Error('認証が必要です')
+    window.location.href = '/login'
+    throw new Error('認証が必要です。再度ログインしてください。')
   }
 
   return session.access_token
