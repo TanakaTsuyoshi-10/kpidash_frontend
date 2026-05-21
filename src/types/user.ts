@@ -3,11 +3,18 @@
  */
 
 // 権限
-export type UserRole = 'admin' | 'user'
+export type UserRole = 'admin' | 'executive' | 'user'
+
+// 権限の表示名
+export const ROLE_LABELS: Record<UserRole, string> = {
+  admin: '管理者',
+  executive: '役員',
+  user: '一般利用者',
+}
 
 // ページキー
 export const PAGE_KEYS = [
-  'dashboard', 'finance', 'ecommerce', 'manufacturing', 'complaints', 'products', 'upload', 'targets'
+  'dashboard', 'finance', 'ecommerce', 'manufacturing', 'complaints', 'products', 'upload', 'targets', 'board', 'labor'
 ] as const
 export type PageKey = typeof PAGE_KEYS[number]
 
@@ -20,6 +27,8 @@ export const PAGE_LABELS: Record<PageKey, string> = {
   products: '店舗分析',
   upload: 'データアップロード',
   targets: '目標管理',
+  board: '取締役会',
+  labor: '経営指標（人件費・時間外）',
 }
 
 // 現在のユーザー情報

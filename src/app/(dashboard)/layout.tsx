@@ -56,7 +56,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const userName = user?.display_name || user?.email?.split('@')[0]
 
   const filteredNavItems = menuItems
-    .filter((item) => !item.pageKey || isAdmin || allowedPages.includes(item.pageKey))
+    .filter((item) => {
+      // pageKeyなし（設定など）は常時表示
+      if (!item.pageKey) return true
+      return isAdmin || allowedPages.includes(item.pageKey)
+    })
     .map((item) => ({
       href: item.href,
       label: item.label,

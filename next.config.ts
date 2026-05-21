@@ -29,6 +29,16 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    // ローカル開発時はローカルバックエンド（localhost:8000）への接続を許可する
+    const isDev = process.env.NODE_ENV !== 'production'
+    const connectSrc = [
+      "'self'",
+      'https://kpidash-backend-15142953408.asia-northeast1.run.app',
+      'https://oaymbdcnzycvhtwlntql.supabase.co',
+      'wss://oaymbdcnzycvhtwlntql.supabase.co',
+      ...(isDev ? ['http://localhost:8000', 'ws://localhost:3000'] : []),
+    ].join(' ')
+
     return [
       {
         source: '/:path*',
@@ -48,7 +58,9 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://kpidash-backend-15142953408.asia-northeast1.run.app https://oaymbdcnzycvhtwlntql.supabase.co wss://oaymbdcnzycvhtwlntql.supabase.co",
+              `connect-src ${connectSrc}`,
+              // 取締役会資料: Googleスライドの埋め込み表示を許可
+              "frame-src https://docs.google.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'"

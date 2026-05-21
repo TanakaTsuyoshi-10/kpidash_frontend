@@ -21,6 +21,7 @@ import {
   ShoppingCart,
   Factory,
   AlertTriangle,
+  Briefcase,
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -28,18 +29,24 @@ import { useUserContext } from '@/contexts/UserContext'
 import type { PageKey } from '@/types/user'
 
 // ナビゲーション項目の定義（エクスポートしてMobileSidebarでも使用）
-export const menuItems: Array<{
+// pageKey: ページ権限（allowedPages）でフィルタする項目
+export interface MenuItem {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
   pageKey?: PageKey
-}> = [
+  /** NEW バッジを表示するか */
+  badge?: 'new'
+}
+
+export const menuItems: MenuItem[] = [
   { href: '/dashboard', label: 'ダッシュボード', icon: LayoutDashboard, pageKey: 'dashboard' },
   { href: '/finance', label: '財務分析', icon: TrendingUp, pageKey: 'finance' },
   { href: '/products', label: '店舗分析', icon: Store, pageKey: 'products' },
   { href: '/ecommerce', label: '通販分析', icon: ShoppingCart, pageKey: 'ecommerce' },
   { href: '/manufacturing', label: '製造分析', icon: Factory, pageKey: 'manufacturing' },
   { href: '/manufacturing/complaints', label: 'クレーム管理', icon: AlertTriangle, pageKey: 'complaints' },
+  { href: '/board', label: '取締役会', icon: Briefcase, pageKey: 'board', badge: 'new' },
   { href: '/upload', label: 'データアップロード', icon: Upload, pageKey: 'upload' },
   { href: '/targets', label: '目標設定', icon: Target, pageKey: 'targets' },
   { href: '/settings', label: '設定', icon: Settings },
@@ -159,6 +166,11 @@ export function Sidebar({ userName, onLogout }: SidebarProps) {
                   {item.href === '/dashboard' && insightBadgeCount > 0 && (
                     <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                       {insightBadgeCount}
+                    </span>
+                  )}
+                  {item.badge === 'new' && (
+                    <span className="ml-auto bg-green-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
+                      NEW
                     </span>
                   )}
                 </Link>

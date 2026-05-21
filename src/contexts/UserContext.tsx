@@ -13,6 +13,7 @@ import type { CurrentUserResponse, PageKey } from '@/types/user'
 interface UserContextType {
   user: CurrentUserResponse | null
   isAdmin: boolean
+  isExecutive: boolean
   allowedPages: PageKey[]
   isLoading: boolean
   error: string | null
@@ -31,6 +32,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       value={{
         user: user ?? null,
         isAdmin: user?.is_admin ?? false,
+        isExecutive: user?.role === 'executive',
         allowedPages: user?.allowed_pages ?? [],
         isLoading,
         error: error?.message ?? null,

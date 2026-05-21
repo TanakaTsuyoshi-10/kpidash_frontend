@@ -47,6 +47,7 @@ export interface RegionalData {
   region_name: string
   total_sales: number | null
   total_sales_previous_year: number | null
+  total_sales_two_years_ago?: number | null
   sales_yoy_rate: number | null
   sales_yoy_diff: number | null
   target_sales: number | null

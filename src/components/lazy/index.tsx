@@ -174,3 +174,52 @@ export const LazyStoreWeekdayHeatmap = dynamic(
     ssr: false
   }
 )
+
+// 案C 改訂版 ダッシュボードコンポーネント
+export const LazyGyozaNewsCard = dynamic(
+  () => import('@/components/dashboard/GyozaNewsCard').then(mod => ({ default: mod.GyozaNewsCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazySlackFeedCard = dynamic(
+  () => import('@/components/dashboard/SlackFeedCard').then(mod => ({ default: mod.SlackFeedCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyBoardMeetingsCard = dynamic(
+  () => import('@/components/dashboard/BoardMeetingsCard').then(mod => ({ default: mod.BoardMeetingsCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyLaborCostSection = dynamic(
+  () => import('@/components/dashboard/LaborCostSection').then(mod => ({ default: mod.LaborCostSection })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyEcWebAnalyticsCard = dynamic(
+  () => import('@/components/dashboard/EcWebAnalyticsCard').then(mod => ({ default: mod.EcWebAnalyticsCard })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
+
+export const LazyDepartmentSalesSection = dynamic(
+  () => import('@/components/dashboard/DepartmentSalesSection').then(mod => ({ default: mod.DepartmentSalesSection })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)

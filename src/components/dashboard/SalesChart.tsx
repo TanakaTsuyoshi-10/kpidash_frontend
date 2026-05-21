@@ -55,13 +55,13 @@ export function SalesChart({ chartData, loading }: Props) {
     )
   }
 
-  // データを整形
+  // データを整形（前年比較対応）
   const data = chartData.map((point) => ({
     month: point.month.slice(5), // YYYY-MM → MM月表示
-    売上高: point.sales,
-    営業利益: point.operating_profit,
-    売上目標: point.sales_target,
-    利益目標: point.operating_profit_target,
+    当年売上: point.sales,
+    前年売上: point.sales_previous_year ?? null,
+    当年営業利益: point.operating_profit,
+    前年営業利益: point.operating_profit_previous_year ?? null,
   }))
 
   // Y軸のフォーマット
@@ -84,7 +84,10 @@ export function SalesChart({ chartData, loading }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">売上・利益推移</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">売上・利益トレンド推移（12ヶ月）</CardTitle>
+          <span className="text-xs text-gray-400">前年と比較</span>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-80">
@@ -112,41 +115,40 @@ export function SalesChart({ chartData, loading }: Props) {
                 labelFormatter={(label) => `${parseInt(String(label))}月`}
               />
               <Legend />
-              {/* 売上高 - 棒グラフ */}
+              {/* 当年売上 - 棒グラフ（緑） */}
               <Bar
                 yAxisId="left"
-                dataKey="売上高"
-                fill="#22c55e"
+                dataKey="当年売上"
+                fill="#16a34a"
                 radius={[4, 4, 0, 0]}
               />
-              {/* 売上目標 - 点線 */}
-              <Line
+              {/* 前年売上 - 棒グラフ（グレー） */}
+              <Bar
                 yAxisId="left"
-                type="monotone"
-                dataKey="売上目標"
-                stroke="#9ca3af"
-                strokeWidth={1}
-                strokeDasharray="5 5"
-                dot={false}
+                dataKey="前年売上"
+                fill="#d1d5db"
+                radius={[4, 4, 0, 0]}
               />
-              {/* 営業利益 - 折れ線 */}
+              {/* 当年営業利益 - 折れ線 */}
               <Line
                 yAxisId="right"
                 type="monotone"
-                dataKey="営業利益"
-                stroke="#3b82f6"
+                dataKey="当年営業利益"
+                stroke="#f59e0b"
                 strokeWidth={2}
-                dot={{ fill: '#3b82f6' }}
+                dot={{ fill: '#f59e0b', r: 2 }}
+                connectNulls
               />
-              {/* 利益目標 - 点線 */}
+              {/* 前年営業利益 - 折れ線（破線） */}
               <Line
                 yAxisId="right"
                 type="monotone"
-                dataKey="利益目標"
-                stroke="#9ca3af"
-                strokeWidth={1}
-                strokeDasharray="3 3"
+                dataKey="前年営業利益"
+                stroke="#fcd34d"
+                strokeWidth={2}
+                strokeDasharray="5 4"
                 dot={false}
+                connectNulls
               />
             </ComposedChart>
           </ResponsiveContainer>

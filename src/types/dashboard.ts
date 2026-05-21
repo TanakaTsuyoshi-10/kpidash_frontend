@@ -64,6 +64,8 @@ export interface ChartDataPoint {
   operating_profit: number | null
   sales_target: number | null
   operating_profit_target: number | null
+  sales_previous_year?: number | null
+  operating_profit_previous_year?: number | null
 }
 
 // アラート項目
