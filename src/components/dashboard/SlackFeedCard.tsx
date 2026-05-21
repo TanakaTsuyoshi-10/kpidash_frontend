@@ -11,8 +11,22 @@ import { MessageSquare } from 'lucide-react'
 import { useSlackPosts } from '@/hooks/useSlack'
 import type { SlackPost } from '@/types/slack'
 
-/** Slackワークスペースのトップ（permalink が無い投稿のフォールバック先） */
-const SLACK_APP_URL = 'https://slack.com/app_redirect'
+/** Slackデスクトップアプリを開くディープリンク */
+const SLACK_APP_URL = 'slack://open'
+
+/**
+ * 投稿のパーマリンク（Web URL）から、Slackデスクトップアプリ用の
+ * ディープリンク（slack://）を生成する。
+ * permalink 例: https://<workspace>.slack.com/archives/<CHANNEL_ID>/p<digits>
+ * デスクトップアプリが該当メッセージを直接開く。
+ */
+function toSlackDeepLink(post: SlackPost): string {
+  const match = post.permalink?.match(/\/archives\/([^/?]+)/)
+  if (match && post.ts) {
+    return `slack://channel?id=${match[1]}&message=${post.ts}`
+  }
+  return SLACK_APP_URL
+}
 
 /**
  * 投稿1件の行
@@ -30,21 +44,17 @@ function PostRow({ post }: { post: SlackPost }) {
           {post.time_label}
         </span>
       </div>
-      <p className="text-xs text-gray-700 mt-0.5 line-clamp-2">
+      <p className="text-xs text-gray-700 mt-0.5 whitespace-pre-wrap break-words">
         <b>{post.author}</b> {post.text}
       </p>
     </>
   )
 
   if (clickable) {
+    // slack:// プロトコルリンク。クリックでデスクトップアプリが開く
     return (
       <li className="hover:bg-gray-50">
-        <a
-          href={post.permalink ?? undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block px-5 py-2.5"
-        >
+        <a href={toSlackDeepLink(post)} className="block px-5 py-2.5">
           {content}
         </a>
       </li>
@@ -166,8 +176,6 @@ export function SlackFeedCard() {
       <div className="px-5 py-2.5 border-t border-gray-100 text-center bg-gray-50/50">
         <a
           href={SLACK_APP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
           className="text-xs font-medium text-green-700 hover:underline"
         >
           Slackで開く

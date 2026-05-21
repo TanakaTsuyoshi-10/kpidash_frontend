@@ -50,7 +50,8 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
 
   const isSelf = currentUser?.id === user?.id
-  const isFormRoleAdmin = formData.role === 'admin'
+  // 管理者・役員は全ページ閲覧可（ページ権限の個別選択は一般利用者のみ）
+  const isFullAccessRole = formData.role === 'admin' || formData.role === 'executive'
 
   const fetchPermissions = useCallback(async (userId: string) => {
     setPermissionsLoading(true)
@@ -73,8 +74,8 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
         isActive: user.is_active,
       })
       setShowDeactivateConfirm(false)
-      // 管理者以外のページ権限を取得
-      if (user.role !== 'admin') {
+      // 一般利用者のみページ権限を取得（管理者・役員は全ページ固定）
+      if (user.role === 'user') {
         fetchPermissions(user.id)
       } else {
         setSelectedPages([])
@@ -82,9 +83,9 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
     }
   }, [open, user, fetchRoles, fetchPermissions])
 
-  // ロールが管理者→一般利用者に変更された場合、ページ権限を取得
+  // ロールが一般利用者に変更された場合、ページ権限を取得
   useEffect(() => {
-    if (open && user && formData.role !== 'admin' && user.role === 'admin') {
+    if (open && user && formData.role === 'user' && user.role !== 'user') {
       fetchPermissions(user.id)
     }
   }, [open, user, formData.role, fetchPermissions])
@@ -104,8 +105,8 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
         role: formData.role,
         is_active: formData.isActive,
       })
-      // 管理者でなく、本人編集でもない場合はページ権限も更新
-      if (!isSelf && formData.role !== 'admin') {
+      // 一般利用者かつ本人編集でない場合のみページ権限を更新（管理者・役員は全ページ固定）
+      if (!isSelf && formData.role === 'user') {
         await updateUserPermissions(user.id, selectedPages)
       }
       toast.success('利用者情報を更新しました')
@@ -270,47 +271,57 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
             )}
           </div>
 
-          {/* ページ閲覧権限（管理者・本人編集時は非表示） */}
-          {!isSelf && !isFormRoleAdmin && (
+          {/* ページ閲覧権限（本人編集時は非表示。管理者・役員は全ページ固定表示） */}
+          {!isSelf && (
             <div className="space-y-2">
               <Label>閲覧許可ページ</Label>
-              {permissionsLoading ? (
+              {isFullAccessRole ? (
+                <>
+                  <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50">
+                    {PAGE_KEYS.map((key) => (
+                      <span
+                        key={key}
+                        className="px-3 py-1.5 rounded-md text-sm font-medium border bg-green-600 text-white border-green-600 opacity-80"
+                      >
+                        {PAGE_LABELS[key]}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {formData.role === 'admin' ? '管理者' : '役員'}は全ページを閲覧できます（変更不可）
+                  </p>
+                </>
+              ) : permissionsLoading ? (
                 <div className="flex items-center gap-2 p-3 text-gray-500 text-sm">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   読み込み中...
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50">
-                  {PAGE_KEYS.map((key) => {
-                    const active = selectedPages.includes(key)
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => togglePage(key)}
-                        className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
-                          active
-                            ? 'bg-green-600 text-white border-green-600'
-                            : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
-                        }`}
-                      >
-                        {PAGE_LABELS[key]}
-                      </button>
-                    )
-                  })}
-                </div>
+                <>
+                  <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-gray-50">
+                    {PAGE_KEYS.map((key) => {
+                      const active = selectedPages.includes(key)
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => togglePage(key)}
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
+                            active
+                              ? 'bg-green-600 text-white border-green-600'
+                              : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
+                          }`}
+                        >
+                          {PAGE_LABELS[key]}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    選択されたページのみ閲覧可能になります
+                  </p>
+                </>
               )}
-              <p className="text-xs text-gray-500">
-                選択されたページのみ閲覧可能になります（管理者は常に全ページ閲覧可）
-              </p>
-            </div>
-          )}
-          {isFormRoleAdmin && (
-            <div className="space-y-2">
-              <Label>閲覧許可ページ</Label>
-              <p className="text-sm text-gray-500 p-3 border rounded-lg bg-gray-50">
-                管理者は常に全ページを閲覧できます
-              </p>
             </div>
           )}
         </div>
