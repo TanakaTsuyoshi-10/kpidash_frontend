@@ -35,6 +35,8 @@ const DEPARTMENT_COLORS: Record<string, string> = {
   通販部門: '#0ea5e9',
   製造部門: '#f59e0b',
   本社: '#a855f7',
+  役員: '#ec4899',
+  その他: '#9ca3af',
 }
 
 /** 前年比を「+8.5%」形式にフォーマットする */
@@ -144,10 +146,12 @@ function OvertimeChart({ overtime }: OvertimeChartProps) {
 
 interface MetricTableProps {
   rows: Array<DepartmentLaborCost | DepartmentOvertime>
+  /** 合計行（全部署の合計）。未指定なら合計行を表示しない */
+  totalRow?: DepartmentLaborCost | DepartmentOvertime | null
   unitLabel: string
 }
 
-function MetricTable({ rows, unitLabel }: MetricTableProps) {
+function MetricTable({ rows, totalRow, unitLabel }: MetricTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs border-collapse">
@@ -182,6 +186,29 @@ function MetricTable({ rows, unitLabel }: MetricTableProps) {
             </tr>
           ))}
         </tbody>
+        {totalRow && (
+          <tfoot className="text-right">
+            <tr className="bg-gray-100 font-semibold text-gray-800">
+              <td className="text-left p-1.5 border border-gray-200">
+                {totalRow.department}
+              </td>
+              <td className="p-1.5 border border-gray-200">
+                {totalRow.previous_year.toFixed(1)}
+              </td>
+              <td className="p-1.5 border border-gray-200">
+                {totalRow.current.toFixed(1)}
+              </td>
+              <td
+                className={cn(
+                  'p-1.5 border border-gray-200',
+                  yoyColorClass(totalRow.yoy_rate)
+                )}
+              >
+                {formatYoY(totalRow.yoy_rate)}
+              </td>
+            </tr>
+          </tfoot>
+        )}
       </table>
       <p className="text-[10px] text-gray-400 mt-1">{unitLabel}</p>
     </div>
@@ -266,6 +293,7 @@ export function LaborCostSection({ month }: LaborCostSectionProps = {}) {
                 </div>
                 <MetricTable
                   rows={data.labor_costs}
+                  totalRow={data.labor_cost_total}
                   unitLabel="単位: 百万円／月"
                 />
               </div>
@@ -282,6 +310,7 @@ export function LaborCostSection({ month }: LaborCostSectionProps = {}) {
                 </div>
                 <MetricTable
                   rows={data.overtime}
+                  totalRow={data.overtime_total}
                   unitLabel="単位: 時間／月（1人あたり平均）"
                 />
               </div>

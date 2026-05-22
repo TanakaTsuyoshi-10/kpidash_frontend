@@ -32,6 +32,10 @@ export interface LaborSummaryResponse {
   labor_costs: DepartmentLaborCost[]
   overtime: DepartmentOvertime[]
   labor_cost_trend: LaborCostTrendPoint[]
+  /** 人件費の全部署合計（その他含む）。未提供時は null */
+  labor_cost_total?: DepartmentLaborCost | null
+  /** 時間外労働の全社合計（1人あたり平均）。未提供時は null */
+  overtime_total?: DepartmentOvertime | null
   /** サンプルデータかどうか（true=サンプル、false=SmartHR実データ） */
   is_sample: boolean
 }
