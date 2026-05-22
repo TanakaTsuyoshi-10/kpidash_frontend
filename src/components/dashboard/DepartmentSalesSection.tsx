@@ -25,12 +25,6 @@ import { BarChart3, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRegionalSummary } from '@/hooks/useRegional'
 import { useChannelSummary } from '@/hooks/useEcommerce'
-import {
-  formatPeriod,
-  getCalendarYear,
-  getCurrentFiscalYear,
-  getPreviousMonth,
-} from '@/lib/fiscal-year'
 
 // 店舗部門の対象5地区（この順・この名称のみ表示。「その他」は除外）
 const TARGET_REGIONS = ['福岡', '熊本', '宮崎', '都城', '鹿児島'] as const
@@ -151,25 +145,38 @@ function ArrowLabel({ rows, x, y, width, index }: ArrowLabelProps) {
 // メインセクション
 // =============================================================================
 
-export function DepartmentSalesSection() {
-  // 最新確定月＝前月（速報確定月）。会計年度と組み合わせて期間文字列を生成。
-  const { period, calendarYear, displayMonth } = useMemo(() => {
-    const fiscalYear = getCurrentFiscalYear()
-    const month = getPreviousMonth()
+interface DepartmentSalesSectionProps {
+  /** 対象期間（YYYY-MM-01。期間セレクタ連動） */
+  period: string
+  /** 集計種別（monthly=単月 / cumulative=年度累計） */
+  periodType: 'monthly' | 'cumulative'
+}
+
+export function DepartmentSalesSection({
+  period,
+  periodType,
+}: DepartmentSalesSectionProps) {
+  const isCumulative = periodType === 'cumulative'
+
+  // 期間文字列（YYYY-MM-01）からカレンダー年・月・会計年度を導出
+  const { calendarYear, displayMonth, fiscalYear } = useMemo(() => {
+    const [yStr, mStr] = period.split('-')
+    const y = Number(yStr)
+    const m = Number(mStr)
     return {
-      period: formatPeriod(fiscalYear, month),
-      calendarYear: getCalendarYear(fiscalYear, month),
-      displayMonth: month,
+      calendarYear: y,
+      displayMonth: m,
+      fiscalYear: m >= 9 ? y + 1 : y,
     }
-  }, [])
+  }, [period])
 
   const { data: regionalData, loading: regionalLoading } = useRegionalSummary(
     period,
-    'monthly'
+    periodType
   )
   const { data: channelData, loading: channelLoading } = useChannelSummary(
     period,
-    'monthly'
+    periodType
   )
 
   const loading = regionalLoading || channelLoading
@@ -232,13 +239,31 @@ export function DepartmentSalesSection() {
     [allRows]
   )
 
-  // 期間ラベル（前々年・前年・今年）
-  const labelTwoYears = `前々年同月 ${calendarYear - 2}年${displayMonth}月`
-  const labelPrevYear = `前年同月 ${calendarYear - 1}年${displayMonth}月`
-  const labelCurrent = `今年度直近月 ${calendarYear}年${displayMonth}月`
-  const shortTwoYears = `前々年同月 '${String(calendarYear - 2).slice(2)}/${displayMonth}`
-  const shortPrevYear = `前年同月 '${String(calendarYear - 1).slice(2)}/${displayMonth}`
-  const shortCurrent = `今年度直近月 '${String(calendarYear).slice(2)}/${displayMonth}`
+  // 期間ラベル（前々年・前年・今年）。累計時は年度ベースの表記に切替える。
+  const labelTwoYears = isCumulative
+    ? `前々年累計 ${fiscalYear - 2}年度`
+    : `前々年同月 ${calendarYear - 2}年${displayMonth}月`
+  const labelPrevYear = isCumulative
+    ? `前年累計 ${fiscalYear - 1}年度`
+    : `前年同月 ${calendarYear - 1}年${displayMonth}月`
+  const labelCurrent = isCumulative
+    ? `今年度累計 ${fiscalYear}年度`
+    : `今年度直近月 ${calendarYear}年${displayMonth}月`
+  const shortTwoYears = isCumulative
+    ? `前々年 ${fiscalYear - 2}年度`
+    : `前々年同月 '${String(calendarYear - 2).slice(2)}/${displayMonth}`
+  const shortPrevYear = isCumulative
+    ? `前年 ${fiscalYear - 1}年度`
+    : `前年同月 '${String(calendarYear - 1).slice(2)}/${displayMonth}`
+  const shortCurrent = isCumulative
+    ? `今年度 ${fiscalYear}年度`
+    : `今年度直近月 '${String(calendarYear).slice(2)}/${displayMonth}`
+
+  // 見出し・説明文（単月／累計で切替え）
+  const titleSuffix = isCumulative
+    ? `${fiscalYear}年度累計`
+    : `${calendarYear}年${displayMonth}月`
+  const yoyDescLabel = isCumulative ? '前年' : '前年同月'
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -246,7 +271,7 @@ export function DepartmentSalesSection() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
         <h2 className="font-semibold flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-green-600" />
-          部門別 売上実績（前月）
+          部門別 売上実績（{titleSuffix}）
         </h2>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
           <span className="flex items-center gap-1">
@@ -273,7 +298,8 @@ export function DepartmentSalesSection() {
         </div>
       </div>
       <p className="text-xs text-gray-400 mb-4">
-        店舗部門5地区＋通販部門5チャネル＝計10項目を3期間で比較／単位: 百万円／棒グラフ上の ▲▼ は前年同月比の増減
+        店舗部門5地区＋通販部門5チャネル＝計10項目を3期間で比較／単位: 百万円／棒グラフ上の ▲▼ は
+        {yoyDescLabel}比の増減
       </p>
 
       {loading ? (

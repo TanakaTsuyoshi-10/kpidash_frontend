@@ -40,13 +40,7 @@ import { RefreshCw, Store, ShoppingCart, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/format'
-import {
-  formatDisplayPeriod,
-  formatPeriod,
-  getCalendarYear,
-  getCurrentFiscalYear,
-  getPreviousMonth,
-} from '@/lib/fiscal-year'
+import { formatPeriod, getCalendarYear } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/dashboard'
 
 interface Props {
@@ -103,32 +97,54 @@ export function ExecutiveDashboard({
     quarter: periodType === 'quarterly' ? quarter : undefined,
   })
 
-  // グラフデータ取得
-  const { data: chartData, loading: chartLoading } = useDashboardChart(12)
-
-  // 業績重点カード用の対象月＝前月（最新確定月）。
-  // 通販は月次入力のため当月にはデータが無い。店舗も月次の前月実績を表示する。
-  const { prevPeriod, prevMonthLabel } = useMemo(() => {
-    const fiscalYear = getCurrentFiscalYear()
-    const month = getPreviousMonth()
-    const calYear = getCalendarYear(fiscalYear, month)
-    return {
-      prevPeriod: formatPeriod(fiscalYear, month),
-      prevMonthLabel: `${calYear}年${month}月 実績`,
+  // ===== 期間セレクタ連動 =====
+  // 業績データ（店舗/通販/部門別/トレンド/人件費）は期間セレクタに連動する。
+  // 月次=単月、四半期/年度=年度累計（四半期は期末月までの累計）。
+  // 餃子ニュース・Slack・GA4 等リアルタイム系は最新固定（連動しない）。
+  const { targetPeriod, summaryPeriodType, periodLabel } = useMemo(() => {
+    if (periodType === 'monthly') {
+      const calYear = getCalendarYear(year, month)
+      return {
+        targetPeriod: formatPeriod(year, month),
+        summaryPeriodType: 'monthly' as const,
+        periodLabel: `${calYear}年${month}月 実績`,
+      }
     }
-  }, [])
+    if (periodType === 'quarterly') {
+      // 四半期の期末月（Q1:11月 / Q2:2月 / Q3:5月 / Q4:8月）までの年度累計
+      const quarterEndMonth: Record<number, number> = { 1: 11, 2: 2, 3: 5, 4: 8 }
+      const endMonth = quarterEndMonth[quarter] ?? 8
+      return {
+        targetPeriod: formatPeriod(year, endMonth),
+        summaryPeriodType: 'cumulative' as const,
+        periodLabel: `${year}年度 Q${quarter} 累計`,
+      }
+    }
+    // 年度（通期 = 8月までの年度累計）
+    return {
+      targetPeriod: formatPeriod(year, 8),
+      summaryPeriodType: 'cumulative' as const,
+      periodLabel: `${year}年度 通期 累計`,
+    }
+  }, [periodType, year, month, quarter])
 
-  // 業績重点カード: 店舗売上（前月・月次）
-  const { data: storeData, loading: storeLoading } = useStoreSummary(
-    prevPeriod,
-    'store',
-    'monthly'
+  // グラフデータ取得（トレンドの終端月を期間セレクタに連動）
+  const { data: chartData, loading: chartLoading } = useDashboardChart(
+    12,
+    targetPeriod
   )
 
-  // 業績重点カード: 通販（前月・月次）
+  // 業績重点カード: 店舗売上（期間セレクタ連動）
+  const { data: storeData, loading: storeLoading } = useStoreSummary(
+    targetPeriod,
+    'store',
+    summaryPeriodType
+  )
+
+  // 業績重点カード: 通販（期間セレクタ連動）
   const { data: channelData, loading: channelLoading } = useChannelSummary(
-    prevPeriod,
-    'monthly'
+    targetPeriod,
+    summaryPeriodType
   )
 
   // 財務データの最新月
@@ -253,7 +269,7 @@ export function ExecutiveDashboard({
         <div>
           <h1 className="text-2xl font-bold">経営ダッシュボード</h1>
           <p className="text-sm text-gray-600 mt-1">
-            {formatDisplayPeriod(year, month)} | {year}年度
+            {periodLabel} | {year}年度
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -291,7 +307,7 @@ export function ExecutiveDashboard({
           title="店舗販売"
           icon={Store}
           mainValue={storeMainValue}
-          caption={prevMonthLabel}
+          caption={periodLabel}
           yoyLabel={storeYoY.label}
           yoyPositive={storeYoY.positive}
           subItems={storeSubItems}
@@ -304,7 +320,7 @@ export function ExecutiveDashboard({
           title="通信販売"
           icon={ShoppingCart}
           mainValue={channelMainValue}
-          caption={prevMonthLabel}
+          caption={periodLabel}
           yoyLabel={channelYoY.label}
           yoyPositive={channelYoY.positive}
           subItems={channelSubItems}
@@ -339,8 +355,11 @@ export function ExecutiveDashboard({
         />
       </div>
 
-      {/* 部門別 売上実績（全幅） */}
-      <LazyDepartmentSalesSection />
+      {/* 部門別 売上実績（全幅・期間セレクタ連動） */}
+      <LazyDepartmentSalesSection
+        period={targetPeriod}
+        periodType={summaryPeriodType}
+      />
 
       {/* 下部: 2カラム */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -381,8 +400,8 @@ export function ExecutiveDashboard({
           {/* 売上・利益トレンド推移（前年比較） */}
           <LazySalesChart chartData={chartData} loading={chartLoading} />
 
-          {/* 経営指標 — 部署別 人件費・時間外（権限管理: labor） */}
-          {canViewLabor && <LazyLaborCostSection />}
+          {/* 経営指標 — 部署別 人件費・時間外（権限管理: labor・期間セレクタ連動） */}
+          {canViewLabor && <LazyLaborCostSection month={targetPeriod} />}
         </div>
 
         {/* 右カラム */}

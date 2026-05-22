@@ -74,9 +74,12 @@ export function useCashFlow(params: DashboardQueryParams = {}) {
 /**
  * 推移グラフデータ取得
  */
-export function useDashboardChart(months: number = 12) {
+export function useDashboardChart(months: number = 12, endMonth?: string) {
+  const url = endMonth
+    ? `/api/v1/dashboard/chart?months=${months}&end_month=${endMonth}`
+    : `/api/v1/dashboard/chart?months=${months}`
   const { data, error, isLoading, isValidating, mutate } = useSWR<ChartDataPoint[]>(
-    `/api/v1/dashboard/chart?months=${months}`,
+    url,
     { dedupingInterval: 30000 }
   )
 

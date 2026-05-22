@@ -10,6 +10,11 @@ const BASE_PATH = '/api/v1/hr'
 /**
  * 部署別 人件費・時間外サマリー取得
  */
-export async function fetchLaborSummary(): Promise<LaborSummaryResponse> {
-  return apiClient.get<LaborSummaryResponse>(`${BASE_PATH}/labor-summary`)
+export async function fetchLaborSummary(
+  month?: string
+): Promise<LaborSummaryResponse> {
+  const query = month ? `?month=${encodeURIComponent(month)}` : ''
+  return apiClient.get<LaborSummaryResponse>(
+    `${BASE_PATH}/labor-summary${query}`
+  )
 }

@@ -192,8 +192,13 @@ function MetricTable({ rows, unitLabel }: MetricTableProps) {
 // メインセクション
 // =============================================================================
 
-export function LaborCostSection() {
-  const { data, loading, error } = useLaborSummary()
+interface LaborCostSectionProps {
+  /** 対象月（YYYY-MM-01。期間セレクタ連動。未指定なら最新月） */
+  month?: string
+}
+
+export function LaborCostSection({ month }: LaborCostSectionProps = {}) {
+  const { data, loading, error } = useLaborSummary(month)
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

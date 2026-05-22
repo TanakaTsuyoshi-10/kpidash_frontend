@@ -11,10 +11,10 @@ import type { LaborSummaryResponse } from '@/types/hr'
 /**
  * 部署別 人件費・時間外サマリー取得フック
  */
-export function useLaborSummary() {
+export function useLaborSummary(month?: string) {
   const { data, error, isLoading, isValidating, mutate } = useSWR<LaborSummaryResponse>(
-    '/hr/labor-summary',
-    () => fetchLaborSummary(),
+    month ? `/hr/labor-summary?month=${month}` : '/hr/labor-summary',
+    () => fetchLaborSummary(month),
     { dedupingInterval: 300000 }
   )
 
