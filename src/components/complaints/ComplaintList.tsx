@@ -75,16 +75,16 @@ export function ComplaintList({ items, loading, viewMode, onSelect }: Props) {
     <Card>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[40px]"></TableHead>
-                <TableHead className="w-[100px]">発生日</TableHead>
-                <TableHead className="min-w-[100px]">発生部署</TableHead>
-                <TableHead className="min-w-[100px]">種類</TableHead>
-                <TableHead className="min-w-[200px]">内容</TableHead>
-                <TableHead className="w-[100px]">対応者</TableHead>
-                <TableHead className="w-[80px]">状況</TableHead>
+                <TableHead className="w-[104px]">発生日</TableHead>
+                <TableHead className="w-[140px]">発生部署</TableHead>
+                <TableHead className="w-[112px]">種類</TableHead>
+                <TableHead>内容</TableHead>
+                <TableHead className="w-[112px]">対応者</TableHead>
+                <TableHead className="w-[92px]">状況</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -113,8 +113,10 @@ export function ComplaintList({ items, loading, viewMode, onSelect }: Props) {
                   <TableCell>
                     <ComplaintTypeBadge complaintType={complaint.complaint_type} typeName={complaint.complaint_type_name} />
                   </TableCell>
-                  <TableCell className="text-sm">
-                    <span className="line-clamp-2">{complaint.complaint_content}</span>
+                  <TableCell className="text-sm whitespace-normal">
+                    <span className="line-clamp-2 break-words">
+                      {complaint.complaint_content}
+                    </span>
                   </TableCell>
                   <TableCell className="text-sm text-gray-500">
                     <span className="line-clamp-1">{complaint.responder_name || '-'}</span>

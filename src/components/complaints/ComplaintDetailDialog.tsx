@@ -104,12 +104,13 @@ export function ComplaintDetailDialog({
     }
   }
 
-  // 対応セクションの保存
+  // 対応セクションの保存（保存成功時は入力画面を閉じる）
   const handleResponseSave = async () => {
     try {
       await onUpdate(complaint.id, responseFormData)
+      handleClose()
     } catch {
-      // エラーは親で処理
+      // エラー時は画面を閉じず、親で表示したエラーを確認できるようにする
     }
   }
 
