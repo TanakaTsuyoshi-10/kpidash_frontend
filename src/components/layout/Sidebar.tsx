@@ -46,7 +46,7 @@ export const menuItems: MenuItem[] = [
   { href: '/ecommerce', label: '通販分析', icon: ShoppingCart, pageKey: 'ecommerce' },
   { href: '/manufacturing', label: '製造分析', icon: Factory, pageKey: 'manufacturing' },
   { href: '/manufacturing/complaints', label: 'クレーム管理', icon: AlertTriangle, pageKey: 'complaints' },
-  { href: '/board', label: '取締役会', icon: Briefcase, pageKey: 'board', badge: 'new' },
+  { href: '/board', label: '取締役会', icon: Briefcase, pageKey: 'board' },
   { href: '/upload', label: 'データアップロード', icon: Upload, pageKey: 'upload' },
   { href: '/targets', label: '目標設定', icon: Target, pageKey: 'targets' },
   { href: '/settings', label: '設定', icon: Settings },

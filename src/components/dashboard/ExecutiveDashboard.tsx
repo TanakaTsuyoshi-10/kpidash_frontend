@@ -35,6 +35,7 @@ import {
 } from '@/hooks/useDashboard'
 import { useStoreSummary } from '@/hooks/useStoreSummary'
 import { useChannelSummary } from '@/hooks/useEcommerce'
+import { useComplaintDashboardSummary } from '@/hooks/useComplaint'
 import { useUserContext } from '@/contexts/UserContext'
 import { RefreshCw, Store, ShoppingCart, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -209,8 +210,17 @@ export function ExecutiveDashboard({
       }))
   }, [channelData, channelTotals])
 
+  // クレームは運用上の最新指標のため、期間セレクタに連動させず
+  // 「当月（実日付ベース）」で件数を取得する。
+  const currentMonthPeriod = useMemo(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  }, [])
+  const { data: complaintSummary, loading: complaintLoading } =
+    useComplaintDashboardSummary(currentMonthPeriod)
+
   // クレーム状況カード
-  const complaint = data?.complaint_summary
+  const complaint = complaintSummary
   const complaintCount = complaint?.current_month_count ?? 0
   const complaintDiff = useMemo(() => {
     if (!complaint) return { label: '前月比 —', positive: true }
@@ -351,7 +361,7 @@ export function ExecutiveDashboard({
           href="/manufacturing/complaints"
           linkLabel="クレーム管理へ"
           accentColor="amber"
-          loading={loading}
+          loading={complaintLoading}
         />
       </div>
 
