@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useDailySalesSummary } from '@/hooks/useDailySales'
 import { cn } from '@/lib/utils'
+import { getJapaneseHoliday } from '@/lib/japanese-holidays'
 import type { DailySalesMetric, DailyStoreSalesData, StoreInfo } from '@/types/daily-sales'
 
 interface Props {
@@ -201,6 +202,8 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
   }
 
   function getDowClass(dateStr: string): string {
+    // 祝日は日曜と同様に赤
+    if (getJapaneseHoliday(dateStr)) return 'text-red-600'
     const d = new Date(dateStr + 'T00:00:00')
     const dow = d.getDay()
     if (dow === 0) return 'text-red-600'
@@ -310,6 +313,11 @@ export function DailyStoreSalesTable({ month, departmentSlug = 'store' }: Props)
                     getDowClass(dateStr),
                   )}>
                     {formatDate(dateStr)}
+                    {getJapaneseHoliday(dateStr) && (
+                      <div className="text-[9px] font-normal text-red-500 leading-tight">
+                        {getJapaneseHoliday(dateStr)}
+                      </div>
+                    )}
                   </td>
                   {sortedStores.map(store => {
                     const entry = dataLookup.get(`${dateStr}-${store.segment_id}`)
