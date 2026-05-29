@@ -4,6 +4,7 @@
  */
 import { createClient } from '@/lib/supabase/client'
 import { getSessionToken } from '@/lib/swr-config'
+import { redirectToLoginOnAuthFailure } from '@/lib/auth-redirect'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 const REQUEST_TIMEOUT = 30000  // 30秒
@@ -43,8 +44,9 @@ export class ApiClient {
   }
 
   private handleErrorResponse(status: number, errorData?: { detail?: string | Array<{ msg?: string }> }): never {
-    // 401: 認証エラー（リダイレクトせずエラーをスロー）
+    // 401: 認証エラー → ログイン画面へ自動誘導してから例外を投げる
     if (status === 401) {
+      redirectToLoginOnAuthFailure()
       throw new Error('認証が必要です。再度ログインしてください。')
     }
 

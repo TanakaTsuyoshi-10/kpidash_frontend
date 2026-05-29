@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +18,12 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
+  const searchParams = useSearchParams()
+
+  // セッション切れで誘導された場合のフラグと、ログイン成功後に戻るURL
+  const expired = searchParams.get('expired') === '1'
+  const message = searchParams.get('message')
+  const returnTo = searchParams.get('returnTo') || undefined
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,7 +31,7 @@ export function LoginForm() {
     setLoading(true)
 
     try {
-      await signIn(email, password)
+      await signIn(email, password, returnTo)
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message)
@@ -46,6 +53,23 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* セッション切れによる自動誘導の通知 */}
+          {expired && (
+            <Alert>
+              <AlertDescription>
+                セッションの有効期限が切れました。再度ログインしてください。
+                ログイン後、操作中の画面へ自動的に戻ります。
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* ログアウト時のメッセージ（既存の挙動） */}
+          {!expired && message && (
+            <Alert>
+              <AlertDescription>{message}</AlertDescription>
+            </Alert>
+          )}
+
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>

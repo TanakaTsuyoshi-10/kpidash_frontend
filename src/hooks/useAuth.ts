@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { preload } from 'swr'
 import { fetcher, setSessionTokenCache } from '@/lib/swr-config'
+import { redirectToLoginOnAuthFailure } from '@/lib/auth-redirect'
 import { getCurrentFiscalYear, getPreviousMonth, getCalendarYear } from '@/lib/fiscal-year'
 
 // 非アクティブタイムアウト（30分）
@@ -26,14 +27,17 @@ export function useAuth() {
   const lastActivityRef = useRef<number>(Date.now())
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null)
   const warningShownRef = useRef(false)
+  // 意図的なログアウトかどうかを記録（SIGNED_OUT イベントの自動誘導と区別するため）
+  const intentionalSignOutRef = useRef(false)
 
   // アクティビティを記録
   const recordActivity = useCallback(() => {
     lastActivityRef.current = Date.now()
   }, [])
 
-  // ログアウト処理
+  // ログアウト処理（意図的）
   const signOut = useCallback(async (message?: string) => {
+    intentionalSignOutRef.current = true
     try {
       await supabase.auth.signOut()
     } catch (error) {
@@ -100,17 +104,31 @@ export function useAuth() {
 
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
+
+        // 意図しない SIGNED_OUT（Supabase の自動リフレッシュ失敗等）を検知して
+        // ログイン画面へ自動誘導する。signOut() による意図的ログアウトでは
+        // intentionalSignOutRef が true のためここはスキップされる。
+        if (event === 'SIGNED_OUT' && !intentionalSignOutRef.current) {
+          redirectToLoginOnAuthFailure()
+        }
+        // 次回のための初期化
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          intentionalSignOutRef.current = false
+        }
       }
     )
 
     return () => subscription.unsubscribe()
   }, [supabase.auth])
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, returnTo?: string) => {
+    // 意図的ログアウトのフラグを解除（過去にログアウトしていた場合に備えて）
+    intentionalSignOutRef.current = false
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -134,7 +152,13 @@ export function useAuth() {
     preload(`/products/store-summary?month=${periodString}&department_slug=store&period_type=monthly`, fetcher)
     preload(`/ecommerce/channel-summary?month=${periodString}&period_type=monthly`, fetcher)
 
-    router.replace('/dashboard')
+    // returnTo が指定されていればそこへ戻る（セッション切れ復帰時など）
+    // 安全のため同一オリジン内の絶対パスのみ受け付ける
+    const safeReturnTo =
+      returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//')
+        ? returnTo
+        : '/dashboard'
+    router.replace(safeReturnTo)
   }
 
   return {

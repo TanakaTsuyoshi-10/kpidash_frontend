@@ -3,6 +3,7 @@
 import { SWRConfig } from 'swr'
 import { ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { redirectToLoginOnAuthFailure } from '@/lib/auth-redirect'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -20,28 +21,48 @@ export function setSessionTokenCache(token: string) {
   cachedSession = { token, expires: Date.now() + 30000 }
 }
 
+/**
+ * セッションを段階的に取得する。
+ * 1) getSession() を読む
+ * 2) 期限切れ間近なら refreshSession()
+ * 3) それでも空なら refreshSession() を明示的にもう一度試す
+ *    （Supabase 内部の autoRefresh と衝突して一時的に空になることがある）
+ */
+async function resolveSession() {
+  const supabase = createClient()
+  let session = (await supabase.auth.getSession()).data.session
+
+  const nearExpiry =
+    session?.expires_at && session.expires_at * 1000 <= Date.now() + 60_000
+  if (nearExpiry) {
+    const { data, error } = await supabase.auth.refreshSession()
+    if (!error && data.session) session = data.session
+  }
+
+  // セッションが空（getSessionが内部失敗で何も返さなかった等）の場合に
+  // 明示的なリフレッシュを試みる。リフレッシュトークンが Cookie に残って
+  // いれば回復できる。
+  if (!session?.access_token) {
+    const { data } = await supabase.auth.refreshSession()
+    if (data.session?.access_token) session = data.session
+  }
+
+  return session
+}
+
 export async function getSessionToken(): Promise<string> {
   if (cachedSession && Date.now() < cachedSession.expires) {
     return cachedSession.token
   }
-  // 同時呼出し時に1つのgetSession()を共有する
   if (pendingSessionPromise) {
     return pendingSessionPromise
   }
   pendingSessionPromise = (async () => {
     try {
-      const supabase = createClient()
-      let { data: { session } } = await supabase.auth.getSession()
-
-      // トークンが期限切れまたは期限間近（60秒以内）の場合はリフレッシュ
-      if (session?.expires_at && session.expires_at * 1000 <= Date.now() + 60_000) {
-        const { data, error } = await supabase.auth.refreshSession()
-        if (!error && data.session) {
-          session = data.session
-        }
-      }
-
+      const session = await resolveSession()
       if (!session?.access_token) {
+        // 完全に復帰不能 → ログイン画面へ誘導してから例外を投げる
+        redirectToLoginOnAuthFailure()
         throw new Error('認証が必要です')
       }
       cachedSession = { token: session.access_token, expires: Date.now() + 30000 }
@@ -67,22 +88,23 @@ export async function fetcher(url: string) {
   // 401の場合、キャッシュを破棄してトークンリフレッシュして1回リトライ
   if (res.status === 401) {
     cachedSession = null
-    const supabase = createClient()
-    const { data: { session: refreshedSession } } = await supabase.auth.refreshSession()
-    if (!refreshedSession?.access_token) {
+    const refreshed = await resolveSession()
+    if (!refreshed?.access_token) {
+      redirectToLoginOnAuthFailure()
       throw new Error('認証が必要です。再度ログインしてください。')
     }
-    cachedSession = { token: refreshedSession.access_token, expires: Date.now() + 5000 }
+    cachedSession = { token: refreshed.access_token, expires: Date.now() + 5000 }
 
     const retryRes = await fetch(`${API_BASE_URL}${url}`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${refreshedSession.access_token}`
+        'Authorization': `Bearer ${refreshed.access_token}`
       },
     })
 
     if (!retryRes.ok) {
       if (retryRes.status === 401) {
+        redirectToLoginOnAuthFailure()
         throw new Error('認証が必要です。再度ログインしてください。')
       }
       const error = await retryRes.json().catch(() => ({}))
