@@ -160,10 +160,8 @@ export function BoardMeetingDetailDialog({
               </p>
               {meeting.materials.map((material, index) => (
                 <div key={index} className="space-y-1.5">
-                  {material.label && (
-                    <p className="text-sm font-medium text-gray-700">{material.label}</p>
-                  )}
-                  <SlideEmbed url={material.url} />
+                  {/* ラベル（ファイル名）の表示は SlideEmbed 側で扱う */}
+                  <SlideEmbed url={material.url} label={material.label} />
                 </div>
               ))}
             </div>
