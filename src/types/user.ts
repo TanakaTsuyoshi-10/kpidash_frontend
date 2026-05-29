@@ -38,6 +38,8 @@ export interface CurrentUserResponse {
   display_name: string | null
   role: UserRole
   is_admin: boolean
+  /** アカウントが有効か。false の場合はログイン拒否対象 */
+  is_active: boolean
   allowed_pages: PageKey[]
 }
 

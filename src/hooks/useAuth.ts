@@ -142,6 +142,41 @@ export function useAuth() {
       setSessionTokenCache(newSession.access_token)
     }
 
+    // 無効化されたアカウントを即座にブロックする
+    // バックエンドの /users/me は is_active=false の場合 403 を返すため、
+    // それを検知して Supabase 側もサインアウトし、エラーを表示する。
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    try {
+      const meRes = await fetch(`${API_URL}/api/v1/users/me`, {
+        headers: {
+          'Authorization': `Bearer ${newSession?.access_token ?? ''}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      if (meRes.status === 403) {
+        intentionalSignOutRef.current = true
+        await supabase.auth.signOut()
+        throw new Error(
+          'このアカウントは無効化されています。管理者にお問い合わせください。'
+        )
+      }
+      if (meRes.ok) {
+        const me = await meRes.json()
+        if (me && me.is_active === false) {
+          intentionalSignOutRef.current = true
+          await supabase.auth.signOut()
+          throw new Error(
+            'このアカウントは無効化されています。管理者にお問い合わせください。'
+          )
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('無効化')) {
+        throw err
+      }
+      // 通信エラー時はログインを通す（既存挙動を優先）
+    }
+
     // ダッシュボードデータをプリロード（ページ遷移と並行してフェッチ開始）
     const year = getCurrentFiscalYear()
     const month = getPreviousMonth()
