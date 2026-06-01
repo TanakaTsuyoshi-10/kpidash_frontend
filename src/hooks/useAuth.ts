@@ -10,11 +10,12 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { preload } from 'swr'
 import { fetcher, setSessionTokenCache } from '@/lib/swr-config'
-import { redirectToLoginOnAuthFailure } from '@/lib/auth-redirect'
 import { getCurrentFiscalYear, getPreviousMonth, getCalendarYear } from '@/lib/fiscal-year'
 
-// 非アクティブタイムアウト（30分）
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000
+// 非アクティブタイムアウト（4時間）
+// 経営ダッシュボードという性質上、画面を開いたまま読むケースが多い。
+// 短すぎると操作なしで頻繁にログアウトされるため、4時間に設定。
+const INACTIVITY_TIMEOUT = 4 * 60 * 60 * 1000
 // 警告表示（タイムアウト5分前）
 const WARNING_BEFORE = 5 * 60 * 1000
 
@@ -78,8 +79,8 @@ export function useAuth() {
     // 1分ごとにチェック
     inactivityTimerRef.current = setInterval(checkInactivity, 60000)
 
-    // ユーザーアクティビティを監視
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
+    // ユーザーアクティビティを監視（読みのみでも検出するため mousemove も含める）
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart']
     events.forEach(event => {
       window.addEventListener(event, recordActivity, { passive: true })
     })
@@ -109,13 +110,12 @@ export function useAuth() {
         setUser(session?.user ?? null)
         setLoading(false)
 
-        // 意図しない SIGNED_OUT（Supabase の自動リフレッシュ失敗等）を検知して
-        // ログイン画面へ自動誘導する。signOut() による意図的ログアウトでは
-        // intentionalSignOutRef が true のためここはスキップされる。
-        if (event === 'SIGNED_OUT' && !intentionalSignOutRef.current) {
-          redirectToLoginOnAuthFailure()
-        }
-        // 次回のための初期化
+        // 注意: SIGNED_OUT イベントでの自動誘導は行わない。
+        // Supabase は一時的なリフレッシュ失敗でも SIGNED_OUT を発火することが
+        // あり、それで即ログイン画面に飛ばすと「操作中に勝手にログアウトされた」
+        // と感じられる原因になる。本当に認証が必要な API 呼び出し時に
+        // getSessionToken / apiClient / fetcher 経路で確定的にダメな場合だけ
+        // /login に誘導する（過敏な誘導を避けつつ、復帰不能時は確実に拾う）。
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           intentionalSignOutRef.current = false
         }
