@@ -142,6 +142,56 @@ function ArrowLabel({ rows, x, y, width, index }: ArrowLabelProps) {
 }
 
 // =============================================================================
+// カスタムツールチップ（表示順を「今年度 → 前年 → 前々年」に固定）
+// =============================================================================
+
+interface TooltipEntry {
+  dataKey?: string | number
+  name?: string | number
+  value?: number | string
+  color?: string
+}
+
+interface ChartTooltipProps {
+  active?: boolean
+  payload?: TooltipEntry[]
+  label?: string | number
+}
+
+/**
+ * 棒は時系列（前々年→前年→今年度）で並べているが、ツールチップは
+ * 「今年度→前年→前々年」の順に表示して最新の数値を一番上で確認できる
+ * ようにする。Recharts の Tooltip に <ChartTooltip /> を渡して使う。
+ */
+function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null
+  // Bar の宣言順は twoYearsAgo → previousYear → current のため、
+  // 逆順に並べると current → previousYear → twoYearsAgo になる。
+  const ordered = [...payload].reverse()
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 px-2.5 py-2 text-[11px] shadow-md">
+      <p className="font-semibold mb-1 text-gray-700">{label}</p>
+      {ordered.map((entry) => (
+        <p
+          key={String(entry.dataKey)}
+          className="flex items-center gap-1.5 leading-tight"
+        >
+          <span
+            className="h-2 w-2 rounded-sm inline-block"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-gray-600">{entry.name}:</span>
+          <span className="font-medium text-gray-900">
+            {Number(entry.value ?? 0).toFixed(1)} 百万円
+          </span>
+        </p>
+      ))}
+    </div>
+  )
+}
+
+
+// =============================================================================
 // メインセクション
 // =============================================================================
 
@@ -277,9 +327,9 @@ export function DepartmentSalesSection({
           <span className="flex items-center gap-1">
             <span
               className="h-2.5 w-2.5 rounded-sm"
-              style={{ backgroundColor: COLOR_CURRENT }}
+              style={{ backgroundColor: COLOR_TWO_YEARS }}
             />
-            {labelCurrent}
+            {labelTwoYears}
           </span>
           <span className="flex items-center gap-1">
             <span
@@ -291,9 +341,9 @@ export function DepartmentSalesSection({
           <span className="flex items-center gap-1">
             <span
               className="h-2.5 w-2.5 rounded-sm"
-              style={{ backgroundColor: COLOR_TWO_YEARS }}
+              style={{ backgroundColor: COLOR_CURRENT }}
             />
-            {labelTwoYears}
+            {labelCurrent}
           </span>
         </div>
       </div>
@@ -338,22 +388,28 @@ export function DepartmentSalesSection({
                       fontSize: 10,
                     }}
                   />
-                  <Tooltip
-                    formatter={(value) => `${Number(value).toFixed(1)} 百万円`}
-                    contentStyle={{
-                      fontSize: '11px',
-                      borderRadius: '8px',
-                      border: '1px solid #e5e7eb',
-                    }}
-                  />
+                  {/* ツールチップは「今年度 → 前年 → 前々年」の順で表示する */}
+                  <Tooltip content={<ChartTooltip />} />
                   <Legend
                     wrapperStyle={{ fontSize: 11 }}
                     iconSize={10}
                     verticalAlign="bottom"
                   />
-                  {/* 棒の並びは「今年度 → 前年 → 前々年」。最新を各グループの
-                      左端に配置し、その隣に直接比較対象の前年を置く。凡例も
-                      Recharts により Bar の宣言順で表示されるため同じ順序になる。 */}
+                  {/* 棒の並びは時系列「前々年 → 前年 → 今年度」を維持。
+                      ツールチップだけ後段の CustomTooltip で
+                      「今年度 → 前年 → 前々年」に並べ替えて表示する。 */}
+                  <Bar
+                    dataKey="twoYearsAgo"
+                    name={shortTwoYears}
+                    fill={COLOR_TWO_YEARS}
+                    radius={[3, 3, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="previousYear"
+                    name={shortPrevYear}
+                    fill={COLOR_PREV_YEAR}
+                    radius={[3, 3, 0, 0]}
+                  />
                   <Bar
                     dataKey="current"
                     name={shortCurrent}
@@ -365,18 +421,6 @@ export function DepartmentSalesSection({
                       content={<ArrowLabel rows={allRows} />}
                     />
                   </Bar>
-                  <Bar
-                    dataKey="previousYear"
-                    name={shortPrevYear}
-                    fill={COLOR_PREV_YEAR}
-                    radius={[3, 3, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="twoYearsAgo"
-                    name={shortTwoYears}
-                    fill={COLOR_TWO_YEARS}
-                    radius={[3, 3, 0, 0]}
-                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
