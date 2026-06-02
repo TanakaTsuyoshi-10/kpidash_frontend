@@ -423,16 +423,18 @@ export function DepartmentSalesSection({
                   </tr>
                 </thead>
                 <tbody className="text-right text-gray-700">
-                  <tr>
-                    <td className="text-left p-1.5 font-medium text-gray-500 whitespace-nowrap">
-                      {shortTwoYears}
+                  {/* 行順は「今年度直近月 → 前年同月 → 前々年同月 → 前年比」。
+                      最新の数値を最上段で目立たせ、その直下に直接の比較対象（前年）を置く。 */}
+                  <tr className="bg-green-50 font-semibold text-gray-900">
+                    <td className="text-left p-1.5 whitespace-nowrap">
+                      {shortCurrent}
                     </td>
                     {allRows.map((row) => (
                       <td
                         key={row.name}
                         className="p-1.5 border border-gray-100"
                       >
-                        {fmtMillion(row.twoYearsAgo)}
+                        {fmtMillion(row.current)}
                       </td>
                     ))}
                   </tr>
@@ -449,16 +451,16 @@ export function DepartmentSalesSection({
                       </td>
                     ))}
                   </tr>
-                  <tr className="bg-green-50 font-semibold text-gray-900">
-                    <td className="text-left p-1.5 whitespace-nowrap">
-                      {shortCurrent}
+                  <tr>
+                    <td className="text-left p-1.5 font-medium text-gray-500 whitespace-nowrap">
+                      {shortTwoYears}
                     </td>
                     {allRows.map((row) => (
                       <td
                         key={row.name}
                         className="p-1.5 border border-gray-100"
                       >
-                        {fmtMillion(row.current)}
+                        {fmtMillion(row.twoYearsAgo)}
                       </td>
                     ))}
                   </tr>
