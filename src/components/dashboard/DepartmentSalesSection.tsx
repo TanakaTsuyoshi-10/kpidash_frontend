@@ -277,9 +277,9 @@ export function DepartmentSalesSection({
           <span className="flex items-center gap-1">
             <span
               className="h-2.5 w-2.5 rounded-sm"
-              style={{ backgroundColor: COLOR_TWO_YEARS }}
+              style={{ backgroundColor: COLOR_CURRENT }}
             />
-            {labelTwoYears}
+            {labelCurrent}
           </span>
           <span className="flex items-center gap-1">
             <span
@@ -291,9 +291,9 @@ export function DepartmentSalesSection({
           <span className="flex items-center gap-1">
             <span
               className="h-2.5 w-2.5 rounded-sm"
-              style={{ backgroundColor: COLOR_CURRENT }}
+              style={{ backgroundColor: COLOR_TWO_YEARS }}
             />
-            {labelCurrent}
+            {labelTwoYears}
           </span>
         </div>
       </div>
@@ -351,18 +351,9 @@ export function DepartmentSalesSection({
                     iconSize={10}
                     verticalAlign="bottom"
                   />
-                  <Bar
-                    dataKey="twoYearsAgo"
-                    name={shortTwoYears}
-                    fill={COLOR_TWO_YEARS}
-                    radius={[3, 3, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="previousYear"
-                    name={shortPrevYear}
-                    fill={COLOR_PREV_YEAR}
-                    radius={[3, 3, 0, 0]}
-                  />
+                  {/* 棒の並びは「今年度 → 前年 → 前々年」。最新を各グループの
+                      左端に配置し、その隣に直接比較対象の前年を置く。凡例も
+                      Recharts により Bar の宣言順で表示されるため同じ順序になる。 */}
                   <Bar
                     dataKey="current"
                     name={shortCurrent}
@@ -374,6 +365,18 @@ export function DepartmentSalesSection({
                       content={<ArrowLabel rows={allRows} />}
                     />
                   </Bar>
+                  <Bar
+                    dataKey="previousYear"
+                    name={shortPrevYear}
+                    fill={COLOR_PREV_YEAR}
+                    radius={[3, 3, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="twoYearsAgo"
+                    name={shortTwoYears}
+                    fill={COLOR_TWO_YEARS}
+                    radius={[3, 3, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
