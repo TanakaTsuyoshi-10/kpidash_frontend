@@ -86,6 +86,7 @@ export function ExecutiveDashboard({
   const { allowedPages } = useUserContext()
   const canViewBoard = allowedPages.includes('board')
   const canViewLabor = allowedPages.includes('labor')
+  const canViewSlack = allowedPages.includes('slack')
 
   // データ鮮度（独立フック）
   const { data: freshness, loading: freshnessLoading } = useDashboardFreshness()
@@ -416,8 +417,8 @@ export function ExecutiveDashboard({
 
         {/* 右カラム */}
         <div className="space-y-6">
-          {/* Slack 投稿 */}
-          <LazySlackFeedCard />
+          {/* Slack 投稿（権限管理: slack） */}
+          {canViewSlack && <LazySlackFeedCard />}
 
           {/* 取締役会資料（権限管理: board） */}
           {canViewBoard && <LazyBoardMeetingsCard enabled={canViewBoard} />}

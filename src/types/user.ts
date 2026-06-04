@@ -14,7 +14,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 // ページキー
 export const PAGE_KEYS = [
-  'dashboard', 'finance', 'ecommerce', 'manufacturing', 'complaints', 'products', 'upload', 'targets', 'board', 'labor'
+  'dashboard', 'finance', 'ecommerce', 'manufacturing', 'complaints', 'products', 'upload', 'targets', 'board', 'labor', 'slack'
 ] as const
 export type PageKey = typeof PAGE_KEYS[number]
 
@@ -29,6 +29,7 @@ export const PAGE_LABELS: Record<PageKey, string> = {
   targets: '目標管理',
   board: '取締役会',
   labor: '経営指標（人件費・時間外）',
+  slack: 'Slack投稿',
 }
 
 // 現在のユーザー情報
