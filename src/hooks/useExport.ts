@@ -790,13 +790,22 @@ export function useStoreAnalysisExport() {
       const months = getMonthsForScope(params, fiscalYear)
 
       if (months) {
-        const monthlyData: { period: string; data: any }[] = []
-        for (const month of months) {
-          try {
-            const storeData = await getStoreSummary(month, 'store', 'monthly')
-            if (storeData?.stores?.length > 0) monthlyData.push({ period: month, data: storeData })
-          } catch { /* skip */ }
-        }
+        // 指定期間内のすべての月を並列取得し、データの有無に関わらず必ず
+        // エクスポートに含める。データがない月は空セルになる（黙って
+        // 月そのものを除外していたため「対象期間が出力されない」と
+        // 見えていた）。
+        const results = await Promise.all(
+          months.map(async (month) => {
+            try {
+              const storeData = await getStoreSummary(month, 'store', 'monthly')
+              return { period: month, data: storeData }
+            } catch (err) {
+              console.warn(`店舗分析 ${month} の取得に失敗:`, err)
+              return { period: month, data: { stores: [], totals: {} } }
+            }
+          })
+        )
+        const monthlyData = results
         if (monthlyData.length > 0) sheets.push(buildStoreAnalysisSheet(monthlyData))
       } else {
         try {
@@ -1015,14 +1024,21 @@ export function useEcommerceExport() {
       const months = getMonthsForScope(params, fiscalYear)
 
       if (months) {
-        // 複数月: チャネルデータ
-        const monthlyData: { period: string; data: any }[] = []
-        for (const month of months) {
-          try {
-            const channelData = await getChannelSummary(month, 'monthly')
-            if (channelData?.channels?.length > 0) monthlyData.push({ period: month, data: channelData })
-          } catch { /* skip */ }
-        }
+        // 複数月: チャネルデータを並列取得。データが無い月も必ず含める
+        // （月そのものを除外していたため、エクスポートに期間が反映されない
+        // 不具合の原因になっていた）。
+        const results = await Promise.all(
+          months.map(async (month) => {
+            try {
+              const channelData = await getChannelSummary(month, 'monthly')
+              return { period: month, data: channelData }
+            } catch (err) {
+              console.warn(`通販分析 ${month} の取得に失敗:`, err)
+              return { period: month, data: { channels: [], totals: {} } }
+            }
+          })
+        )
+        const monthlyData = results
         if (monthlyData.length > 0) sheets.push(buildEcommerceSheet(monthlyData))
 
         // 商品別・顧客統計・HPアクセスは最後の月で取得
