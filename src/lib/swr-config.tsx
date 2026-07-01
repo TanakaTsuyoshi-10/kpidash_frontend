@@ -2,16 +2,15 @@
 
 import { SWRConfig } from 'swr'
 import { ReactNode } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { redirectToLoginOnAuthFailure } from '@/lib/auth-redirect'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-// セッショントークンのメモリキャッシュ（30秒）
-// 同時に複数のSWRフェッチが走った際の重複getSession()呼び出しを防ぐ
-// JWTの有効期限（通常1時間）よりはるかに短いため安全
 let cachedSession: { token: string; expires: number } | null = null
 let pendingSessionPromise: Promise<string> | null = null
+let pendingRefreshPromise: Promise<Session | null> | null = null
 
 /**
  * ログイン成功直後にトークンをキャッシュにセットする。
@@ -22,10 +21,57 @@ export function setSessionTokenCache(token: string) {
 }
 
 /**
+ * refreshSession() をアプリ全体で1本のプロミスに集約する。
+ * Supabase のリフレッシュトークンは「1回限り使い捨て」で、並行リクエストが
+ * 同時に refresh を呼ぶと2回目以降は再利用検知でセッション全体が失効する
+ * （操作中の突然ログアウトの主因）。ここで pendingRefreshPromise を使い
+ * 同時呼出しを1本に集約することで、実際の refresh は1回しか走らない。
+ * 完了直後の連続呼出しもキャッシュにヒットさせるため、プロミスは
+ * 100ms 遅延でクリアする。
+ *
+ * 一時的なネットワークエラー（Cloud Run のコールドスタートや WiFi 瞬断）で
+ * 即座にログアウトさせないよう、失敗時は 400ms 待って1回だけリトライする。
+ */
+export async function sharedRefreshSession(): Promise<Session | null> {
+  if (pendingRefreshPromise) {
+    return pendingRefreshPromise
+  }
+  const supabase = createClient()
+  pendingRefreshPromise = (async () => {
+    try {
+      const attempt = async () => {
+        const { data, error } = await supabase.auth.refreshSession()
+        if (error || !data.session) return null
+        return data.session
+      }
+      let session = await attempt()
+      if (!session) {
+        await new Promise((r) => setTimeout(r, 400))
+        session = await attempt()
+      }
+      if (!session) return null
+      const jwtExpiresMs = session.expires_at
+        ? session.expires_at * 1000 - 60_000 // JWT 期限の60秒前まで有効とみなす
+        : Date.now() + 30_000
+      cachedSession = {
+        token: session.access_token,
+        expires: Math.min(Date.now() + 30_000, jwtExpiresMs),
+      }
+      return session
+    } finally {
+      setTimeout(() => {
+        pendingRefreshPromise = null
+      }, 100)
+    }
+  })()
+  return pendingRefreshPromise
+}
+
+/**
  * セッションを段階的に取得する。
  * 1) getSession() を読む
- * 2) 期限切れ間近なら refreshSession()
- * 3) それでも空なら refreshSession() を明示的にもう一度試す
+ * 2) 期限切れ間近なら sharedRefreshSession()
+ * 3) それでも空なら sharedRefreshSession() を明示的にもう一度試す
  *    （Supabase 内部の autoRefresh と衝突して一時的に空になることがある）
  */
 async function resolveSession() {
@@ -35,16 +81,13 @@ async function resolveSession() {
   const nearExpiry =
     session?.expires_at && session.expires_at * 1000 <= Date.now() + 60_000
   if (nearExpiry) {
-    const { data, error } = await supabase.auth.refreshSession()
-    if (!error && data.session) session = data.session
+    const refreshed = await sharedRefreshSession()
+    if (refreshed) session = refreshed
   }
 
-  // セッションが空（getSessionが内部失敗で何も返さなかった等）の場合に
-  // 明示的なリフレッシュを試みる。リフレッシュトークンが Cookie に残って
-  // いれば回復できる。
   if (!session?.access_token) {
-    const { data } = await supabase.auth.refreshSession()
-    if (data.session?.access_token) session = data.session
+    const refreshed = await sharedRefreshSession()
+    if (refreshed?.access_token) session = refreshed
   }
 
   return session
@@ -61,11 +104,16 @@ export async function getSessionToken(): Promise<string> {
     try {
       const session = await resolveSession()
       if (!session?.access_token) {
-        // 完全に復帰不能 → ログイン画面へ誘導してから例外を投げる
         redirectToLoginOnAuthFailure()
         throw new Error('認証が必要です')
       }
-      cachedSession = { token: session.access_token, expires: Date.now() + 30000 }
+      const jwtExpiresMs = session.expires_at
+        ? session.expires_at * 1000 - 60_000
+        : Date.now() + 30_000
+      cachedSession = {
+        token: session.access_token,
+        expires: Math.min(Date.now() + 30_000, jwtExpiresMs),
+      }
       return session.access_token
     } finally {
       pendingSessionPromise = null
@@ -88,7 +136,7 @@ export async function fetcher(url: string) {
   // 401の場合、キャッシュを破棄してトークンリフレッシュして1回リトライ
   if (res.status === 401) {
     cachedSession = null
-    const refreshed = await resolveSession()
+    const refreshed = await sharedRefreshSession()
     if (!refreshed?.access_token) {
       redirectToLoginOnAuthFailure()
       throw new Error('認証が必要です。再度ログインしてください。')
@@ -117,6 +165,11 @@ export async function fetcher(url: string) {
   if (!res.ok) {
     if (res.status === 429) {
       throw new Error('リクエスト数が制限を超えました。しばらく待ってから再試行してください。')
+    }
+    if (res.status === 503) {
+      // 認証サーバ側の一時的な障害。SWRのリトライに任せて、
+      // 有効なセッションを勝手にログアウトさせない。
+      throw new Error('サーバが一時的に応答できません。少し待って再試行します。')
     }
     const error = await res.json().catch(() => ({}))
     throw new Error(error.detail || `APIエラーが発生しました (${res.status})`)

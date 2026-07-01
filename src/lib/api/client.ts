@@ -3,7 +3,7 @@
  * Supabaseのアクセストークンをヘッダーに付与
  */
 import { createClient } from '@/lib/supabase/client'
-import { getSessionToken } from '@/lib/swr-config'
+import { getSessionToken, sharedRefreshSession } from '@/lib/swr-config'
 import { redirectToLoginOnAuthFailure } from '@/lib/auth-redirect'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -55,6 +55,12 @@ export class ApiClient {
       throw new Error('リクエスト数が制限を超えました。しばらく待ってから再試行してください。')
     }
 
+    // 503: 認証サーバなど上流の一時的な障害 → SWRリトライに任せて
+    // ログアウトはさせない
+    if (status === 503) {
+      throw new Error('サーバが一時的に応答できません。少し待って再試行します。')
+    }
+
     // その他のエラー
     if (errorData?.detail) {
       if (typeof errorData.detail === 'string') {
@@ -84,8 +90,7 @@ export class ApiClient {
 
       // 401の場合、トークンリフレッシュして1回リトライ
       if (response.status === 401) {
-        const supabase = getSupabase()
-        const { data: { session } } = await supabase.auth.refreshSession()
+        const session = await sharedRefreshSession()
         if (!session?.access_token) {
           this.handleErrorResponse(401)
         }
@@ -175,9 +180,9 @@ export class ApiClient {
     let { data: { session } } = await supabase.auth.getSession()
 
     // セッションがない、またはトークンが期限切れ/期限間近（60秒以内）の場合はリフレッシュ
+    // 並行リクエストでのリフレッシュトークン二重使用を防ぐため共有版を使う
     if (!session || (session.expires_at && session.expires_at * 1000 <= Date.now() + 60_000)) {
-      const { data } = await supabase.auth.refreshSession()
-      session = data.session
+      session = await sharedRefreshSession()
     }
 
     if (!session?.access_token) {
@@ -200,7 +205,7 @@ export class ApiClient {
 
       // 401の場合、トークンリフレッシュして1回リトライ
       if (response.status === 401) {
-        const { data: { session: refreshed } } = await supabase.auth.refreshSession()
+        const refreshed = await sharedRefreshSession()
         if (!refreshed?.access_token) {
           this.handleErrorResponse(401)
         }
@@ -239,9 +244,9 @@ export class ApiClient {
     let { data: { session } } = await supabase.auth.getSession()
 
     // セッションがない、またはトークンが期限切れ/期限間近（60秒以内）の場合はリフレッシュ
+    // 並行リクエストでのリフレッシュトークン二重使用を防ぐため共有版を使う
     if (!session || (session.expires_at && session.expires_at * 1000 <= Date.now() + 60_000)) {
-      const { data } = await supabase.auth.refreshSession()
-      session = data.session
+      session = await sharedRefreshSession()
     }
 
     if (!session?.access_token) {

@@ -27,10 +27,20 @@ export function createClient() {
   }
 
   // ブラウザでは単一インスタンスを使い回す。
+  // autoRefreshToken を無効化して、リフレッシュはアプリの sharedRefreshSession()
+  // だけで実行させる。SDK 内部のタイマーと我々の集約プロミスが独立に refresh を
+  // 発火することでリフレッシュトークンの二重使用が発生する経路を根本から断つ。
   if (!browserClient) {
     browserClient = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: true,
+          detectSessionInUrl: true,
+        },
+      }
     )
   }
   return browserClient

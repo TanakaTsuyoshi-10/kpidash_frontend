@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Download, FileSpreadsheet } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { getSessionToken } from '@/lib/swr-config'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -65,24 +65,15 @@ export function TemplateDownload() {
     setError(null)
 
     try {
-      // 認証トークンを取得
-      const supabase = createClient()
-      let { data: { session } } = await supabase.auth.getSession()
-
-      if (!session) {
-        const { data } = await supabase.auth.refreshSession()
-        session = data.session
-      }
-
-      if (!session?.access_token) {
-        throw new Error('認証が必要です')
-      }
+      // 認証トークンをアプリ共通の集約経路から取得
+      // （refreshSession の並行呼出しで二重使用を防ぐ）
+      const token = await getSessionToken()
 
       // テンプレートをダウンロード
       const url = `${API_URL}${template.endpoint}?year=${selectedYear}&month=${selectedMonth}`
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
         },
       })
 

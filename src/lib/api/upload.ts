@@ -1,7 +1,7 @@
 /**
  * アップロード関連のAPI関数
  */
-import { createClient } from '@/lib/supabase/client'
+import { getSessionToken } from '@/lib/swr-config'
 import type {
   FileType,
   UploadResult,
@@ -13,41 +13,10 @@ import type {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
-// Supabaseクライアントをシングルトンとして保持
-let supabaseClient: ReturnType<typeof createClient> | null = null
-
-function getSupabase() {
-  if (!supabaseClient) {
-    supabaseClient = createClient()
-  }
-  return supabaseClient
-}
-
+// アプリ全体で共有のセッション取得（swr-config の getSessionToken を経由）を使う。
+// これにより並行リクエストでの refreshSession() 二重呼出しを防ぐ。
 async function getAuthToken(): Promise<string> {
-  const supabase = getSupabase()
-  let { data: { session } } = await supabase.auth.getSession()
-
-  // セッションがない、またはトークンが期限切れ/期限間近（60秒以内）の場合はリフレッシュ
-  const needsRefresh = !session || (
-    session.expires_at && session.expires_at * 1000 <= Date.now() + 60_000
-  )
-
-  if (needsRefresh) {
-    const { data, error } = await supabase.auth.refreshSession()
-    if (error) {
-      // リフレッシュ失敗時はログインページへリダイレクト
-      window.location.href = '/login'
-      throw new Error('セッションの更新に失敗しました。再度ログインしてください。')
-    }
-    session = data.session
-  }
-
-  if (!session?.access_token) {
-    window.location.href = '/login'
-    throw new Error('認証が必要です。再度ログインしてください。')
-  }
-
-  return session.access_token
+  return getSessionToken()
 }
 
 /**
