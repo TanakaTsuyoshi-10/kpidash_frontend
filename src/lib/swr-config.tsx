@@ -41,23 +41,39 @@ export async function sharedRefreshSession(): Promise<Session | null> {
     try {
       const attempt = async () => {
         const { data, error } = await supabase.auth.refreshSession()
-        if (error || !data.session) return null
-        return data.session
+        if (error) {
+          // 診断ログ: なぜ refresh が失敗したかを console に残す。
+          // BroadcastChannel の遅延や他タブとの競合を切り分けやすくする。
+          console.warn('[auth] refreshSession failed:', error.message, error)
+          return { session: null, error }
+        }
+        if (!data.session) {
+          console.warn('[auth] refreshSession returned empty session')
+          return { session: null, error: null }
+        }
+        return { session: data.session, error: null }
       }
-      let session = await attempt()
-      if (!session) {
-        await new Promise((r) => setTimeout(r, 400))
-        session = await attempt()
+
+      // 1回目
+      const first = await attempt()
+      if (first.session) return finalize(first.session)
+
+      // 2回目（400ms 待ち）— Cloud Run コールドや WiFi 瞬断向け
+      await new Promise((r) => setTimeout(r, 400))
+      const second = await attempt()
+      if (second.session) return finalize(second.session)
+
+      // 3回目（さらに 1s 待って getSession でリフレッシュ済みトークンを拾えないか確認）
+      // 他タブが先に refresh を完走している場合、BroadcastChannel 経由でこちらの
+      // ローカルストレージにも新しい session が書き込まれるまでに数十〜数百ms かかる
+      await new Promise((r) => setTimeout(r, 1000))
+      const fromStorage = (await supabase.auth.getSession()).data.session
+      if (fromStorage?.access_token) {
+        console.info('[auth] recovered session from broadcast/storage after refresh failure')
+        return finalize(fromStorage)
       }
-      if (!session) return null
-      const jwtExpiresMs = session.expires_at
-        ? session.expires_at * 1000 - 60_000 // JWT 期限の60秒前まで有効とみなす
-        : Date.now() + 30_000
-      cachedSession = {
-        token: session.access_token,
-        expires: Math.min(Date.now() + 30_000, jwtExpiresMs),
-      }
-      return session
+
+      return null
     } finally {
       setTimeout(() => {
         pendingRefreshPromise = null
@@ -65,6 +81,17 @@ export async function sharedRefreshSession(): Promise<Session | null> {
     }
   })()
   return pendingRefreshPromise
+}
+
+function finalize(session: Session): Session {
+  const jwtExpiresMs = session.expires_at
+    ? session.expires_at * 1000 - 60_000
+    : Date.now() + 30_000
+  cachedSession = {
+    token: session.access_token,
+    expires: Math.min(Date.now() + 30_000, jwtExpiresMs),
+  }
+  return session
 }
 
 /**
@@ -104,6 +131,7 @@ export async function getSessionToken(): Promise<string> {
     try {
       const session = await resolveSession()
       if (!session?.access_token) {
+        console.warn('[auth] getSessionToken: session unavailable → redirect to /login')
         redirectToLoginOnAuthFailure()
         throw new Error('認証が必要です')
       }
