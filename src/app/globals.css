@@ -181,3 +181,52 @@
   -webkit-overflow-scrolling: touch;
   overflow-x: auto;
 }
+
+/* =============================================================
+   承認ワークフロー: リッチテキスト内の表（エディタ・詳細表示共通）
+   ============================================================= */
+.rich-content table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+.rich-content td,
+.rich-content th {
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  vertical-align: top;
+  position: relative;
+  min-width: 3rem;
+  word-break: break-word;
+}
+.rich-content th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  text-align: left;
+}
+.rich-content table p {
+  margin: 0;
+}
+/* セル選択時のハイライト */
+.rich-content .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(59, 130, 246, 0.12);
+  pointer-events: none;
+}
+/* 列幅リサイズハンドル */
+.rich-content .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: #3b82f6;
+  pointer-events: none;
+}
+.rich-content.resize-cursor {
+  cursor: col-resize;
+}

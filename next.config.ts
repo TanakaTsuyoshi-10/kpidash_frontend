@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
       'https://kpidash-backend-15142953408.asia-northeast1.run.app',
       'https://oaymbdcnzycvhtwlntql.supabase.co',
       'wss://oaymbdcnzycvhtwlntql.supabase.co',
-      ...(isDev ? ['http://localhost:8000', 'ws://localhost:3000'] : []),
+      ...(isDev ? ['http://localhost:8000', 'ws://localhost:3000', 'ws://localhost:3001'] : []),
     ].join(' ')
 
     return [
@@ -69,12 +69,17 @@ const nextConfig: NextConfig = {
         ]
       },
       // 静的アセット用キャッシュ（_next/static配下のみ）
+      // 本番: チャンクURLにコンテンツハッシュが付くので immutable で長期キャッシュ
+      // 開発: URLが変わらないため immutable にするとコード更新がブラウザに届かなくなる
+      //       （古いJSが1年キャッシュされる）ので no-store にする
       {
         source: '/_next/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: isDev
+              ? 'no-store, must-revalidate'
+              : 'public, max-age=31536000, immutable',
           },
         ],
       },

@@ -6,6 +6,7 @@
 
 import { UserManagementCard } from '@/components/settings/UserManagementCard'
 import { ProfileSettingsCard } from '@/components/settings/ProfileSettingsCard'
+import { ApprovalSettingsCard } from '@/components/settings/ApprovalSettingsCard'
 
 export default function SettingsPage() {
   return (
@@ -14,6 +15,7 @@ export default function SettingsPage() {
 
       <div className="grid gap-6 max-w-2xl">
         <UserManagementCard />
+        <ApprovalSettingsCard />
         <ProfileSettingsCard />
       </div>
     </div>

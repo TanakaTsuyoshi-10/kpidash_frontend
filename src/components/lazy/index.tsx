@@ -223,3 +223,12 @@ export const LazyDepartmentSalesSection = dynamic(
     ssr: false
   }
 )
+
+// 承認ワークフロー: リッチテキストエディタ（Tiptap は重いので遅延読み込み）
+export const LazyTiptapEditor = dynamic(
+  () => import('@/components/approvals/editor/TiptapEditor').then(mod => ({ default: mod.TiptapEditor })),
+  {
+    loading: () => <CardSkeleton />,
+    ssr: false
+  }
+)
