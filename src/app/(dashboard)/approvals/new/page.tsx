@@ -112,13 +112,22 @@ function NewApprovalForm() {
     setAttachments((prev) => [...prev, att])
   }, [])
 
+  /**
+   * 現在の本文HTMLに実際に残っている画像だけを添付一覧として返す。
+   * attachments state はアップロード履歴（追加専用）のため、エディタ上で
+   * 画像を削除した場合はここで除外しないと、削除済み画像が
+   * Slack投稿に添付されてしまう。
+   */
+  const usedAttachments = () =>
+    attachments.filter((att) => captionHtml.includes(att.url))
+
   const buildPayload = () => ({
     request_type: requestType,
     title: title || '(無題)',
     content: {
       caption_html: captionHtml,
       caption_plain: captionPlain,
-      attachments,
+      attachments: usedAttachments(),
     },
     metadata: channelId ? { slack_channel_id: channelId } : {},
     approval_mode: mode,
@@ -175,7 +184,7 @@ function NewApprovalForm() {
         content: {
           caption_html: captionHtml,
           caption_plain: captionPlain,
-          attachments,
+          attachments: usedAttachments(),
         },
         metadata: channelId ? { slack_channel_id: channelId } : {},
         approval_mode: mode,
