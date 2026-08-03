@@ -8,7 +8,10 @@ import useSWR from 'swr'
 import {
   getDailySalesSummary,
   getHourlySales,
+  getHourlySalesMonth,
   getDailyTrend,
+  getWeekdayAnalysis,
+  getStoreHourlyCustomers,
   uploadReceiptJournal,
 } from '@/lib/api/daily-sales'
 import type {
@@ -16,6 +19,8 @@ import type {
   HourlySalesResponse,
   DailyTrendResponse,
   ReceiptJournalUploadResult,
+  WeekdayAnalysisResponse,
+  StoreHourlyCustomersResponse,
 } from '@/types/daily-sales'
 
 /**
@@ -48,6 +53,61 @@ export function useHourlySales(
   const { data, error, isLoading, isValidating, mutate } = useSWR<HourlySalesResponse>(
     key,
     () => getHourlySales(date, departmentSlug),
+    { dedupingInterval: 60000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}
+
+/**
+ * 時間帯別ヒートマップデータ（月間合計）を取得するフック
+ */
+export function useHourlySalesMonth(
+  month: string | null,
+  departmentSlug: string = 'store',
+) {
+  const key = month ? `/daily-sales/hourly-month?month=${month}&dept=${departmentSlug}` : null
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR<HourlySalesResponse>(
+    key,
+    () => getHourlySalesMonth(month as string, departmentSlug),
+    { dedupingInterval: 60000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}
+
+/**
+ * 曜日別分析（平日/土日祝）を取得するフック
+ */
+export function useWeekdayAnalysis(
+  month: string,
+  departmentSlug: string = 'store',
+  segmentId?: string,
+) {
+  const key = `/daily-sales/weekday-analysis?month=${month}&dept=${departmentSlug}&segment=${segmentId ?? ''}`
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR<WeekdayAnalysisResponse>(
+    key,
+    () => getWeekdayAnalysis(month, departmentSlug, segmentId),
+    { dedupingInterval: 60000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}
+
+/**
+ * 店舗の日別×時間帯 来客ヒートマップを取得するフック
+ */
+export function useStoreHourlyCustomers(
+  month: string,
+  segmentId: string,
+) {
+  const key = segmentId ? `/daily-sales/hourly-customers-daily?month=${month}&segment=${segmentId}` : null
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StoreHourlyCustomersResponse>(
+    key,
+    () => getStoreHourlyCustomers(month, segmentId),
     { dedupingInterval: 60000 }
   )
 

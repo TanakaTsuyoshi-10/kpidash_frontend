@@ -27,7 +27,8 @@ function formatCurrency(value: number): string {
 
 interface ChartDataPoint {
   day: number
-  current: number
+  /** 当年売上（未来日など当年データがない日は null で線を引かない） */
+  current: number | null
   previous: number
 }
 
@@ -87,6 +88,9 @@ export function DailyTrendChart({ month, departmentSlug = 'store' }: Props) {
   )
 
   // チャートデータ作成
+  // previous_year はバックエンドで「当年各日の同曜日マッチ日」に整列済み
+  // （インデックス i が当月 i+1 日に対応）。当年データがない日（未来日）は
+  // null にして線を引かない。
   const chartData = useMemo((): ChartDataPoint[] => {
     if (!trendData) return []
 
@@ -98,7 +102,7 @@ export function DailyTrendChart({ month, departmentSlug = 'store' }: Props) {
       const prev = trendData.previous_year[i]
       points.push({
         day: i + 1,
-        current: cur?.sales || 0,
+        current: cur ? cur.sales : null,
         previous: prev?.sales || 0,
       })
     }
@@ -109,7 +113,7 @@ export function DailyTrendChart({ month, departmentSlug = 'store' }: Props) {
   // Y軸の最大値（きりの良い数値に丸める）
   const yAxisMax = useMemo(() => {
     if (!chartData.length) return 0
-    const max = Math.max(...chartData.map(d => Math.max(d.current, d.previous)))
+    const max = Math.max(...chartData.map(d => Math.max(d.current ?? 0, d.previous)))
     if (max === 0) return 100000
     const magnitude = Math.pow(10, Math.floor(Math.log10(max)))
     return Math.ceil(max / magnitude) * magnitude

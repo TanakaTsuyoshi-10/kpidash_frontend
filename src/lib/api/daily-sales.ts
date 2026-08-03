@@ -7,6 +7,8 @@ import type {
   HourlySalesResponse,
   DailyTrendResponse,
   ReceiptJournalUploadResult,
+  WeekdayAnalysisResponse,
+  StoreHourlyCustomersResponse,
 } from '@/types/daily-sales'
 
 /**
@@ -60,4 +62,48 @@ export async function uploadReceiptJournal(
   file: File,
 ): Promise<ReceiptJournalUploadResult> {
   return apiClient.uploadFile<ReceiptJournalUploadResult>('/upload/receipt-journal', file)
+}
+
+/**
+ * 時間帯別ヒートマップデータ（月間合計）を取得する
+ */
+export async function getHourlySalesMonth(
+  month: string,
+  departmentSlug: string = 'store',
+): Promise<HourlySalesResponse> {
+  const params = new URLSearchParams({
+    month,
+    department_slug: departmentSlug,
+  })
+  return apiClient.get<HourlySalesResponse>(`/daily-sales/hourly-month?${params.toString()}`)
+}
+
+/**
+ * 曜日別分析（平日/土日祝）を取得する
+ */
+export async function getWeekdayAnalysis(
+  month: string,
+  departmentSlug: string = 'store',
+  segmentId?: string,
+): Promise<WeekdayAnalysisResponse> {
+  const params = new URLSearchParams({
+    month,
+    department_slug: departmentSlug,
+  })
+  if (segmentId) params.append('segment_id', segmentId)
+  return apiClient.get<WeekdayAnalysisResponse>(`/daily-sales/weekday-analysis?${params.toString()}`)
+}
+
+/**
+ * 店舗の日別×時間帯 来客ヒートマップを取得する
+ */
+export async function getStoreHourlyCustomers(
+  month: string,
+  segmentId: string,
+): Promise<StoreHourlyCustomersResponse> {
+  const params = new URLSearchParams({
+    month,
+    segment_id: segmentId,
+  })
+  return apiClient.get<StoreHourlyCustomersResponse>(`/daily-sales/hourly-customers-daily?${params.toString()}`)
 }

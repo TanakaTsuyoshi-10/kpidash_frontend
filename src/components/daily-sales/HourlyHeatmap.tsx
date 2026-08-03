@@ -9,8 +9,11 @@
 import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { useHourlySales } from '@/hooks/useDailySales'
+import { useHourlySales, useHourlySalesMonth } from '@/hooks/useDailySales'
 import { cn } from '@/lib/utils'
+
+/** 「月間合計」表示を表すセンチネル値 */
+const MONTH_TOTAL = '__month__'
 
 interface Props {
   month: string
@@ -37,9 +40,12 @@ function getHeatColor(value: number, maxValue: number): string {
 }
 
 export function HourlyHeatmap({ month, dates, departmentSlug = 'store' }: Props) {
-  // 初期日付: 月の最初の日
+  // 初期日付: 月の最初の日（MONTH_TOTAL 選択時は月間合計表示）
   const [selectedDate, setSelectedDate] = useState<string>(dates[0] || '')
-  const { data, loading, error } = useHourlySales(selectedDate, departmentSlug)
+  const isMonthTotal = selectedDate === MONTH_TOTAL
+  const daily = useHourlySales(isMonthTotal ? '' : selectedDate, departmentSlug)
+  const monthly = useHourlySalesMonth(isMonthTotal ? month : null, departmentSlug)
+  const { data, loading, error } = isMonthTotal ? monthly : daily
 
   // ツールチップ状態
   const [tooltip, setTooltip] = useState<{
@@ -112,6 +118,17 @@ export function HourlyHeatmap({ month, dates, departmentSlug = 'store' }: Props)
       <CardContent>
         {/* 日付セレクタ */}
         <div className="flex flex-wrap gap-1 mb-4">
+          <Button
+            variant={isMonthTotal ? 'default' : 'outline'}
+            size="sm"
+            className={cn(
+              'text-xs px-2 py-1 h-7 font-semibold',
+              isMonthTotal && 'bg-emerald-600 hover:bg-emerald-700',
+            )}
+            onClick={() => setSelectedDate(MONTH_TOTAL)}
+          >
+            月間合計
+          </Button>
           {dates.map(dateStr => (
             <Button
               key={dateStr}

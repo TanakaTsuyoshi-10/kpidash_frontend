@@ -101,3 +101,51 @@ export interface ReceiptJournalUploadResult {
 // =============================================================================
 
 export type DailySalesMetric = 'sales' | 'customers' | 'unit_price'
+
+// =============================================================================
+// 曜日別分析（平日 / 土日祝）
+// =============================================================================
+
+export interface WeekdayGroupPrev {
+  days: number
+  avg_sales: number
+  avg_bats: number
+  avg_customers: number
+  avg_price: number
+}
+
+export interface WeekdayGroupYoy {
+  avg_sales: number | null
+  avg_bats: number | null
+  avg_customers: number | null
+  avg_price: number | null
+}
+
+export interface WeekdayGroupStats extends WeekdayGroupPrev {
+  prev: WeekdayGroupPrev
+  yoy: WeekdayGroupYoy
+}
+
+export interface WeekdayAnalysisResponse {
+  period: string
+  weekday: WeekdayGroupStats
+  weekend: WeekdayGroupStats
+}
+
+// 店舗の日別×時間帯 来客ヒートマップ
+export interface DailyHourlyCustomerCell {
+  date: string
+  hour: number
+  customers: number
+}
+
+export interface StoreHourlyCustomersResponse {
+  period: string
+  segment_id: string
+  hours: number[]
+  dates: string[]
+  data: DailyHourlyCustomerCell[]
+  row_totals: { date: string; customers: number }[]
+  col_totals: { hour: number; customers: number }[]
+  total: number
+}

@@ -71,3 +71,50 @@ export function useStoreDetail(segmentId: string, initialMonth: string) {
 
   return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, month, setMonth, refetch: mutate }
 }
+
+// 宅配関連: 商品分類別データ
+export interface DeliveryCategoryData {
+  category: string
+  sales: number
+  quantity: number
+  sales_previous_year: number
+  quantity_previous_year: number
+  sales_yoy: number | null
+  quantity_yoy: number | null
+}
+
+// 宅配関連: 送料の発送先地域別内訳
+export interface ShippingRegionData {
+  region: string
+  count: number
+  sales: number
+  share: number  // 件数構成比（%）
+}
+
+// 宅配関連売上レスポンス
+export interface StoreDeliveryResponse {
+  segment_id: string
+  month: string
+  total_sales: number
+  total_sales_previous_year: number
+  total_sales_yoy: number | null
+  categories: DeliveryCategoryData[]
+  shipping_regions: ShippingRegionData[]
+}
+
+export function useStoreDelivery(segmentId: string, month: string) {
+  const key = segmentId ? `/kpi/store/${segmentId}/delivery?month=${month}` : null
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StoreDeliveryResponse>(
+    key,
+    () => {
+      const params = new URLSearchParams({ month })
+      return apiClient.get<StoreDeliveryResponse>(
+        `/kpi/store/${segmentId}/delivery?${params.toString()}`
+      )
+    },
+    { dedupingInterval: 60000 }
+  )
+
+  return { data: data ?? null, loading: isLoading, validating: isValidating, error: error?.message || null, refetch: mutate }
+}

@@ -22,6 +22,9 @@ import {
 import { PeriodSelector } from '@/components/dashboard/PeriodSelector'
 import { ProductItemsTable } from '@/components/products/ProductItemsTable'
 import { StorePLSummaryCard } from '@/components/products/StorePLSummaryCard'
+import { DeliverySalesCard } from '@/components/products/DeliverySalesCard'
+import { WeekdayAnalysis } from '@/components/daily-sales/WeekdayAnalysis'
+import { StoreHourlyCustomersHeatmap } from '@/components/daily-sales/StoreHourlyCustomersHeatmap'
 import { useStoreDetail } from '@/hooks/useStoreDetail'
 import { cn } from '@/lib/utils'
 import {
@@ -207,6 +210,26 @@ export default function StoreDetailPage({ params }: Props) {
 
       {/* 収支実績 */}
       <StorePLSummaryCard segmentId={segmentId} month={periodString} />
+
+      {/* 曜日別分析（平日 / 土日祝） */}
+      <div>
+        <h2 className="text-lg font-bold mb-3">曜日別分析 ({displayMonth})</h2>
+        <WeekdayAnalysis month={periodString} segmentId={segmentId} />
+      </div>
+
+      {/* 時間帯別来客ヒートマップ（日別×時間帯） */}
+      <StoreHourlyCustomersHeatmap
+        segmentId={segmentId}
+        month={periodString}
+        displayMonth={displayMonth}
+      />
+
+      {/* 宅配関連売上 */}
+      <DeliverySalesCard
+        segmentId={segmentId}
+        month={periodString}
+        displayMonth={displayMonth}
+      />
 
       {/* 商品グループ別販売状況 */}
       <Card>

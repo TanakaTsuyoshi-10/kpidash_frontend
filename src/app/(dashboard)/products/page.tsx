@@ -11,6 +11,7 @@ import { LazyStoreTrendChart, LazyProductSalesChart, LazyDailyTrendChart } from 
 import { RegionalSummaryTable } from '@/components/products/RegionalSummaryTable'
 import { DailyStoreSalesTable } from '@/components/daily-sales/DailyStoreSalesTable'
 import { HourlyHeatmap } from '@/components/daily-sales/HourlyHeatmap'
+import { WeekdayAnalysis } from '@/components/daily-sales/WeekdayAnalysis'
 import { OrderForecastView } from '@/components/order-forecast/OrderForecastView'
 import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -146,6 +147,7 @@ export default function ProductsPage() {
               <TabsTrigger value="daily-table">日別×店舗</TabsTrigger>
               <TabsTrigger value="heatmap">時間帯別</TabsTrigger>
               <TabsTrigger value="daily-trend">日次推移</TabsTrigger>
+              <TabsTrigger value="weekday">曜日別分析</TabsTrigger>
             </TabsList>
 
             <TabsContent value="daily-table">
@@ -158,6 +160,10 @@ export default function ProductsPage() {
 
             <TabsContent value="daily-trend">
               <LazyDailyTrendChart month={month} />
+            </TabsContent>
+
+            <TabsContent value="weekday">
+              <WeekdayAnalysis month={month} />
             </TabsContent>
           </Tabs>
         </TabsContent>
