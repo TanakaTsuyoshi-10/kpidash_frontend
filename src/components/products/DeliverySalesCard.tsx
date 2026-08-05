@@ -5,6 +5,7 @@
  */
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -14,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Truck } from 'lucide-react'
+import { ChevronDown, ChevronRight, Truck } from 'lucide-react'
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useStoreDelivery } from '@/hooks/useStoreDetail'
 import { cn } from '@/lib/utils'
@@ -50,61 +51,55 @@ function formatYoY(rate: number | null | undefined): string {
 
 export function DeliverySalesCard({ segmentId, month, displayMonth, periodType = 'monthly' }: Props) {
   const { data, loading, error } = useStoreDelivery(segmentId, month, periodType)
+  // ページが長くなるためデフォルト閉
+  const [open, setOpen] = useState(false)
 
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>宅配関連売上 ({displayMonth})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-40 rounded-lg bg-gray-100 animate-pulse" />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>宅配関連売上 ({displayMonth})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-red-600">{error}</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!data) return null
-
-  const hasRegions = data.shipping_regions.length > 0
+  const hasRegions = (data?.shipping_regions.length ?? 0) > 0
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader
+        onClick={() => setOpen(!open)}
+        className="cursor-pointer select-none hover:bg-gray-50/60 transition-colors"
+      >
+        <CardTitle className="flex items-center gap-2 min-h-7">
+          {open ? (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          )}
           <span className="p-1.5 rounded-md bg-emerald-100">
             <Truck className="h-4 w-4 text-emerald-700" />
           </span>
           宅配関連売上 ({displayMonth})
-          <span className="ml-auto text-base font-bold tabular-nums">
-            {formatCurrency(data.total_sales)}
-            <span
-              className={cn(
-                'ml-2 text-sm font-semibold',
-                data.total_sales_yoy != null && data.total_sales_yoy >= 0
-                  ? 'text-green-600'
-                  : 'text-red-600',
-              )}
-            >
-              前年比 {formatYoY(data.total_sales_yoy)}
+          {data ? (
+            <span className="ml-auto text-base font-bold tabular-nums">
+              {formatCurrency(data.total_sales)}
+              <span
+                className={cn(
+                  'ml-2 text-sm font-semibold',
+                  data.total_sales_yoy != null && data.total_sales_yoy >= 0
+                    ? 'text-green-600'
+                    : 'text-red-600',
+                )}
+              >
+                前年比 {formatYoY(data.total_sales_yoy)}
+              </span>
             </span>
-          </span>
+          ) : (
+            !open && (
+              <span className="ml-auto text-sm font-normal text-gray-400">
+                {loading ? '読込中...' : '（クリックで展開）'}
+              </span>
+            )
+          )}
         </CardTitle>
       </CardHeader>
+      {open && (
       <CardContent>
+        {loading && <div className="h-40 rounded-lg bg-gray-100 animate-pulse" />}
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        {data && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 分類別内訳 */}
           <div className="overflow-x-auto">
@@ -269,7 +264,9 @@ export function DeliverySalesCard({ segmentId, month, displayMonth, periodType =
             )}
           </div>
         </div>
+        )}
       </CardContent>
+      )}
     </Card>
   )
 }

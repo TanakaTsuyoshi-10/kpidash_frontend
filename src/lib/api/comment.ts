@@ -27,11 +27,14 @@ export class ApiError extends Error {
  */
 export async function getMonthlyComments(
   category: CommentCategory,
-  period: string
+  period: string,
+  segmentId?: string
 ): Promise<MonthlyComment[]> {
   try {
+    const params = new URLSearchParams({ period })
+    if (segmentId) params.append('segment_id', segmentId)
     const response = await apiClient.get<MonthlyCommentsResponse>(
-      `/comments/${category}?period=${period}`
+      `/comments/${category}?${params.toString()}`
     )
     return response.comments ?? []
   } catch (err) {

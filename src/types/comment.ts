@@ -11,6 +11,7 @@ export interface MonthlyComment {
   category: CommentCategory
   period: string  // "YYYY-MM-01" 形式
   comment: string
+  segment_id?: string | null       // 店舗ID（店舗詳細のコメントのみ。部門レベルはnull）
   created_by?: string | null       // 作成者ユーザーID
   created_by_email?: string | null // 作成者メールアドレス
   updated_by?: string | null       // 最終編集者ユーザーID
@@ -29,6 +30,7 @@ export interface SaveCommentRequest {
   category: CommentCategory
   period: string
   comment: string
+  segment_id?: string | null
 }
 
 // コメント更新リクエスト

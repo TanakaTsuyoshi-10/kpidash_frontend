@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronRight, ChevronsUpDown, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ProductItemSalesData } from '@/hooks/useStoreDetail'
 
@@ -51,6 +51,9 @@ function formatYoY(rate: number | null | undefined): string {
 }
 
 export function ProductItemsTable({ items, displayMonth }: Props) {
+  // トグル開閉状態（ページが長くなるためデフォルト閉）
+  const [open, setOpen] = useState(false)
+
   // 検索・フィルタ状態
   const [searchText, setSearchText] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
@@ -199,9 +202,23 @@ export function ProductItemsTable({ items, displayMonth }: Props) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>商品別販売実績 ({displayMonth})</CardTitle>
+      <CardHeader
+        onClick={() => setOpen(!open)}
+        className="cursor-pointer select-none hover:bg-gray-50/60 transition-colors"
+      >
+        <CardTitle className="flex items-center gap-2 min-h-7">
+          {open ? (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          )}
+          商品別販売実績 ({displayMonth})
+          <span className="text-sm font-normal text-gray-400">
+            {items.length}件{open ? '' : '（クリックで展開）'}
+          </span>
+        </CardTitle>
       </CardHeader>
+      {open && (
       <CardContent>
         {/* フィルタ・検索エリア */}
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
@@ -395,6 +412,7 @@ export function ProductItemsTable({ items, displayMonth }: Props) {
           </div>
         </div>
       </CardContent>
+      )}
     </Card>
   )
 }

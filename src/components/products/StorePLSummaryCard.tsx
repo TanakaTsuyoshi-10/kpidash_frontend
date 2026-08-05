@@ -1,6 +1,7 @@
 /**
  * 店舗収支サマリーカード
- * 店舗詳細ページ用のP/L表示（販管費展開可能）
+ * 店舗詳細ページ用のP/L表示（販管費展開可能・トグル開閉式）
+ * 閉じた状態でもヘッダーに売上高・営業利益のサマリーを表示する
  */
 'use client'
 
@@ -64,54 +65,9 @@ interface SGADetailItem {
 
 export function StorePLSummaryCard({ segmentId, month, periodType = 'monthly', periodLabel }: Props) {
   const { data, loading, error } = useStorePL(segmentId, month, periodType)
+  // ページが長くなるためデフォルト閉
+  const [open, setOpen] = useState(false)
   const [sgaExpanded, setSgaExpanded] = useState(false)
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">収支実績</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-8 bg-gray-200 rounded" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">収支実績</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4 text-gray-400">
-            収支データの取得に失敗しました
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!data) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">収支実績</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-4 text-gray-400">
-            収支データがありません
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
 
   // 販管費明細を取得
   const getSGADetails = (detail: StorePLSGADetail | null): SGADetailItem[] => {
@@ -126,105 +82,158 @@ export function StorePLSummaryCard({ segmentId, month, periodType = 'monthly', p
     ].filter(item => item.value !== 0)
   }
 
-  const sgaDetails = getSGADetails(data.sga_detail)
+  const sgaDetails = data ? getSGADetails(data.sga_detail) : []
   const hasDetails = sgaDetails.length > 0
+  const hasNumbers = data != null && toNumber(data.sales) !== null
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">収支実績</CardTitle>
-        <p className="text-sm text-gray-500">{periodLabel ?? month.substring(0, 7)}</p>
+      <CardHeader
+        onClick={() => setOpen(!open)}
+        className="cursor-pointer select-none hover:bg-gray-50/60 transition-colors"
+      >
+        <CardTitle className="flex items-center gap-2 min-h-7">
+          {open ? (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          )}
+          収支実績
+          <span className="text-sm font-normal text-gray-500">
+            {periodLabel ?? month.substring(0, 7)}
+          </span>
+          {hasNumbers ? (
+            <span className="ml-auto text-sm font-normal text-gray-500 tabular-nums">
+              売上高 <span className="font-bold text-gray-900">{formatCurrency(data!.sales)}</span>
+              <span className="mx-1.5">/</span>
+              営業利益{' '}
+              <span
+                className={cn(
+                  'font-bold',
+                  (toNumber(data!.operating_profit) ?? 0) >= 0 ? 'text-gray-900' : 'text-red-600',
+                )}
+              >
+                {formatCurrency(data!.operating_profit)}
+              </span>
+            </span>
+          ) : (
+            !open && (
+              <span className="text-sm font-normal text-gray-400">（クリックで展開）</span>
+            )
+          )}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[140px]">項目</TableHead>
-              <TableHead className="text-right">今期</TableHead>
-              <TableHead className="text-right">前年比</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {/* 売上高 */}
-            <TableRow>
-              <TableCell className="font-medium">売上高</TableCell>
-              <TableCell className="text-right font-mono">
-                {formatCurrency(data.sales)}
-              </TableCell>
-              <TableCell className={cn('text-right font-mono', getYoYColor(data.sales_yoy_rate))}>
-                {formatYoY(data.sales_yoy_rate)}
-              </TableCell>
-            </TableRow>
+      {open && (
+        <CardContent>
+          {loading ? (
+            <div className="animate-pulse space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-8 bg-gray-200 rounded" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-4 text-gray-400">
+              収支データの取得に失敗しました
+            </div>
+          ) : !data ? (
+            <div className="text-center py-4 text-gray-400">
+              収支データがありません
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[140px]">項目</TableHead>
+                  <TableHead className="text-right">今期</TableHead>
+                  <TableHead className="text-right">前年比</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {/* 売上高 */}
+                <TableRow>
+                  <TableCell className="font-medium">売上高</TableCell>
+                  <TableCell className="text-right font-mono">
+                    {formatCurrency(data.sales)}
+                  </TableCell>
+                  <TableCell className={cn('text-right font-mono', getYoYColor(data.sales_yoy_rate))}>
+                    {formatYoY(data.sales_yoy_rate)}
+                  </TableCell>
+                </TableRow>
 
-            {/* 売上原価 */}
-            <TableRow>
-              <TableCell className="font-medium">売上原価</TableCell>
-              <TableCell className="text-right font-mono">
-                {formatCurrency(data.cost_of_sales)}
-              </TableCell>
-              <TableCell className="text-right font-mono text-gray-400">-</TableCell>
-            </TableRow>
+                {/* 売上原価 */}
+                <TableRow>
+                  <TableCell className="font-medium">売上原価</TableCell>
+                  <TableCell className="text-right font-mono">
+                    {formatCurrency(data.cost_of_sales)}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-gray-400">-</TableCell>
+                </TableRow>
 
-            {/* 売上総利益 */}
-            <TableRow className="bg-gray-50">
-              <TableCell className="font-medium">売上総利益</TableCell>
-              <TableCell className="text-right font-mono">
-                {formatCurrency(data.gross_profit)}
-              </TableCell>
-              <TableCell className="text-right font-mono text-gray-400">-</TableCell>
-            </TableRow>
+                {/* 売上総利益 */}
+                <TableRow className="bg-gray-50">
+                  <TableCell className="font-medium">売上総利益</TableCell>
+                  <TableCell className="text-right font-mono">
+                    {formatCurrency(data.gross_profit)}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-gray-400">-</TableCell>
+                </TableRow>
 
-            {/* 販管費（展開可能） */}
-            <TableRow
-              onClick={() => hasDetails && setSgaExpanded(!sgaExpanded)}
-              className={cn(
-                hasDetails && 'cursor-pointer hover:bg-gray-50'
-              )}
-            >
-              <TableCell className="font-medium">
-                <div className="flex items-center gap-1">
-                  {hasDetails ? (
-                    sgaExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-gray-500" />
-                    )
-                  ) : (
-                    <span className="w-4" />
+                {/* 販管費（展開可能） */}
+                <TableRow
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (hasDetails) setSgaExpanded(!sgaExpanded)
+                  }}
+                  className={cn(
+                    hasDetails && 'cursor-pointer hover:bg-gray-50'
                   )}
-                  <span>販管費</span>
-                </div>
-              </TableCell>
-              <TableCell className="text-right font-mono">
-                {formatCurrency(data.sga_total)}
-              </TableCell>
-              <TableCell className="text-right font-mono text-gray-400">-</TableCell>
-            </TableRow>
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-1">
+                      {hasDetails ? (
+                        sgaExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-500" />
+                        )
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <span>販管費</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {formatCurrency(data.sga_total)}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-gray-400">-</TableCell>
+                </TableRow>
 
-            {/* 販管費明細（展開時） */}
-            {sgaExpanded && sgaDetails.map((item) => (
-              <TableRow key={item.name} className="bg-gray-50/50">
-                <TableCell className="pl-8 text-sm text-gray-600">{item.name}</TableCell>
-                <TableCell className="text-right font-mono text-sm text-gray-600">
-                  {formatCurrency(item.value)}
-                </TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            ))}
+                {/* 販管費明細（展開時） */}
+                {sgaExpanded && sgaDetails.map((item) => (
+                  <TableRow key={item.name} className="bg-gray-50/50">
+                    <TableCell className="pl-8 text-sm text-gray-600">{item.name}</TableCell>
+                    <TableCell className="text-right font-mono text-sm text-gray-600">
+                      {formatCurrency(item.value)}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                ))}
 
-            {/* 営業利益 */}
-            <TableRow className="bg-gray-50 font-medium">
-              <TableCell className="font-medium">営業利益</TableCell>
-              <TableCell className="text-right font-mono font-medium">
-                {formatCurrency(data.operating_profit)}
-              </TableCell>
-              <TableCell className={cn('text-right font-mono', getYoYColor(data.operating_profit_yoy_rate))}>
-                {formatYoY(data.operating_profit_yoy_rate)}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </CardContent>
+                {/* 営業利益 */}
+                <TableRow className="bg-gray-50 font-medium">
+                  <TableCell className="font-medium">営業利益</TableCell>
+                  <TableCell className="text-right font-mono font-medium">
+                    {formatCurrency(data.operating_profit)}
+                  </TableCell>
+                  <TableCell className={cn('text-right font-mono', getYoYColor(data.operating_profit_yoy_rate))}>
+                    {formatYoY(data.operating_profit_yoy_rate)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      )}
     </Card>
   )
 }

@@ -26,7 +26,8 @@ interface UseMonthlyCommentsReturn {
 
 export function useMonthlyComments(
   category: CommentCategory,
-  period: string
+  period: string,
+  segmentId?: string
 ): UseMonthlyCommentsReturn {
   const [comments, setComments] = useState<MonthlyComment[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,7 +44,7 @@ export function useMonthlyComments(
       try {
         setLoading(true)
         setError(null)
-        const data = await getMonthlyComments(category, period)
+        const data = await getMonthlyComments(category, period, segmentId)
         if (!cancelled) {
           setComments(data)
         }
@@ -65,7 +66,7 @@ export function useMonthlyComments(
     return () => {
       cancelled = true
     }
-  }, [category, period])
+  }, [category, period, segmentId])
 
   // コメントを追加
   const addComment = useCallback(async (text: string) => {
@@ -78,6 +79,7 @@ export function useMonthlyComments(
         category,
         period,
         comment: text,
+        segment_id: segmentId ?? null,
       })
       setComments(prev => [...prev, newComment])
     } catch (err) {
@@ -87,7 +89,7 @@ export function useMonthlyComments(
     } finally {
       setSaving(false)
     }
-  }, [category, period])
+  }, [category, period, segmentId])
 
   // コメントを編集
   const updateComment = useCallback(async (id: string, text: string) => {

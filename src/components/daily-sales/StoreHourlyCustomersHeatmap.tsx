@@ -7,7 +7,7 @@
 
 import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users } from 'lucide-react'
+import { ChevronDown, ChevronRight, Users } from 'lucide-react'
 import { useStoreHourlyCustomers } from '@/hooks/useDailySales'
 import { getJapaneseHoliday } from '@/lib/japanese-holidays'
 import { cn } from '@/lib/utils'
@@ -54,6 +54,8 @@ function getDateLabelClass(dateStr: string): string {
 }
 
 export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth, periodType = 'monthly' }: Props) {
+  // ページが長くなるためデフォルト閉
+  const [open, setOpen] = useState(false)
   const isCumulative = periodType === 'cumulative'
   const { data, loading, error } = useStoreHourlyCustomers(month, segmentId, periodType)
 
@@ -89,8 +91,16 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth, pe
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader
+        onClick={() => setOpen(!open)}
+        className="cursor-pointer select-none hover:bg-gray-50/60 transition-colors"
+      >
+        <CardTitle className="flex items-center gap-2 min-h-7">
+          {open ? (
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          ) : (
+            <ChevronRight className="h-5 w-5 text-gray-500" />
+          )}
           <span className="p-1.5 rounded-md bg-sky-100">
             <Users className="h-4 w-4 text-sky-700" />
           </span>
@@ -103,6 +113,7 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth, pe
           )}
         </CardTitle>
       </CardHeader>
+      {open && (
       <CardContent>
         {loading && (
           <div className="flex items-center justify-center h-32 text-muted-foreground">
@@ -217,6 +228,7 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth, pe
           <div className="text-muted-foreground text-sm">この月のデータがありません。</div>
         )}
       </CardContent>
+      )}
     </Card>
   )
 }

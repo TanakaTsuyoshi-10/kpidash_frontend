@@ -9,7 +9,7 @@ import { use, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { format, subMonths } from 'date-fns'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +26,14 @@ import { StorePLSummaryCard } from '@/components/products/StorePLSummaryCard'
 import { DeliverySalesCard } from '@/components/products/DeliverySalesCard'
 import { WeekdayAnalysis } from '@/components/daily-sales/WeekdayAnalysis'
 import { StoreHourlyCustomersHeatmap } from '@/components/daily-sales/StoreHourlyCustomersHeatmap'
+import { DailySalesCalendar } from '@/components/products/DailySalesCalendar'
+import { CollapsibleSection } from '@/components/common/CollapsibleSection'
+import {
+  useStoreComments,
+  StoreCommentAlert,
+  StoreCommentEditor,
+  StoreCommentList,
+} from '@/components/products/StoreComments'
 import { useStoreDetail } from '@/hooks/useStoreDetail'
 import { cn } from '@/lib/utils'
 
@@ -56,8 +64,13 @@ export default function StoreDetailPage({ params }: Props) {
 
   const [month, setMonthValue] = useState(initialMonth)
   const [periodType, setPeriodType] = useState<StorePeriodType>('monthly')
+  // 商品グループ別販売状況のトグル（ページが長くなるためデフォルト閉）
+  const [productGroupOpen, setProductGroupOpen] = useState(false)
 
   const { data, loading, error, setMonth } = useStoreDetail(segmentId, month, periodType)
+
+  // コメント（店舗×月単位。累計表示中も対象月に紐づく）
+  const commentState = useStoreComments(month, segmentId)
 
   // 月変更時にAPIを呼び出し、URLも更新
   useEffect(() => {
@@ -165,6 +178,9 @@ export default function StoreDetailPage({ params }: Props) {
         </div>
       </div>
 
+      {/* コメント未入力アラート＋追加ボタン */}
+      <StoreCommentAlert state={commentState} monthLabel={displayMonth} />
+
       {/* 店舗サマリー */}
       {data && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -233,10 +249,23 @@ export default function StoreDetailPage({ params }: Props) {
       />
 
       {/* 曜日別分析（平日 / 土日祝） */}
-      <div>
-        <h2 className="text-lg font-bold mb-3">曜日別分析 ({periodLabel})</h2>
+      <CollapsibleSection
+        title={
+          <>
+            曜日別分析
+            <span className="text-sm font-normal text-gray-500">{periodLabel}</span>
+          </>
+        }
+      >
         <WeekdayAnalysis month={month} segmentId={segmentId} periodType={periodType} />
-      </div>
+      </CollapsibleSection>
+
+      {/* 日別前年対比カレンダー（トグル開閉・対象は選択月） */}
+      <DailySalesCalendar
+        segmentId={segmentId}
+        month={month}
+        displayMonth={displayMonth}
+      />
 
       {/* 時間帯別来客ヒートマップ（単月=日別×時間帯 / 累計=月別×時間帯） */}
       <StoreHourlyCustomersHeatmap
@@ -256,9 +285,25 @@ export default function StoreDetailPage({ params }: Props) {
 
       {/* 商品グループ別販売状況 */}
       <Card>
-        <CardHeader>
-          <CardTitle>商品グループ別販売状況 ({periodLabel})</CardTitle>
+        <CardHeader
+          onClick={() => setProductGroupOpen(!productGroupOpen)}
+          className="cursor-pointer select-none hover:bg-gray-50/60 transition-colors"
+        >
+          <CardTitle className="flex items-center gap-2 min-h-7">
+            {productGroupOpen ? (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-gray-500" />
+            )}
+            商品グループ別販売状況 ({periodLabel})
+            {!productGroupOpen && (
+              <span className="text-sm font-normal text-gray-400">
+                {data?.products.length ?? 0}件（クリックで展開）
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
+        {productGroupOpen && (
         <CardContent>
           {!data || data.products.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
@@ -313,12 +358,23 @@ export default function StoreDetailPage({ params }: Props) {
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       {/* 個別商品販売状況 */}
       <ProductItemsTable
         items={data?.product_items || []}
         displayMonth={periodLabel}
+      />
+
+      {/* コメント一覧（最下部） */}
+      <StoreCommentList state={commentState} monthLabel={displayMonth} />
+
+      {/* コメント入力ボックス（画面右下に固定表示） */}
+      <StoreCommentEditor
+        state={commentState}
+        monthLabel={displayMonth}
+        storeName={data?.segment_name ?? ''}
       />
     </div>
   )
