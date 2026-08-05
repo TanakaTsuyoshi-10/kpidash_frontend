@@ -85,10 +85,12 @@ export async function getWeekdayAnalysis(
   month: string,
   departmentSlug: string = 'store',
   segmentId?: string,
+  periodType: 'monthly' | 'cumulative' = 'monthly',
 ): Promise<WeekdayAnalysisResponse> {
   const params = new URLSearchParams({
     month,
     department_slug: departmentSlug,
+    period_type: periodType,
   })
   if (segmentId) params.append('segment_id', segmentId)
   return apiClient.get<WeekdayAnalysisResponse>(`/daily-sales/weekday-analysis?${params.toString()}`)
@@ -100,10 +102,12 @@ export async function getWeekdayAnalysis(
 export async function getStoreHourlyCustomers(
   month: string,
   segmentId: string,
+  periodType: 'monthly' | 'cumulative' = 'monthly',
 ): Promise<StoreHourlyCustomersResponse> {
   const params = new URLSearchParams({
     month,
     segment_id: segmentId,
+    period_type: periodType,
   })
   return apiClient.get<StoreHourlyCustomersResponse>(`/daily-sales/hourly-customers-daily?${params.toString()}`)
 }

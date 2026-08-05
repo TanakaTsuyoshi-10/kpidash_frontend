@@ -22,6 +22,9 @@ import type { StorePLSGADetail } from '@/types/financial'
 interface Props {
   segmentId: string
   month: string
+  periodType?: 'monthly' | 'cumulative'
+  /** 期間の表示ラベル（例: 2026年7月 / 2025年9月〜2026年7月 累計） */
+  periodLabel?: string
 }
 
 // 数値に変換（文字列対応）
@@ -59,8 +62,8 @@ interface SGADetailItem {
   value: number
 }
 
-export function StorePLSummaryCard({ segmentId, month }: Props) {
-  const { data, loading, error } = useStorePL(segmentId, month)
+export function StorePLSummaryCard({ segmentId, month, periodType = 'monthly', periodLabel }: Props) {
+  const { data, loading, error } = useStorePL(segmentId, month, periodType)
   const [sgaExpanded, setSgaExpanded] = useState(false)
 
   if (loading) {
@@ -130,7 +133,7 @@ export function StorePLSummaryCard({ segmentId, month }: Props) {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">収支実績</CardTitle>
-        <p className="text-sm text-gray-500">{month.substring(0, 7)}</p>
+        <p className="text-sm text-gray-500">{periodLabel ?? month.substring(0, 7)}</p>
       </CardHeader>
       <CardContent>
         <Table>

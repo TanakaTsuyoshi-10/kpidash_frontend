@@ -157,14 +157,18 @@ export function useStorePLList(
 /**
  * 店舗収支取得フック（店舗詳細ページ用）
  */
-export function useStorePL(segmentId: string, month: string) {
+export function useStorePL(
+  segmentId: string,
+  month: string,
+  periodType: 'monthly' | 'cumulative' = 'monthly'
+) {
   const key = segmentId && month
-    ? `/api/v1/finance/store-pl/${segmentId}?month=${month}`
+    ? `/api/v1/finance/store-pl/${segmentId}?month=${month}&period_type=${periodType}`
     : null
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<StorePL>(
     key,
-    () => getStorePLBySegment(segmentId, month),
+    () => getStorePLBySegment(segmentId, month, periodType),
     { dedupingInterval: 60000 }
   )
 

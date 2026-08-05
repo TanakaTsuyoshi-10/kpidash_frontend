@@ -15,6 +15,8 @@ interface Props {
   departmentSlug?: string
   /** 指定時はその店舗のみで集計（店舗詳細ページ用） */
   segmentId?: string
+  /** cumulative で年度累計（9月〜対象月） */
+  periodType?: 'monthly' | 'cumulative'
 }
 
 interface MetricDef {
@@ -113,8 +115,8 @@ function GroupCard({
   )
 }
 
-export function WeekdayAnalysis({ month, departmentSlug = 'store', segmentId }: Props) {
-  const { data, loading, error } = useWeekdayAnalysis(month, departmentSlug, segmentId)
+export function WeekdayAnalysis({ month, departmentSlug = 'store', segmentId, periodType = 'monthly' }: Props) {
+  const { data, loading, error } = useWeekdayAnalysis(month, departmentSlug, segmentId, periodType)
 
   if (loading) {
     return (

@@ -16,6 +16,7 @@ interface Props {
   segmentId: string
   month: string
   displayMonth: string
+  periodType?: 'monthly' | 'cumulative'
 }
 
 // 値を0〜1にスケーリングして背景色クラスを返す（客数用: 青系）
@@ -38,6 +39,12 @@ function formatDateLabel(dateStr: string): string {
   return `${d.getDate()}日(${DAY_NAMES[d.getDay()]})`
 }
 
+// 累計モード用: 月ラベル（例: 2025年12月）
+function formatMonthLabel(dateStr: string): string {
+  const [y, m] = dateStr.split('-')
+  return `${y}年${parseInt(m)}月`
+}
+
 // 日付ラベルの色: 日曜・祝日=赤、土曜=青
 function getDateLabelClass(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
@@ -46,8 +53,9 @@ function getDateLabelClass(dateStr: string): string {
   return ''
 }
 
-export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth }: Props) {
-  const { data, loading, error } = useStoreHourlyCustomers(month, segmentId)
+export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth, periodType = 'monthly' }: Props) {
+  const isCumulative = periodType === 'cumulative'
+  const { data, loading, error } = useStoreHourlyCustomers(month, segmentId, periodType)
 
   const [tooltip, setTooltip] = useState<{
     x: number; y: number; customers: number; date: string; hour: number
@@ -89,7 +97,8 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth }: 
           時間帯別来客ヒートマップ ({displayMonth})
           {data && (
             <span className="ml-auto text-sm font-normal text-gray-500 tabular-nums">
-              月間合計 <span className="font-bold text-gray-900">{data.total.toLocaleString()}人</span>
+              {isCumulative ? '期間合計' : '月間合計'}{' '}
+              <span className="font-bold text-gray-900">{data.total.toLocaleString()}人</span>
             </span>
           )}
         </CardTitle>
@@ -109,7 +118,7 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth }: 
               <thead>
                 <tr>
                   <th className="sticky left-0 z-10 bg-gray-100 px-2 py-1.5 text-left font-medium border-b border-r min-w-[80px]">
-                    日付
+                    {isCumulative ? '月' : '日付'}
                   </th>
                   {data.hours.map((hour) => (
                     <th
@@ -120,7 +129,7 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth }: 
                     </th>
                   ))}
                   <th className="px-2 py-1.5 text-center font-medium border-b border-l bg-gray-100 min-w-[60px]">
-                    日計
+                    {isCumulative ? '月計' : '日計'}
                   </th>
                 </tr>
               </thead>
@@ -132,10 +141,10 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth }: 
                       <td
                         className={cn(
                           'sticky left-0 z-10 bg-white px-2 py-1 font-medium border-b border-r whitespace-nowrap',
-                          getDateLabelClass(dateStr),
+                          !isCumulative && getDateLabelClass(dateStr),
                         )}
                       >
-                        {formatDateLabel(dateStr)}
+                        {isCumulative ? formatMonthLabel(dateStr) : formatDateLabel(dateStr)}
                       </td>
                       {data.hours.map((hour) => {
                         const customers = cellLookup.get(`${dateStr}-${hour}`) ?? 0
@@ -196,7 +205,7 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth }: 
                 }}
               >
                 <div className="font-medium">
-                  {formatDateLabel(tooltip.date)} {tooltip.hour}時台
+                  {isCumulative ? formatMonthLabel(tooltip.date) : formatDateLabel(tooltip.date)} {tooltip.hour}時台
                 </div>
                 <div>来客: {tooltip.customers.toLocaleString()}人</div>
               </div>

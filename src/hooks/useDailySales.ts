@@ -84,12 +84,13 @@ export function useWeekdayAnalysis(
   month: string,
   departmentSlug: string = 'store',
   segmentId?: string,
+  periodType: 'monthly' | 'cumulative' = 'monthly',
 ) {
-  const key = `/daily-sales/weekday-analysis?month=${month}&dept=${departmentSlug}&segment=${segmentId ?? ''}`
+  const key = `/daily-sales/weekday-analysis?month=${month}&dept=${departmentSlug}&segment=${segmentId ?? ''}&period_type=${periodType}`
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<WeekdayAnalysisResponse>(
     key,
-    () => getWeekdayAnalysis(month, departmentSlug, segmentId),
+    () => getWeekdayAnalysis(month, departmentSlug, segmentId, periodType),
     { dedupingInterval: 60000 }
   )
 
@@ -102,12 +103,13 @@ export function useWeekdayAnalysis(
 export function useStoreHourlyCustomers(
   month: string,
   segmentId: string,
+  periodType: 'monthly' | 'cumulative' = 'monthly',
 ) {
-  const key = segmentId ? `/daily-sales/hourly-customers-daily?month=${month}&segment=${segmentId}` : null
+  const key = segmentId ? `/daily-sales/hourly-customers-daily?month=${month}&segment=${segmentId}&period_type=${periodType}` : null
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<StoreHourlyCustomersResponse>(
     key,
-    () => getStoreHourlyCustomers(month, segmentId),
+    () => getStoreHourlyCustomers(month, segmentId, periodType),
     { dedupingInterval: 60000 }
   )
 

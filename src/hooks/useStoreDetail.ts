@@ -53,15 +53,19 @@ export interface StoreDetailResponse {
   product_items: ProductItemSalesData[]  // 個別商品別
 }
 
-export function useStoreDetail(segmentId: string, initialMonth: string) {
+export function useStoreDetail(
+  segmentId: string,
+  initialMonth: string,
+  periodType: 'monthly' | 'cumulative' = 'monthly'
+) {
   const [month, setMonth] = useState(initialMonth)
 
-  const key = segmentId ? `/kpi/store/${segmentId}/detail?month=${month}` : null
+  const key = segmentId ? `/kpi/store/${segmentId}/detail?month=${month}&period_type=${periodType}` : null
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<StoreDetailResponse>(
     key,
     () => {
-      const params = new URLSearchParams({ month })
+      const params = new URLSearchParams({ month, period_type: periodType })
       return apiClient.get<StoreDetailResponse>(
         `/kpi/store/${segmentId}/detail?${params.toString()}`
       )
@@ -102,13 +106,17 @@ export interface StoreDeliveryResponse {
   shipping_regions: ShippingRegionData[]
 }
 
-export function useStoreDelivery(segmentId: string, month: string) {
-  const key = segmentId ? `/kpi/store/${segmentId}/delivery?month=${month}` : null
+export function useStoreDelivery(
+  segmentId: string,
+  month: string,
+  periodType: 'monthly' | 'cumulative' = 'monthly'
+) {
+  const key = segmentId ? `/kpi/store/${segmentId}/delivery?month=${month}&period_type=${periodType}` : null
 
   const { data, error, isLoading, isValidating, mutate } = useSWR<StoreDeliveryResponse>(
     key,
     () => {
-      const params = new URLSearchParams({ month })
+      const params = new URLSearchParams({ month, period_type: periodType })
       return apiClient.get<StoreDeliveryResponse>(
         `/kpi/store/${segmentId}/delivery?${params.toString()}`
       )

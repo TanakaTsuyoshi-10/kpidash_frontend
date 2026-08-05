@@ -23,6 +23,7 @@ interface Props {
   segmentId: string
   month: string
   displayMonth: string
+  periodType?: 'monthly' | 'cumulative'
 }
 
 const REGION_COLORS = [
@@ -47,8 +48,8 @@ function formatYoY(rate: number | null | undefined): string {
   return `${sign}${rate.toFixed(1)}%`
 }
 
-export function DeliverySalesCard({ segmentId, month, displayMonth }: Props) {
-  const { data, loading, error } = useStoreDelivery(segmentId, month)
+export function DeliverySalesCard({ segmentId, month, displayMonth, periodType = 'monthly' }: Props) {
+  const { data, loading, error } = useStoreDelivery(segmentId, month, periodType)
 
   if (loading) {
     return (

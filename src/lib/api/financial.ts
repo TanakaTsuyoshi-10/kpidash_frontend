@@ -295,9 +295,10 @@ export async function getStorePLList(
  */
 export async function getStorePLBySegment(
   segmentId: string,
-  month: string
+  month: string,
+  periodType: 'monthly' | 'cumulative' = 'monthly'
 ): Promise<StorePL> {
-  const searchParams = new URLSearchParams({ month })
+  const searchParams = new URLSearchParams({ month, period_type: periodType })
   return apiClient.get<StorePL>(
     `/api/v1/finance/store-pl/${segmentId}?${searchParams.toString()}`
   )

@@ -1,6 +1,7 @@
 /**
  * 店舗詳細ページ
- * 商品ごとの販売状況（売上、客単価、前年同月比較）を表示
+ * 商品ごとの販売状況（売上、客単価、前年比較）を表示
+ * 単月/累計（年度累計 = 9月〜対象月）の切替に対応
  */
 'use client'
 
@@ -19,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { PeriodSelector } from '@/components/dashboard/PeriodSelector'
+import { FiscalMonthSelector } from '@/components/dashboard/FiscalMonthSelector'
 import { ProductItemsTable } from '@/components/products/ProductItemsTable'
 import { StorePLSummaryCard } from '@/components/products/StorePLSummaryCard'
 import { DeliverySalesCard } from '@/components/products/DeliverySalesCard'
@@ -27,16 +28,12 @@ import { WeekdayAnalysis } from '@/components/daily-sales/WeekdayAnalysis'
 import { StoreHourlyCustomersHeatmap } from '@/components/daily-sales/StoreHourlyCustomersHeatmap'
 import { useStoreDetail } from '@/hooks/useStoreDetail'
 import { cn } from '@/lib/utils'
-import {
-  formatPeriod,
-  getFiscalYearFromPeriod,
-  formatDisplayPeriod,
-} from '@/lib/fiscal-year'
-import type { PeriodType } from '@/types/dashboard'
 
 interface Props {
   params: Promise<{ segmentId: string }>
 }
+
+type StorePeriodType = 'monthly' | 'cumulative'
 
 // 通貨フォーマット
 function formatCurrency(value: number | null | undefined): string {
@@ -51,38 +48,61 @@ function formatYoY(rate: number | null | undefined): string {
   return `${sign}${rate.toFixed(1)}%`
 }
 
-// 期間文字列から月を取得
-function getMonthFromPeriod(period: string): number {
-  const date = new Date(period)
-  return date.getMonth() + 1
-}
-
 export default function StoreDetailPage({ params }: Props) {
   const { segmentId } = use(params)
   const searchParams = useSearchParams()
   const defaultMonth = format(subMonths(new Date(), 1), 'yyyy-MM-01')
   const initialMonth = searchParams.get('month') || defaultMonth
 
-  // 年度・月の状態管理
-  const [periodType, setPeriodType] = useState<PeriodType>('monthly')
-  const [year, setYear] = useState(() => getFiscalYearFromPeriod(initialMonth))
-  const [month, setMonthValue] = useState(() => getMonthFromPeriod(initialMonth))
-  const [quarter, setQuarter] = useState(1)
+  const [month, setMonthValue] = useState(initialMonth)
+  const [periodType, setPeriodType] = useState<StorePeriodType>('monthly')
 
-  // 期間文字列を計算
-  const periodString = formatPeriod(year, month)
+  const { data, loading, error, setMonth } = useStoreDetail(segmentId, month, periodType)
 
-  const { data, loading, error, setMonth } = useStoreDetail(segmentId, periodString)
-
-  // 年度・月変更時にAPIを呼び出し、URLも更新
+  // 月変更時にAPIを呼び出し、URLも更新
   useEffect(() => {
-    setMonth(periodString)
+    setMonth(month)
     const url = new URL(window.location.href)
-    url.searchParams.set('month', periodString)
+    url.searchParams.set('month', month)
     window.history.replaceState({}, '', url.toString())
-  }, [periodString, setMonth])
+  }, [month, setMonth])
 
-  const displayMonth = formatDisplayPeriod(year, month)
+  // 期間ラベル
+  const [yearNum, monthNum] = month.substring(0, 7).split('-').map(Number)
+  const fiscalYearStart = monthNum >= 9 ? yearNum : yearNum - 1
+  const isCumulative = periodType === 'cumulative'
+  const displayMonth = `${yearNum}年${monthNum}月`
+  const periodLabel = isCumulative
+    ? `${fiscalYearStart}年9月〜${yearNum}年${monthNum}月 累計`
+    : displayMonth
+
+  // 単月/累計トグル
+  const PeriodTypeToggle = () => (
+    <div className="flex rounded-lg border border-gray-200 overflow-hidden shrink-0">
+      <button
+        onClick={() => setPeriodType('monthly')}
+        className={cn(
+          'px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap',
+          periodType === 'monthly'
+            ? 'bg-green-600 text-white'
+            : 'bg-card text-gray-600 hover:bg-gray-50'
+        )}
+      >
+        単月
+      </button>
+      <button
+        onClick={() => setPeriodType('cumulative')}
+        className={cn(
+          'px-3 py-1.5 text-sm font-medium transition-colors border-l border-gray-200 whitespace-nowrap',
+          periodType === 'cumulative'
+            ? 'bg-green-600 text-white'
+            : 'bg-card text-gray-600 hover:bg-gray-50'
+        )}
+      >
+        累計
+      </button>
+    </div>
+  )
 
   if (loading) {
     return (
@@ -139,16 +159,10 @@ export default function StoreDetailPage({ params }: Props) {
             {data?.segment_name || '店舗詳細'}
           </h1>
         </div>
-        <PeriodSelector
-          periodType={periodType}
-          year={year}
-          month={month}
-          quarter={quarter}
-          onPeriodTypeChange={setPeriodType}
-          onYearChange={setYear}
-          onMonthChange={setMonthValue}
-          onQuarterChange={setQuarter}
-        />
+        <div className="flex items-center gap-3">
+          <FiscalMonthSelector value={month} onChange={setMonthValue} />
+          <PeriodTypeToggle />
+        </div>
       </div>
 
       {/* 店舗サマリー */}
@@ -198,43 +212,52 @@ export default function StoreDetailPage({ params }: Props) {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-500">対象月</CardTitle>
+              <CardTitle className="text-sm text-gray-500">対象期間</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{displayMonth}</div>
-              <div className="text-sm text-gray-500">{year}年度</div>
+              <div className={cn('font-bold', isCumulative ? 'text-lg' : 'text-2xl')}>
+                {isCumulative ? `${fiscalYearStart}/9〜${yearNum}/${monthNum} 累計` : displayMonth}
+              </div>
+              <div className="text-sm text-gray-500">{fiscalYearStart}年度</div>
             </CardContent>
           </Card>
         </div>
       )}
 
       {/* 収支実績 */}
-      <StorePLSummaryCard segmentId={segmentId} month={periodString} />
+      <StorePLSummaryCard
+        segmentId={segmentId}
+        month={month}
+        periodType={periodType}
+        periodLabel={periodLabel}
+      />
 
       {/* 曜日別分析（平日 / 土日祝） */}
       <div>
-        <h2 className="text-lg font-bold mb-3">曜日別分析 ({displayMonth})</h2>
-        <WeekdayAnalysis month={periodString} segmentId={segmentId} />
+        <h2 className="text-lg font-bold mb-3">曜日別分析 ({periodLabel})</h2>
+        <WeekdayAnalysis month={month} segmentId={segmentId} periodType={periodType} />
       </div>
 
-      {/* 時間帯別来客ヒートマップ（日別×時間帯） */}
+      {/* 時間帯別来客ヒートマップ（単月=日別×時間帯 / 累計=月別×時間帯） */}
       <StoreHourlyCustomersHeatmap
         segmentId={segmentId}
-        month={periodString}
-        displayMonth={displayMonth}
+        month={month}
+        displayMonth={periodLabel}
+        periodType={periodType}
       />
 
       {/* 宅配関連売上 */}
       <DeliverySalesCard
         segmentId={segmentId}
-        month={periodString}
-        displayMonth={displayMonth}
+        month={month}
+        displayMonth={periodLabel}
+        periodType={periodType}
       />
 
       {/* 商品グループ別販売状況 */}
       <Card>
         <CardHeader>
-          <CardTitle>商品グループ別販売状況 ({displayMonth})</CardTitle>
+          <CardTitle>商品グループ別販売状況 ({periodLabel})</CardTitle>
         </CardHeader>
         <CardContent>
           {!data || data.products.length === 0 ? (
@@ -295,7 +318,7 @@ export default function StoreDetailPage({ params }: Props) {
       {/* 個別商品販売状況 */}
       <ProductItemsTable
         items={data?.product_items || []}
-        displayMonth={displayMonth}
+        displayMonth={periodLabel}
       />
     </div>
   )
