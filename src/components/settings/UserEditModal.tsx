@@ -19,9 +19,9 @@ import { Loader2, Trash2 } from 'lucide-react'
 import { useUserOperations, useUserRoles } from '@/hooks/useUsers'
 import { useUserContext } from '@/contexts/UserContext'
 import { toast } from 'sonner'
-import { getUserPermissions, updateUserPermissions } from '@/lib/api/users'
+import { getOrgDepartments, getUserPermissions, updateUserPermissions } from '@/lib/api/users'
 import { PAGE_KEYS, PAGE_LABELS } from '@/types/user'
-import type { UserProfileResponse, UserRole, UserRoleInfo, PageKey } from '@/types/user'
+import type { OrgDepartment, UserProfileResponse, UserRole, UserRoleInfo, PageKey } from '@/types/user'
 
 interface UserEditModalProps {
   open: boolean
@@ -34,6 +34,10 @@ interface FormData {
   displayName: string
   role: UserRole
   isActive: boolean
+  orgDepartmentId: string
+  position: string
+  canApprove: boolean
+  approvalViewAll: boolean
 }
 
 export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditModalProps) {
@@ -44,7 +48,12 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
     displayName: '',
     role: 'user',
     isActive: true,
+    orgDepartmentId: '',
+    position: '',
+    canApprove: false,
+    approvalViewAll: false,
   })
+  const [departments, setDepartments] = useState<OrgDepartment[]>([])
   const [selectedPages, setSelectedPages] = useState<PageKey[]>([])
   const [permissionsLoading, setPermissionsLoading] = useState(false)
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
@@ -68,10 +77,15 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
   useEffect(() => {
     if (open && user) {
       fetchRoles()
+      getOrgDepartments().then((r) => setDepartments(r.departments)).catch(() => setDepartments([]))
       setFormData({
         displayName: user.display_name || '',
         role: user.role,
         isActive: user.is_active,
+        orgDepartmentId: user.org_department_id ?? '',
+        position: user.position ?? '',
+        canApprove: user.can_approve ?? false,
+        approvalViewAll: user.approval_view_all ?? false,
       })
       setShowDeactivateConfirm(false)
       // 一般利用者のみページ権限を取得（管理者・役員は全ページ固定）
@@ -104,6 +118,10 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
         display_name: formData.displayName || undefined,
         role: formData.role,
         is_active: formData.isActive,
+        org_department_id: formData.orgDepartmentId,
+        position: formData.position,
+        can_approve: formData.canApprove,
+        approval_view_all: formData.approvalViewAll,
       })
       // 一般利用者かつ本人編集でない場合のみページ権限を更新（管理者・役員は全ページ固定）
       if (!isSelf && formData.role === 'user') {
@@ -158,13 +176,39 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="displayName">表示名</Label>
+            <Label htmlFor="displayName">表示名（名前）</Label>
             <Input
               id="displayName"
               value={formData.displayName}
               onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
               placeholder="表示名"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="orgDepartment">部署</Label>
+              <select
+                id="orgDepartment"
+                value={formData.orgDepartmentId}
+                onChange={(e) => setFormData({ ...formData, orgDepartmentId: e.target.value })}
+                className="w-full h-9 px-3 border rounded-md text-sm bg-white"
+              >
+                <option value="">（未設定）</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="position">役職</Label>
+              <Input
+                id="position"
+                value={formData.position}
+                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                placeholder="例: 店長、課長"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -269,6 +313,48 @@ export function UserEditModal({ open, onOpenChange, user, onSuccess }: UserEditM
                 自分自身を無効化することはできません
               </p>
             )}
+          </div>
+
+          {/* 承認ワークフロー権限（ページ閲覧権限とは別軸） */}
+          <div className="space-y-2">
+            <Label>承認ワークフロー権限</Label>
+            <div className="space-y-2 p-3 border rounded-lg bg-gray-50">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.canApprove}
+                  onChange={(e) => setFormData({ ...formData, canApprove: e.target.checked })}
+                  className="mt-0.5"
+                />
+                <span className="text-sm">
+                  <span className="font-medium">承認権限</span>
+                  <span className="block text-xs text-gray-500">
+                    稟議の承認者として指定できるようになります
+                  </span>
+                </span>
+              </label>
+              <label
+                className={`flex items-start gap-2 ${
+                  isFullAccessRole ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isFullAccessRole || formData.approvalViewAll}
+                  onChange={(e) => setFormData({ ...formData, approvalViewAll: e.target.checked })}
+                  disabled={isFullAccessRole}
+                  className="mt-0.5"
+                />
+                <span className="text-sm">
+                  <span className="font-medium">稟議の全社閲覧</span>
+                  <span className="block text-xs text-gray-500">
+                    {isFullAccessRole
+                      ? '管理者・役員は常に全社の稟議を閲覧できます'
+                      : '自部署以外の稟議も閲覧できるようになります（通常は自部署のみ）'}
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
 
           {/* ページ閲覧権限（本人編集時は非表示。管理者・役員は全ページ固定表示） */}

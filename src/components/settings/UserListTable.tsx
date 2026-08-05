@@ -71,7 +71,10 @@ export function UserListTable({ users, onEdit }: UserListTableProps) {
           <TableRow>
             <TableHead>利用者名</TableHead>
             <TableHead>メールアドレス</TableHead>
+            <TableHead>部署</TableHead>
+            <TableHead>役職</TableHead>
             <TableHead>権限</TableHead>
+            <TableHead>承認/閲覧</TableHead>
             <TableHead>状態</TableHead>
             <TableHead className="w-[80px]">操作</TableHead>
           </TableRow>
@@ -79,7 +82,7 @@ export function UserListTable({ users, onEdit }: UserListTableProps) {
         <TableBody>
           {users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+              <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                 利用者が登録されていません
               </TableCell>
             </TableRow>
@@ -92,8 +95,28 @@ export function UserListTable({ users, onEdit }: UserListTableProps) {
                 <TableCell className="text-gray-600">
                   {user.email}
                 </TableCell>
+                <TableCell className="text-gray-600">
+                  {user.org_department_name ?? <span className="text-gray-300">未設定</span>}
+                </TableCell>
+                <TableCell className="text-gray-600">
+                  {user.position ?? <span className="text-gray-300">-</span>}
+                </TableCell>
                 <TableCell>
                   {getRoleBadge(user.role, user.role_name)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {user.can_approve && (
+                      <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                        承認者
+                      </Badge>
+                    )}
+                    {(user.role === 'admin' || user.role === 'executive' || user.approval_view_all) && (
+                      <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">
+                        全社閲覧
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   {getStatusBadge(user.is_active)}

@@ -1,6 +1,7 @@
 /**
  * 承認ワークフロー 一覧ページ
- * タブ: 要対応（自分がpending）/ 申請中（自分が起票）/ 全件（admin/executiveのみ）
+ * タブ: 要対応（自分がpending）/ 申請中（自分が起票）/
+ *       部署内（自部署の稟議。admin・役員・全社閲覧権限者は「全件」表示）
  */
 'use client'
 
@@ -57,7 +58,7 @@ function RequestList({ tab }: { tab: 'todo' | 'mine' | 'all' }) {
           ? '承認待ちの申請はありません'
           : tab === 'mine'
             ? '申請はまだありません'
-            : '申請がありません'}
+            : '閲覧できる申請がありません（自部署の稟議のみ表示されます）'}
       </p>
     )
   }
@@ -99,8 +100,10 @@ function RequestList({ tab }: { tab: 'todo' | 'mine' | 'all' }) {
 }
 
 export default function ApprovalsPage() {
-  const { isAdmin, isExecutive } = useUserContext()
-  const canViewAll = isAdmin || isExecutive
+  const { isAdmin, isExecutive, user } = useUserContext()
+  // 稟議の全社閲覧: admin/役員/全社閲覧権限。それ以外は「部署内」として同じタブを表示
+  const canViewAll = isAdmin || isExecutive || (user?.approval_view_all ?? false)
+  const scopeTabLabel = canViewAll ? '全件' : '部署内'
   const [tab, setTab] = useState('todo')
 
   return (
@@ -128,12 +131,10 @@ export default function ApprovalsPage() {
                   <Send className="h-4 w-4" />
                   申請中・下書き
                 </TabsTrigger>
-                {canViewAll && (
-                  <TabsTrigger value="all" className="flex items-center gap-1.5">
-                    <Files className="h-4 w-4" />
-                    全件
-                  </TabsTrigger>
-                )}
+                <TabsTrigger value="all" className="flex items-center gap-1.5">
+                  <Files className="h-4 w-4" />
+                  {scopeTabLabel}
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="todo" className="mt-4">
                 <RequestList tab="todo" />
@@ -141,11 +142,9 @@ export default function ApprovalsPage() {
               <TabsContent value="mine" className="mt-4">
                 <RequestList tab="mine" />
               </TabsContent>
-              {canViewAll && (
-                <TabsContent value="all" className="mt-4">
-                  <RequestList tab="all" />
-                </TabsContent>
-              )}
+              <TabsContent value="all" className="mt-4">
+                <RequestList tab="all" />
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>

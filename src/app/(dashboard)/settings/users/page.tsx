@@ -8,12 +8,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Plus, Loader2 } from 'lucide-react'
+import { ArrowLeft, Building2, Plus, Loader2 } from 'lucide-react'
 import { useUserContext } from '@/contexts/UserContext'
 import { useUserList } from '@/hooks/useUsers'
 import { UserListTable } from '@/components/settings/UserListTable'
 import { UserCreateModal } from '@/components/settings/UserCreateModal'
 import { UserEditModal } from '@/components/settings/UserEditModal'
+import { OrgDepartmentModal } from '@/components/settings/OrgDepartmentModal'
 import type { UserProfileResponse } from '@/types/user'
 
 export default function UsersPage() {
@@ -22,6 +23,7 @@ export default function UsersPage() {
   const { users, loading, fetchUsers } = useUserList()
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [deptModalOpen, setDeptModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserProfileResponse | null>(null)
 
@@ -70,10 +72,16 @@ export default function UsersPage() {
           </Link>
           <h1 className="text-2xl font-bold">利用者管理</h1>
         </div>
-        <Button onClick={() => setCreateModalOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          新規登録
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setDeptModalOpen(true)}>
+            <Building2 className="h-4 w-4 mr-2" />
+            部署管理
+          </Button>
+          <Button onClick={() => setCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            新規登録
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -95,6 +103,12 @@ export default function UsersPage() {
         onOpenChange={setEditModalOpen}
         user={selectedUser}
         onSuccess={handleSuccess}
+      />
+
+      <OrgDepartmentModal
+        open={deptModalOpen}
+        onOpenChange={setDeptModalOpen}
+        onChanged={handleSuccess}
       />
     </div>
   )

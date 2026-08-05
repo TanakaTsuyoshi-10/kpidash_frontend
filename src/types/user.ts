@@ -43,6 +43,13 @@ export interface CurrentUserResponse {
   /** アカウントが有効か。false の場合はログイン拒否対象 */
   is_active: boolean
   allowed_pages: PageKey[]
+  org_department_id: string | null
+  org_department_name: string | null
+  position: string | null
+  /** 承認権限（承認者に指定可能か） */
+  can_approve: boolean
+  /** 稟議の全社閲覧権限 */
+  approval_view_all: boolean
 }
 
 // ページ権限
@@ -59,6 +66,11 @@ export interface UserProfileResponse {
   role: UserRole
   role_name: string | null
   is_active: boolean
+  org_department_id: string | null
+  org_department_name: string | null
+  position: string | null
+  can_approve: boolean
+  approval_view_all: boolean
   created_at: string | null
   updated_at: string | null
   last_sign_in_at: string | null
@@ -87,12 +99,33 @@ export interface UserProfileCreate {
   password: string
   display_name?: string
   role?: UserRole
+  org_department_id?: string | null
+  position?: string
+  can_approve?: boolean
+  approval_view_all?: boolean
 }
 
 export interface UserProfileUpdate {
   display_name?: string
   role?: UserRole
   is_active?: boolean
+  /** "" を渡すと部署未設定にクリア */
+  org_department_id?: string
+  position?: string
+  can_approve?: boolean
+  approval_view_all?: boolean
+}
+
+// 部署マスタ
+export interface OrgDepartment {
+  id: string
+  name: string
+  display_order: number
+  is_active: boolean
+}
+
+export interface OrgDepartmentListResponse {
+  departments: OrgDepartment[]
 }
 
 // 操作結果

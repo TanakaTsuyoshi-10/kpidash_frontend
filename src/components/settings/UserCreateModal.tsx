@@ -18,7 +18,8 @@ import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
 import { useUserOperations, useUserRoles } from '@/hooks/useUsers'
 import { toast } from 'sonner'
-import type { UserRole, UserRoleInfo } from '@/types/user'
+import { getOrgDepartments } from '@/lib/api/users'
+import type { OrgDepartment, UserRole, UserRoleInfo } from '@/types/user'
 
 interface UserCreateModalProps {
   open: boolean
@@ -31,6 +32,9 @@ interface FormData {
   password: string
   displayName: string
   role: UserRole
+  orgDepartmentId: string
+  position: string
+  canApprove: boolean
 }
 
 interface FormErrors {
@@ -43,6 +47,9 @@ const initialFormData: FormData = {
   password: '',
   displayName: '',
   role: 'user',
+  orgDepartmentId: '',
+  position: '',
+  canApprove: false,
 }
 
 export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateModalProps) {
@@ -50,10 +57,12 @@ export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateMod
   const { roles, fetchRoles } = useUserRoles()
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<FormErrors>({})
+  const [departments, setDepartments] = useState<OrgDepartment[]>([])
 
   useEffect(() => {
     if (open) {
       fetchRoles()
+      getOrgDepartments().then((r) => setDepartments(r.departments)).catch(() => setDepartments([]))
       setFormData(initialFormData)
       setErrors({})
     }
@@ -90,6 +99,9 @@ export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateMod
         password: formData.password,
         display_name: formData.displayName || undefined,
         role: formData.role,
+        org_department_id: formData.orgDepartmentId || null,
+        position: formData.position || undefined,
+        can_approve: formData.canApprove,
       })
       toast.success('利用者を登録しました')
       onOpenChange(false)
@@ -157,6 +169,47 @@ export function UserCreateModal({ open, onOpenChange, onSuccess }: UserCreateMod
               placeholder="表示名（任意）"
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="orgDepartmentNew">部署</Label>
+              <select
+                id="orgDepartmentNew"
+                value={formData.orgDepartmentId}
+                onChange={(e) => setFormData({ ...formData, orgDepartmentId: e.target.value })}
+                className="w-full h-9 px-3 border rounded-md text-sm bg-white"
+              >
+                <option value="">（未設定）</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="positionNew">役職</Label>
+              <Input
+                id="positionNew"
+                value={formData.position}
+                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                placeholder="例: 店長、課長"
+              />
+            </div>
+          </div>
+
+          <label className="flex items-start gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="checkbox"
+              checked={formData.canApprove}
+              onChange={(e) => setFormData({ ...formData, canApprove: e.target.checked })}
+              className="mt-0.5"
+            />
+            <span className="text-sm">
+              <span className="font-medium">承認権限</span>
+              <span className="block text-xs text-gray-500">
+                稟議の承認者として指定できるようになります
+              </span>
+            </span>
+          </label>
 
           <div className="space-y-2">
             <Label>
