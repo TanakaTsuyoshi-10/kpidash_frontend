@@ -75,18 +75,16 @@ function GroupCard({
   title,
   icon,
   stats,
-  accent,
 }: {
   title: string
   icon: React.ReactNode
   stats: WeekdayGroupStats
-  accent: string
 }) {
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <span className={cn('p-1.5 rounded-md', accent)}>{icon}</span>
+          {icon}
           {title}
           <span className="ml-auto text-xs font-normal text-gray-400">
             集計 {stats.days}日（前年 {stats.prev.days}日）
@@ -140,15 +138,13 @@ export function WeekdayAnalysis({ month, departmentSlug = 'store', segmentId, pe
     <div className="space-y-4">
       <GroupCard
         title="平日（月〜金・祝日除く）"
-        icon={<Briefcase className="h-4 w-4 text-blue-700" />}
+        icon={<Briefcase className="h-4 w-4 text-gray-500" />}
         stats={data.weekday}
-        accent="bg-blue-100"
       />
       <GroupCard
         title="土日祝"
-        icon={<Sun className="h-4 w-4 text-orange-600" />}
+        icon={<Sun className="h-4 w-4 text-gray-500" />}
         stats={data.weekend}
-        accent="bg-orange-100"
       />
 
       {/* 平日 vs 土日祝 比較表 */}

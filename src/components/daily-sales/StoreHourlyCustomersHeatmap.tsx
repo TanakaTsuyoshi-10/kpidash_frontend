@@ -101,9 +101,7 @@ export function StoreHourlyCustomersHeatmap({ segmentId, month, displayMonth, pe
           ) : (
             <ChevronRight className="h-5 w-5 text-gray-500" />
           )}
-          <span className="p-1.5 rounded-md bg-sky-100">
-            <Users className="h-4 w-4 text-sky-700" />
-          </span>
+          <Users className="h-4 w-4 text-gray-500" />
           時間帯別来客ヒートマップ ({displayMonth})
           {data && (
             <span className="ml-auto text-sm font-normal text-gray-500 tabular-nums">

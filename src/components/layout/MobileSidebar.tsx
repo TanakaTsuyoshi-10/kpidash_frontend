@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, LogOut, Building2 } from 'lucide-react'
+import { Menu, X, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -83,9 +83,13 @@ export function MobileSidebar({ navItems, userName, onLogout, open, onOpenChange
         <div className="flex flex-col h-full">
           {/* ヘッダー */}
           <div className="p-4 border-b">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-green-600" />
-              <h1 className="text-xl font-bold text-gray-800">KPI管理</h1>
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-maruoka.png"
+                alt="ぎょうざの丸岡"
+                className="h-12 w-auto"
+              />
             </div>
             {userName && (
               <p className="text-sm text-gray-500 mt-2 truncate">{userName}</p>

@@ -18,6 +18,8 @@ import {
   Hash,
   Stamp,
   Trash2,
+  Copy,
+  UserRoundPen,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -30,20 +32,32 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { PermissionGuard } from '@/components/PermissionGuard'
 import { ApprovalStepsView } from '@/components/approvals/ApprovalStepsView'
 import { ApprovalTimeline } from '@/components/approvals/ApprovalTimeline'
 import { useUserContext } from '@/contexts/UserContext'
-import { useApprovalRequest } from '@/hooks/useApprovals'
+import { useApprovalRequest, useViewerCandidates } from '@/hooks/useApprovals'
+import { groupUsersByDepartment } from '@/components/approvals/groupUsersByDepartment'
 import {
   acknowledgeRequest,
   approveStep,
   cancelRequest,
   deleteRequest,
+  duplicateRequest,
   rejectStep,
   republish,
   returnToRequester,
+  transferRequest,
 } from '@/lib/api/approvals'
 import {
   APPROVAL_MODE_LABELS,
@@ -128,6 +142,37 @@ export default function ApprovalDetailPage({
       mutate()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : '取下げに失敗しました')
+    }
+  }
+
+  const { users: transferCandidates } = useViewerCandidates()
+  const [transferOpen, setTransferOpen] = useState(false)
+  const [transferTo, setTransferTo] = useState('')
+
+  const handleTransfer = async () => {
+    if (!transferTo) return
+    setProcessing(true)
+    try {
+      await transferRequest(request!.id, transferTo)
+      toast.success('担当者を変更しました')
+      setTransferOpen(false)
+      mutate()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '担当者の変更に失敗しました')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handleDuplicate = async () => {
+    setProcessing(true)
+    try {
+      const dup = await duplicateRequest(request!.id)
+      toast.success('複製しました。下書きとして編集できます')
+      router.push(`/approvals/new?draft=${dup.id}`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '複製に失敗しました')
+      setProcessing(false)
     }
   }
 
@@ -255,12 +300,20 @@ export default function ApprovalDetailPage({
         )}
 
         {/* 起票者向けアクション */}
-        {isRequester && request.status === 'draft' && (
+        {(isRequester || canReassign) && request.status === 'draft' && (
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="py-4 flex flex-wrap items-center gap-2">
               <p className="text-sm text-blue-800 font-medium mr-auto">
                 下書き状態です。編集して申請してください
               </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setTransferOpen(true)}
+              >
+                <UserRoundPen className="h-4 w-4 mr-1" />
+                担当者を変更
+              </Button>
               <Button
                 size="sm"
                 onClick={() => router.push(`/approvals/new?draft=${request.id}`)}
@@ -339,7 +392,7 @@ export default function ApprovalDetailPage({
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Eye className="h-4 w-4 text-blue-600" />
+                <Eye className="h-4 w-4 text-gray-500" />
                 閲覧者（確認押印）
               </CardTitle>
             </CardHeader>
@@ -405,6 +458,16 @@ export default function ApprovalDetailPage({
               申請を取り下げる
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-gray-400 hover:text-blue-600"
+            onClick={handleDuplicate}
+            disabled={processing}
+          >
+            <Copy className="h-4 w-4 mr-1" />
+            この案件を複製する
+          </Button>
           {request.can_delete && (
             <Button
               variant="ghost"
@@ -418,6 +481,48 @@ export default function ApprovalDetailPage({
             </Button>
           )}
         </div>
+
+        {/* 担当者変更ダイアログ */}
+        <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>起票担当者を変更</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label>新しい担当者</Label>
+              <Select value={transferTo || undefined} onValueChange={setTransferTo}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="担当者を選択..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {groupUsersByDepartment(
+                    transferCandidates.filter((u) => u.id !== request.requester_id)
+                  ).map(([dept, deptUsers]) => (
+                    <SelectGroup key={dept}>
+                      <SelectLabel className="text-xs text-gray-400 bg-gray-50">{dept}</SelectLabel>
+                      {deptUsers.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.display_name || u.email}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-400">
+                変更後は新しい担当者がこの下書きを編集・申請できます（現在の担当者は編集できなくなります）
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setTransferOpen(false)}>
+                キャンセル
+              </Button>
+              <Button onClick={handleTransfer} disabled={processing || !transferTo}>
+                {processing ? '変更中...' : '変更する'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* 承認/却下/差戻ダイアログ */}
         <Dialog

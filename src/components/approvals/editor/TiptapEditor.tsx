@@ -131,6 +131,105 @@ const ResizableImage = Image.extend({
 })
 
 /** 段落・見出しのインデント（margin-left ベース）＋ Tab / Shift+Tab */
+// =============================================================================
+// 文字サイズ（textStyle マークの font-size 属性）
+// =============================================================================
+
+const FontSize = Extension.create({
+  name: 'fontSize',
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['textStyle'],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element) => element.style.fontSize || null,
+            renderHTML: (attributes) => {
+              if (!attributes.fontSize) return {}
+              return { style: `font-size: ${attributes.fontSize}` }
+            },
+          },
+        },
+      },
+    ]
+  },
+})
+
+/** ツールバーの文字サイズ候補（プリセット） */
+const FONT_SIZE_PRESETS = [
+  { value: '', label: '標準' },
+  { value: '12px', label: '小' },
+  { value: '18px', label: '大' },
+  { value: '24px', label: '特大' },
+  { value: '32px', label: '見出し' },
+] as const
+
+/** px 直接指定の候補 */
+const FONT_SIZE_PX = [
+  '10px', '11px', '12px', '13px', '14px', '15px', '16px', '18px',
+  '20px', '22px', '24px', '26px', '28px', '32px', '36px', '40px', '48px',
+] as const
+
+// =============================================================================
+// Excel等からの表ペースト
+// =============================================================================
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/**
+ * Excel/スプレッドシートからペーストされたHTML内の表を、
+ * エディタのスタイルに合わせたクリーンな表HTMLに変換する。
+ * 元のフォント・色・罫線などの装飾はすべて破棄し、
+ * セルのテキストと結合（rowspan/colspan）のみを引き継ぐ。
+ */
+function cleanPastedTableHtml(html: string): string | null {
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const tables = Array.from(doc.querySelectorAll('table'))
+    if (tables.length === 0) return null
+
+    const parts: string[] = []
+    for (const table of tables) {
+      // ネストした表は外側のみ対象にする
+      if (table.parentElement?.closest('table')) continue
+      const rows = Array.from(table.querySelectorAll('tr')).filter(
+        (tr) => tr.closest('table') === table
+      )
+      if (rows.length === 0) continue
+
+      const rowsHtml = rows
+        .map((tr) => {
+          const cells = Array.from(tr.children).filter(
+            (c) => c.tagName === 'TD' || c.tagName === 'TH'
+          )
+          const cellsHtml = cells
+            .map((cell) => {
+              const el = cell as HTMLTableCellElement
+              const attrs: string[] = []
+              if (el.colSpan > 1) attrs.push(`colspan="${el.colSpan}"`)
+              if (el.rowSpan > 1) attrs.push(`rowspan="${el.rowSpan}"`)
+              const text = escapeHtml((el.textContent ?? '').replace(/\s+/g, ' ').trim())
+              return `<td${attrs.length ? ' ' + attrs.join(' ') : ''}><p>${text}</p></td>`
+            })
+            .join('')
+          return `<tr>${cellsHtml}</tr>`
+        })
+        .join('')
+      parts.push(`<table><tbody>${rowsHtml}</tbody></table>`)
+    }
+    return parts.length > 0 ? parts.join('<p></p>') : null
+  } catch {
+    return null
+  }
+}
+
 const Indent = Extension.create({
   name: 'indent',
 
@@ -327,6 +426,7 @@ export function TiptapEditor({
       StarterKit,
       ResizableImage.configure({ inline: false, allowBase64: false }),
       TextStyle,
+      FontSize,
       Color,
       TextAlign.configure({
         types: ['paragraph', 'heading'],
@@ -361,9 +461,23 @@ export function TiptapEditor({
         return false
       },
       handlePaste: (view, event) => {
-        const items = event.clipboardData?.items
-        if (!items || !editor) return false
-        for (const item of Array.from(items)) {
+        const cb = event.clipboardData
+        if (!cb || !editor) return false
+
+        // Excel等の表: クリップボードに画像とHTMLが同時に載るため、
+        // 表HTMLがあれば画像より優先し、装飾を除去して表として貼り付ける
+        const html = cb.getData('text/html')
+        if (html && /<table[\s>]/i.test(html)) {
+          const cleaned = cleanPastedTableHtml(html)
+          if (cleaned) {
+            event.preventDefault()
+            editor.chain().focus().insertContent(cleaned).run()
+            return true
+          }
+        }
+
+        // 画像（スクリーンショット等）のペースト
+        for (const item of Array.from(cb.items)) {
           if (item.type.startsWith('image/')) {
             const file = item.getAsFile()
             if (file) {
@@ -482,6 +596,45 @@ export function TiptapEditor({
         >
           <Strikethrough className="h-4 w-4" />
         </button>
+
+        <span className="w-px h-5 bg-gray-300 mx-1" />
+
+        {/* 文字サイズ */}
+        <select
+          value={editor.getAttributes('textStyle').fontSize ?? ''}
+          onChange={(e) => {
+            const size = e.target.value
+            if (size) {
+              editor.chain().focus().setMark('textStyle', { fontSize: size }).run()
+            } else {
+              // 標準に戻す: fontSize を外し、空になった textStyle マークは除去
+              editor
+                .chain()
+                .focus()
+                .setMark('textStyle', { fontSize: null })
+                .removeEmptyTextStyle()
+                .run()
+            }
+          }}
+          className="h-7 px-1.5 rounded border border-gray-300 bg-white text-xs text-gray-700"
+          title="文字サイズ"
+          disabled={disabled}
+        >
+          <optgroup label="プリセット">
+            {FONT_SIZE_PRESETS.map((f) => (
+              <option key={f.value || 'default'} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="サイズ指定（px）">
+            {FONT_SIZE_PX.map((px) => (
+              <option key={px} value={px}>
+                {px}
+              </option>
+            ))}
+          </optgroup>
+        </select>
 
         <span className="w-px h-5 bg-gray-300 mx-1" />
 

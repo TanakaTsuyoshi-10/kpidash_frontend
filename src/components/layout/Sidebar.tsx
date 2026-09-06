@@ -15,8 +15,7 @@ import {
   Upload,
   Target,
   Settings,
-  Building2,
-  Store,
+    Store,
   TrendingUp,
   ShoppingCart,
   Factory,
@@ -140,9 +139,13 @@ export function Sidebar({ userName, onLogout }: SidebarProps) {
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-gray-50 border-r border-gray-200">
       {/* ロゴ */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-2">
-          <Building2 className="h-8 w-8 text-green-600" />
-          <span className="text-lg font-bold">KPI管理</span>
+        <div className="mb-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-maruoka.png"
+            alt="ぎょうざの丸岡"
+            className="h-14 w-auto"
+          />
         </div>
         {userName && (
           <p className="text-sm text-gray-500 truncate">{userName}</p>

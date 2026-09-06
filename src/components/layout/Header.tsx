@@ -26,10 +26,13 @@ export function Header() {
           {/* モバイル用スペーサー（ハンバーガーボタン分） */}
           <div className="w-10 lg:hidden" />
 
-          {/* タイトル */}
-          <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
-            MaruokaKPI
-          </h1>
+          {/* タイトル（会社ロゴ） */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-maruoka.png"
+            alt="ぎょうざの丸岡"
+            className="h-9 sm:h-10 w-auto"
+          />
 
           {/* ユーザー情報とログアウト */}
           <div className="flex items-center gap-2 sm:gap-4">

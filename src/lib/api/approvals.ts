@@ -200,3 +200,16 @@ export async function acknowledgeRequest(id: string): Promise<ApprovalRequestDet
 export async function deleteRequest(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/approvals/${id}`)
 }
+
+export async function transferRequest(
+  id: string,
+  newRequesterId: string
+): Promise<ApprovalRequestDetail> {
+  return apiClient.post<ApprovalRequestDetail>(`/api/v1/approvals/${id}/transfer`, {
+    new_requester_id: newRequesterId,
+  })
+}
+
+export async function duplicateRequest(id: string): Promise<ApprovalRequestDetail> {
+  return apiClient.post<ApprovalRequestDetail>(`/api/v1/approvals/${id}/duplicate`, {})
+}

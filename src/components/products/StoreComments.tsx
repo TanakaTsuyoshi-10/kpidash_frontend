@@ -187,7 +187,7 @@ export function StoreCommentEditor({
       <Card className="shadow-2xl border-2 border-green-600/40">
         <CardHeader className="py-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-green-700" />
+            <MessageSquare className="h-4 w-4 text-gray-500" />
             {editing ? 'コメントを編集' : 'コメントを追加'}
             <span className="text-xs font-normal text-gray-500">
               {storeName}・{monthLabel}
@@ -278,7 +278,7 @@ export function StoreCommentList({
           ) : (
             <ChevronRight className="h-5 w-5 text-gray-500" />
           )}
-          <MessageSquare className="h-5 w-5 text-green-700" />
+          <MessageSquare className="h-5 w-5 text-gray-500" />
           コメント（{monthLabel}）
           {!loading && (
             <span className="text-sm font-normal text-gray-400">{comments.length}件</span>

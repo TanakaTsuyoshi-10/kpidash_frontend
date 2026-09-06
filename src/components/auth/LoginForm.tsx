@@ -46,6 +46,14 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
+        <div className="flex justify-center mb-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-maruoka.png"
+            alt="ぎょうざの丸岡"
+            className="h-20 w-auto"
+          />
+        </div>
         <CardTitle>ログイン</CardTitle>
         <CardDescription>
           メールアドレスとパスワードを入力してください

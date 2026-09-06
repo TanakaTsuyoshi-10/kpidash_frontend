@@ -68,9 +68,7 @@ export function DeliverySalesCard({ segmentId, month, displayMonth, periodType =
           ) : (
             <ChevronRight className="h-5 w-5 text-gray-500" />
           )}
-          <span className="p-1.5 rounded-md bg-emerald-100">
-            <Truck className="h-4 w-4 text-emerald-700" />
-          </span>
+          <Truck className="h-4 w-4 text-gray-500" />
           宅配関連売上 ({displayMonth})
           {data ? (
             <span className="ml-auto text-base font-bold tabular-nums">

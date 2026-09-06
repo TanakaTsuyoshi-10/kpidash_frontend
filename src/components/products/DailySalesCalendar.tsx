@@ -106,9 +106,7 @@ export function DailySalesCalendar({ segmentId, month, displayMonth }: Props) {
           ) : (
             <ChevronRight className="h-5 w-5 text-gray-500" />
           )}
-          <span className="p-1.5 rounded-md bg-emerald-100">
-            <CalendarDays className="h-4 w-4 text-emerald-700" />
-          </span>
+          <CalendarDays className="h-4 w-4 text-gray-500" />
           日別前年対比カレンダー ({displayMonth})
           {monthTotal ? (
             <span className="ml-auto text-sm font-normal text-gray-500 tabular-nums">
