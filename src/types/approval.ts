@@ -127,6 +127,9 @@ export const ACTION_LABELS: Record<string, string> = {
   publish_success: 'Slack投稿成功',
   publish_failed: 'Slack投稿失敗',
   notify_failed: '通知失敗',
+  viewer_ack: '閲覧確認（押印）',
+  delete: '削除',
+  attachments_purged: '添付画像の自動削除',
 }
 
 export interface ApprovalRequestSummary {
@@ -147,6 +150,14 @@ export interface ApprovalRequestSummary {
   updated_at: string
 }
 
+export interface ApprovalViewer {
+  id: string
+  viewer_id: string
+  viewer_email: string
+  viewer_name?: string | null
+  acknowledged_at?: string | null
+}
+
 export interface ApprovalRequestDetail extends ApprovalRequestSummary {
   content: ApprovalContent
   metadata: Record<string, unknown>
@@ -157,6 +168,9 @@ export interface ApprovalRequestDetail extends ApprovalRequestSummary {
   actions: ApprovalActionEntry[]
   can_act: boolean
   can_edit: boolean
+  viewers: ApprovalViewer[]
+  can_ack: boolean
+  can_delete: boolean
 }
 
 export interface ApprovalRequestListResponse {
@@ -176,6 +190,7 @@ export interface ApprovalRequestCreatePayload {
   metadata: Record<string, unknown>
   approval_mode?: ApprovalMode
   approvers: ApproverInput[]
+  viewers?: string[]
 }
 
 export interface ApprovalRequestSubmitPayload {
@@ -184,6 +199,7 @@ export interface ApprovalRequestSubmitPayload {
   metadata: Record<string, unknown>
   approval_mode: ApprovalMode
   approvers: ApproverInput[]
+  viewers?: string[]
 }
 
 export interface ApprovalDelegate {
@@ -216,4 +232,36 @@ export interface AttachmentUploadResponse {
 
 export interface PendingCountResponse {
   count: number
+}
+
+
+// =============================================================================
+// ダッシュボード
+// =============================================================================
+
+export interface ApprovalDashboardDeptRow {
+  department_name: string
+  draft: number
+  pending: number
+  approved: number
+  rejected: number
+  total: number
+}
+
+export interface ApprovalDashboardRequestRow {
+  id: string
+  title: string
+  request_type_label: string
+  status: ApprovalRequestStatus
+  phase: string
+  requester_name: string
+  department_name: string
+  submitted_at?: string | null
+  created_at: string
+}
+
+export interface ApprovalDashboardResponse {
+  by_department: ApprovalDashboardDeptRow[]
+  requests: ApprovalDashboardRequestRow[]
+  total: number
 }

@@ -34,7 +34,7 @@ export async function getPendingCount(): Promise<PendingCountResponse> {
 }
 
 export async function getAssignableUsers(): Promise<
-  Array<{ id: string; email: string; display_name: string }>
+  Array<{ id: string; email: string; display_name: string; department: string }>
 > {
   return apiClient.get(`${BASE}/assignable-users`)
 }
@@ -185,4 +185,18 @@ export async function createDelegate(
 
 export async function deleteDelegate(id: string): Promise<void> {
   return apiClient.delete(`${DELEGATES_BASE}/${id}`)
+}
+
+export async function getViewerCandidates(): Promise<
+  Array<{ id: string; email: string; display_name: string; department: string }>
+> {
+  return apiClient.get('/api/v1/approvals/viewer-candidates')
+}
+
+export async function acknowledgeRequest(id: string): Promise<ApprovalRequestDetail> {
+  return apiClient.post<ApprovalRequestDetail>(`/api/v1/approvals/${id}/acknowledge`, {})
+}
+
+export async function deleteRequest(id: string): Promise<void> {
+  await apiClient.delete(`/api/v1/approvals/${id}`)
 }

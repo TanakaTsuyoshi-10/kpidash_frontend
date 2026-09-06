@@ -10,11 +10,14 @@ import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { useAssignableUsers } from '@/hooks/useApprovals'
+import { groupUsersByDepartment } from '@/components/approvals/groupUsersByDepartment'
 import {
   APPROVAL_MODE_LABELS,
   type ApprovalMode,
@@ -35,6 +38,7 @@ export function ApprovalRouteEditor({
   disabled = false,
 }: ApprovalRouteEditorProps) {
   const { users } = useAssignableUsers()
+  const departmentGroups = groupUsersByDepartment(users)
 
   const addApprover = () => {
     const nextStepNo =
@@ -116,16 +120,23 @@ export function ApprovalRouteEditor({
                   <SelectValue placeholder="承認者を選択..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map((u) => (
-                    <SelectItem
-                      key={u.id}
-                      value={u.id}
-                      disabled={
-                        selectedIds.has(u.id) && approver.assignee_id !== u.id
-                      }
-                    >
-                      {u.display_name}（{u.email}）
-                    </SelectItem>
+                  {departmentGroups.map(([dept, deptUsers]) => (
+                    <SelectGroup key={dept}>
+                      <SelectLabel className="text-xs text-gray-400 bg-gray-50">
+                        {dept}
+                      </SelectLabel>
+                      {deptUsers.map((u) => (
+                        <SelectItem
+                          key={u.id}
+                          value={u.id}
+                          disabled={
+                            selectedIds.has(u.id) && approver.assignee_id !== u.id
+                          }
+                        >
+                          {u.display_name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>

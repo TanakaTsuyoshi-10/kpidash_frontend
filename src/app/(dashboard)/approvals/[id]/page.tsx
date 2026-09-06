@@ -12,9 +12,12 @@ import {
   XCircle,
   Undo2,
   Ban,
+  Eye,
   Pencil,
   RefreshCw,
   Hash,
+  Stamp,
+  Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -34,8 +37,10 @@ import { ApprovalTimeline } from '@/components/approvals/ApprovalTimeline'
 import { useUserContext } from '@/contexts/UserContext'
 import { useApprovalRequest } from '@/hooks/useApprovals'
 import {
+  acknowledgeRequest,
   approveStep,
   cancelRequest,
+  deleteRequest,
   rejectStep,
   republish,
   returnToRequester,
@@ -126,6 +131,32 @@ export default function ApprovalDetailPage({
     }
   }
 
+  const handleAcknowledge = async () => {
+    setProcessing(true)
+    try {
+      await acknowledgeRequest(request!.id)
+      toast.success('確認（押印）を記録しました')
+      mutate()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '確認の記録に失敗しました')
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('この案件を削除しますか？削除すると一覧に表示されなくなります。')) return
+    setProcessing(true)
+    try {
+      await deleteRequest(request!.id)
+      toast.success('案件を削除しました')
+      router.push('/approvals')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : '削除に失敗しました')
+      setProcessing(false)
+    }
+  }
+
   const handleRepublish = async () => {
     if (!request) return
     setProcessing(true)
@@ -208,6 +239,21 @@ export default function ApprovalDetailPage({
           </Card>
         )}
 
+        {/* 閲覧者向け: 確認（押印） */}
+        {request.can_ack && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="py-4 flex flex-wrap items-center gap-2">
+              <p className="text-sm text-blue-800 font-medium mr-auto">
+                あなたは閲覧者に指定されています。内容を確認したら押印してください
+              </p>
+              <Button size="sm" onClick={handleAcknowledge} disabled={processing}>
+                <Stamp className="h-4 w-4 mr-1" />
+                確認しました（押印）
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 起票者向けアクション */}
         {isRequester && request.status === 'draft' && (
           <Card className="border-blue-200 bg-blue-50">
@@ -246,6 +292,11 @@ export default function ApprovalDetailPage({
             <CardTitle className="text-base">申請内容</CardTitle>
           </CardHeader>
           <CardContent>
+            {Boolean(request.metadata?.attachments_purged_at) && (
+              <p className="mb-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                この案件の添付画像は保存期間経過のため削除されています（本文・承認履歴は保持されます）
+              </p>
+            )}
             {request.content.caption_html ? (
               <div
                 className="rich-content prose prose-sm max-w-none [&_img]:max-w-full [&_img]:rounded-md [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5"
@@ -283,12 +334,67 @@ export default function ApprovalDetailPage({
           </CardContent>
         </Card>
 
+        {/* 閲覧者（押印状況） */}
+        {request.viewers.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Eye className="h-4 w-4 text-blue-600" />
+                閲覧者（確認押印）
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {request.viewers.map((v) => (
+                  <div
+                    key={v.id}
+                    className={`flex items-center gap-2.5 rounded-lg border px-3 py-2 ${
+                      v.acknowledged_at
+                        ? 'border-red-200 bg-red-50/40'
+                        : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    {/* 押印風の丸印 */}
+                    <span
+                      className={`flex items-center justify-center h-11 w-11 rounded-full border-2 text-[10px] font-bold leading-tight text-center ${
+                        v.acknowledged_at
+                          ? 'border-red-500 text-red-600 rotate-[-6deg]'
+                          : 'border-dashed border-gray-300 text-gray-300'
+                      }`}
+                    >
+                      {v.acknowledged_at ? (
+                        <span>
+                          確認
+                          <br />
+                          済
+                        </span>
+                      ) : (
+                        '未'
+                      )}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">
+                        {v.viewer_name ?? v.viewer_email}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {v.acknowledged_at
+                          ? `確認: ${new Date(v.acknowledged_at).toLocaleString('ja-JP')}`
+                          : '未確認'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 監査履歴 */}
         <ApprovalTimeline actions={request.actions} />
 
         {/* 取下げ */}
-        {isRequester && ['draft', 'pending'].includes(request.status) && (
-          <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {isRequester && ['draft', 'pending'].includes(request.status) && (
             <Button
               variant="ghost"
               size="sm"
@@ -298,8 +404,20 @@ export default function ApprovalDetailPage({
               <Ban className="h-4 w-4 mr-1" />
               申請を取り下げる
             </Button>
-          </div>
-        )}
+          )}
+          {request.can_delete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-red-600"
+              onClick={handleDelete}
+              disabled={processing}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              この案件を削除する
+            </Button>
+          )}
+        </div>
 
         {/* 承認/却下/差戻ダイアログ */}
         <Dialog

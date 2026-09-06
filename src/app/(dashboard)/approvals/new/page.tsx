@@ -22,6 +22,7 @@ import {
 import { PermissionGuard } from '@/components/PermissionGuard'
 import { LazyTiptapEditor } from '@/components/lazy'
 import { ApprovalRouteEditor } from '@/components/approvals/ApprovalRouteEditor'
+import { ApprovalViewerSelector } from '@/components/approvals/ApprovalViewerSelector'
 import { useChannelBindings, useRequestTypes } from '@/hooks/useApprovals'
 import {
   createDraft,
@@ -54,6 +55,7 @@ function NewApprovalForm() {
     { step_no: 1, assignee_id: '' },
   ])
   const [mode, setMode] = useState<ApprovalMode>('sequential')
+  const [viewers, setViewers] = useState<string[]>([])
   const [draftId, setDraftId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -84,6 +86,7 @@ function NewApprovalForm() {
             d.steps.map((s) => ({ step_no: s.step_no, assignee_id: s.assignee_id }))
           )
         }
+        setViewers((d.viewers ?? []).map((v) => v.viewer_id))
         setEditorKey((k) => k + 1) // エディタを初期HTMLで再マウント
       })
       .catch(() => toast.error('下書きの読み込みに失敗しました'))
@@ -132,6 +135,7 @@ function NewApprovalForm() {
     metadata: channelId ? { slack_channel_id: channelId } : {},
     approval_mode: mode,
     approvers: approvers.filter((a) => a.assignee_id),
+    viewers,
   })
 
   const handleSaveDraft = async () => {
@@ -189,6 +193,7 @@ function NewApprovalForm() {
         metadata: channelId ? { slack_channel_id: channelId } : {},
         approval_mode: mode,
         approvers: validApprovers,
+        viewers,
       })
       toast.success('申請しました。承認者へ通知メールを送信しました')
       router.push('/approvals')
@@ -301,6 +306,15 @@ function NewApprovalForm() {
               setMode(m)
             }}
           />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">閲覧者（任意）</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ApprovalViewerSelector value={viewers} onChange={setViewers} />
         </CardContent>
       </Card>
 

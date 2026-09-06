@@ -8,13 +8,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, Inbox, Send, Files, AlertTriangle } from 'lucide-react'
+import { Plus, Inbox, Send, Files, AlertTriangle, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { PermissionGuard } from '@/components/PermissionGuard'
 import { useUserContext } from '@/contexts/UserContext'
-import { useApprovalRequests } from '@/hooks/useApprovals'
+import { useApprovalRequests, usePendingApprovalCount } from '@/hooks/useApprovals'
+import { ApprovalDashboard } from '@/components/approvals/ApprovalDashboard'
 import {
   REQUEST_STATUS_LABELS,
   type ApprovalRequestStatus,
@@ -104,7 +105,8 @@ export default function ApprovalsPage() {
   // 稟議の全社閲覧: admin/役員/全社閲覧権限。それ以外は「部署内」として同じタブを表示
   const canViewAll = isAdmin || isExecutive || (user?.approval_view_all ?? false)
   const scopeTabLabel = canViewAll ? '全件' : '部署内'
-  const [tab, setTab] = useState('todo')
+  const [tab, setTab] = useState('dashboard')
+  const pendingCount = usePendingApprovalCount()
 
   return (
     <PermissionGuard pageKey="approvals">
@@ -119,13 +121,33 @@ export default function ApprovalsPage() {
           </Link>
         </div>
 
+        {/* 要対応バナー（どのタブにいても視認できる） */}
+        {pendingCount > 0 && tab !== 'dashboard' && (
+          <button
+            type="button"
+            onClick={() => setTab('dashboard')}
+            className="w-full flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-left hover:bg-amber-100 transition-colors"
+          >
+            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+            <span className="text-sm font-medium text-amber-800">
+              要対応の案件が {pendingCount} 件あります（承認待ち・閲覧未確認）
+            </span>
+            <span className="ml-auto text-xs text-amber-700 underline">ダッシュボードで確認</span>
+          </button>
+        )}
+
         <Card>
           <CardContent className="pt-4">
             <Tabs value={tab} onValueChange={setTab}>
               <TabsList className="w-full sm:w-auto">
-                <TabsTrigger value="todo" className="flex items-center gap-1.5">
-                  <Inbox className="h-4 w-4" />
-                  要対応
+                <TabsTrigger value="dashboard" className="flex items-center gap-1.5">
+                  <LayoutDashboard className="h-4 w-4" />
+                  ダッシュボード
+                  {pendingCount > 0 && (
+                    <span className="ml-0.5 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold">
+                      {pendingCount}
+                    </span>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger value="mine" className="flex items-center gap-1.5">
                   <Send className="h-4 w-4" />
@@ -136,14 +158,27 @@ export default function ApprovalsPage() {
                   {scopeTabLabel}
                 </TabsTrigger>
               </TabsList>
-              <TabsContent value="todo" className="mt-4">
-                <RequestList tab="todo" />
-              </TabsContent>
               <TabsContent value="mine" className="mt-4">
                 <RequestList tab="mine" />
               </TabsContent>
               <TabsContent value="all" className="mt-4">
                 <RequestList tab="all" />
+              </TabsContent>
+              <TabsContent value="dashboard" className="mt-4 space-y-4">
+                {/* 要対応（同ページ内で常に確認できるように先頭に表示） */}
+                <div className="rounded-lg border border-amber-300 bg-amber-50/60 p-4">
+                  <p className="flex items-center gap-2 text-sm font-bold text-amber-800 mb-3">
+                    <Inbox className="h-4 w-4" />
+                    要対応（承認待ち・閲覧未確認）
+                    {pendingCount > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold">
+                        {pendingCount}
+                      </span>
+                    )}
+                  </p>
+                  <RequestList tab="todo" />
+                </div>
+                <ApprovalDashboard />
               </TabsContent>
             </Tabs>
           </CardContent>

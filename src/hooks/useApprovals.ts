@@ -5,6 +5,7 @@
 
 import useSWR from 'swr'
 import type {
+  ApprovalDashboardResponse,
   ApprovalDelegate,
   ApprovalRequestDetail,
   ApprovalRequestListResponse,
@@ -58,7 +59,7 @@ export function useChannelBindings(requestType?: string) {
 
 export function useAssignableUsers() {
   const { data, error, isLoading } = useSWR<
-    Array<{ id: string; email: string; display_name: string }>
+    Array<{ id: string; email: string; display_name: string; department: string }>
   >('/api/v1/approvals/assignable-users')
   return { users: data ?? [], isLoading, error }
 }
@@ -68,4 +69,18 @@ export function useDelegates(allUsers = false) {
     `/api/v1/approval-delegates/?all_users=${allUsers}`
   )
   return { delegates: data ?? [], isLoading, error, mutate }
+}
+
+export function useViewerCandidates() {
+  const { data, error, isLoading } = useSWR<
+    Array<{ id: string; email: string; display_name: string; department: string }>
+  >('/api/v1/approvals/viewer-candidates')
+  return { users: data ?? [], isLoading, error }
+}
+
+export function useApprovalDashboard() {
+  const { data, error, isLoading, mutate } = useSWR<ApprovalDashboardResponse>(
+    '/api/v1/approvals/dashboard'
+  )
+  return { data: data ?? null, isLoading, error, mutate }
 }
