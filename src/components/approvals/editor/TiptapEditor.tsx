@@ -11,7 +11,8 @@
 import { useCallback, useEffect } from 'react'
 import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import { Extension } from '@tiptap/core'
-import { Plugin } from '@tiptap/pm/state'
+import { Plugin, TextSelection } from '@tiptap/pm/state'
+import { TableMap } from '@tiptap/pm/tables'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import { TextStyle } from '@tiptap/extension-text-style'
@@ -303,6 +304,99 @@ const ColoredTableHeader = TableHeader.extend({
 })
 
 /**
+ * 行の高さ（縦幅）を指定できる TableRow
+ *
+ * height はあくまで「希望の高さ」で、CSS のテーブル仕様により
+ * 行の実際の高さは中身（文字サイズ）より小さくならない。
+ * → 最小サイズは自動的に文字サイズに追従する。
+ */
+const ResizableTableRow = TableRow.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      height: {
+        default: null,
+        parseHTML: (element) => {
+          const h = (element as HTMLElement).style.height
+          return h ? parseInt(h, 10) : null
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.height) return {}
+          return { style: `height: ${attributes.height}px` }
+        },
+      },
+    }
+  },
+})
+
+/** 行の高さ候補（px）。「自動」は指定なし＝中身に合わせる */
+const ROW_HEIGHTS = [30, 40, 50, 60, 80, 100, 120] as const
+
+/**
+ * 表内の上下キーで上下の行（同じ列のセル）へ移動する
+ *
+ * ProseMirror の表はセル内での上下キー移動が効かないため、
+ * セルの端（視覚的に最上行/最下行）にカーソルがある場合のみ
+ * 上下の行の同じ列のセルへ選択を移す。表の外や、セル内で
+ * まだ上下に行がある場合はブラウザ標準の動作に任せる。
+ */
+function navigateTableRow(
+  editor: Editor,
+  dir: -1 | 1,
+): boolean {
+  const { state, view } = editor
+  const { $from, empty } = state.selection
+  if (!empty) return false
+
+  // セルを探す
+  let cellDepth = -1
+  for (let d = $from.depth; d > 0; d--) {
+    const name = $from.node(d).type.name
+    if (name === 'tableCell' || name === 'tableHeader') {
+      cellDepth = d
+      break
+    }
+  }
+  if (cellDepth === -1) return false
+
+  // セル内でまだ上下に移動できる場合は標準動作に任せる
+  // （折り返しも考慮して視覚的な端かどうかを判定）
+  if (!view.endOfTextblock(dir === 1 ? 'down' : 'up')) return false
+
+  const tableDepth = cellDepth - 2 // cell < row < table
+  if (tableDepth < 0) return false
+  const tableNode = $from.node(tableDepth)
+  if (tableNode.type.name !== 'table') return false
+  const tableStart = $from.start(tableDepth)
+  const map = TableMap.get(tableNode)
+  const cellRelPos = $from.before(cellDepth) - tableStart
+  const rect = map.findCell(cellRelPos)
+
+  const targetRow = dir === 1 ? rect.bottom : rect.top - 1
+  if (targetRow < 0 || targetRow >= map.height) return false
+
+  const targetCellRel = map.positionAt(targetRow, rect.left, tableNode)
+  const targetCellPos = tableStart + targetCellRel
+  // 探索方向は常に前方（セル先頭から中へ）。逆方向だと手前のセルに抜けてしまう
+  const selection = TextSelection.near(
+    state.doc.resolve(targetCellPos + 1),
+    1,
+  )
+  view.dispatch(state.tr.setSelection(selection).scrollIntoView())
+  return true
+}
+
+const TableRowNavigation = Extension.create({
+  name: 'tableRowNavigation',
+  addKeyboardShortcuts() {
+    return {
+      ArrowDown: ({ editor }) => navigateTableRow(editor as Editor, 1),
+      ArrowUp: ({ editor }) => navigateTableRow(editor as Editor, -1),
+    }
+  },
+})
+
+/**
  * 番号付きリストの連番継続
  *
  * 空行（空の段落）や画像だけを挟んで番号付きリストが分かれた場合、
@@ -435,7 +529,8 @@ export function TiptapEditor({
       Indent,
       ContinuousOrderedList,
       Table.configure({ resizable: true }),
-      TableRow,
+      ResizableTableRow,
+      TableRowNavigation,
       ColoredTableHeader,
       ColoredTableCell,
       Placeholder.configure({ placeholder }),
@@ -528,6 +623,34 @@ export function TiptapEditor({
   const currentImageWidth = editor.getAttributes('image').width ?? null
   const isInTable = editor.isActive('table')
 
+  /** カーソルのある表の行の height 属性（未指定は null） */
+  const currentRowHeight: number | null = (() => {
+    if (!isInTable) return null
+    const { $from } = editor.state.selection
+    for (let d = $from.depth; d > 0; d--) {
+      const node = $from.node(d)
+      if (node.type.name === 'tableRow') return node.attrs.height ?? null
+    }
+    return null
+  })()
+
+  /** カーソルのある行の高さを設定する（null で自動＝中身に合わせる） */
+  const setRowHeight = (height: number | null) => {
+    const { state, view } = editor
+    const { $from } = state.selection
+    for (let d = $from.depth; d > 0; d--) {
+      const node = $from.node(d)
+      if (node.type.name === 'tableRow') {
+        const pos = $from.before(d)
+        view.dispatch(
+          state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, height })
+        )
+        editor.commands.focus()
+        return
+      }
+    }
+  }
+
   const ALIGNS = [
     { value: 'left', icon: AlignLeft, label: '左揃え' },
     { value: 'center', icon: AlignCenter, label: '中央揃え' },
@@ -557,9 +680,9 @@ export function TiptapEditor({
   }
 
   return (
-    <div className="border rounded-md bg-white">
-      {/* ツールバー */}
-      <div className="flex flex-wrap items-center gap-1 border-b px-2 py-1.5 bg-gray-50 rounded-t-md">
+    <div className="border rounded-md bg-white flex flex-col max-h-[75vh]">
+      {/* ツールバー（ヘッダー固定: 本文が長い場合は本文側だけがスクロールする） */}
+      <div className="shrink-0 flex flex-wrap items-center gap-1 border-b px-2 py-1.5 bg-gray-50 rounded-t-md">
         <button
           type="button"
           className={btnClass(editor.isActive('bold'))}
@@ -813,9 +936,9 @@ export function TiptapEditor({
         </button>
       </div>
 
-      {/* 表操作パネル（表内にカーソルがある時のみ表示） */}
+      {/* 表操作パネル（表内にカーソルがある時のみ表示・ツールバーと同様に固定） */}
       {isInTable && (
-        <div className="flex flex-wrap items-center gap-1 border-b px-2 py-1.5 bg-blue-50/60">
+        <div className="shrink-0 flex flex-wrap items-center gap-1 border-b px-2 py-1.5 bg-blue-50/60">
           <span className="text-xs text-gray-500 mr-1">表:</span>
           {(
             [
@@ -840,6 +963,28 @@ export function TiptapEditor({
               {label}
             </button>
           ))}
+
+          <span className="w-px h-4 bg-gray-300 mx-1" />
+
+          {/* 行の高さ（最小は文字サイズに応じて自動確保される） */}
+          <span className="text-xs text-gray-500">行の高さ:</span>
+          <select
+            value={currentRowHeight ?? ''}
+            onChange={(e) => {
+              const v = e.target.value
+              setRowHeight(v ? parseInt(v, 10) : null)
+            }}
+            className="h-6 px-1 rounded border border-gray-300 bg-white text-xs text-gray-700"
+            title="カーソルのある行の高さ"
+            disabled={disabled}
+          >
+            <option value="">自動</option>
+            {ROW_HEIGHTS.map((h) => (
+              <option key={h} value={h}>
+                {h}px
+              </option>
+            ))}
+          </select>
 
           <span className="w-px h-4 bg-gray-300 mx-1" />
 
@@ -879,9 +1024,11 @@ export function TiptapEditor({
         </div>
       )}
 
-      <EditorContent editor={editor} />
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <EditorContent editor={editor} />
+      </div>
 
-      <p className="px-3 pb-2 text-xs text-gray-400">
+      <p className="shrink-0 px-3 py-2 border-t text-xs text-gray-400">
         画像はドラッグ&ドロップまたは貼り付けで挿入できます。画像をクリックするとサイズ・配置（左/中央/右）・インデントを変更できます。文字色は
         Slack 投稿には反映されません。
       </p>
