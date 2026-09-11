@@ -85,11 +85,16 @@ const ResizableImage = Image.extend({
         default: null,
         parseHTML: (element) => {
           const style = element.getAttribute('style') ?? ''
-          const m = style.match(/width:\s*([\d.]+%)/)
+          // 横並び時の calc(50% - 8px) 形式からも % 値を取り出す
+          const m = style.match(/width:\s*(?:calc\()?\s*([\d.]+%)/)
           return m ? m[1] : element.getAttribute('width')
         },
         renderHTML: (attributes) => {
           if (!attributes.width) return {}
+          // 横並び時は右マージン(8px)分を差し引き、「中(50%)」2枚が横にぴったり収まるようにする
+          if (attributes.align === 'inline' && /%$/.test(attributes.width)) {
+            return { style: `width: calc(${attributes.width} - 8px)` }
+          }
           return { style: `width: ${attributes.width}` }
         },
       },
@@ -107,6 +112,13 @@ const ResizableImage = Image.extend({
             return {
               'data-align': 'right',
               style: 'display: block; margin-left: auto',
+            }
+          }
+          // 横並び: 隣接する横並び画像同士が同じ行に並ぶ
+          if (attributes.align === 'inline') {
+            return {
+              'data-align': 'inline',
+              style: 'display: inline-block; vertical-align: top; margin-right: 8px',
             }
           }
           return { style: 'display: block' }
@@ -911,6 +923,41 @@ export function TiptapEditor({
                 {s.label}
               </button>
             ))}
+            <span className="w-px h-5 bg-gray-300 mx-1" />
+            <span className="text-xs text-gray-500 mr-0.5">並び:</span>
+            {(
+              [
+                { label: '縦', value: 'left', title: '画像を縦に並べる（標準）' },
+                { label: '横', value: 'inline', title: '隣り合う画像を横に並べる' },
+              ] as const
+            ).map((o) => {
+              const active =
+                o.value === 'inline'
+                  ? currentAlign === 'inline'
+                  : currentAlign !== 'inline'
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                    active
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border text-gray-600 hover:bg-gray-100'
+                  }`}
+                  onClick={() =>
+                    editor
+                      .chain()
+                      .focus()
+                      .updateAttributes('image', { align: o.value, indent: 0 })
+                      .run()
+                  }
+                  title={o.title}
+                  disabled={disabled}
+                >
+                  {o.label}
+                </button>
+              )
+            })}
           </>
         )}
 
@@ -1029,7 +1076,8 @@ export function TiptapEditor({
       </div>
 
       <p className="shrink-0 px-3 py-2 border-t text-xs text-gray-400">
-        画像はドラッグ&ドロップまたは貼り付けで挿入できます。画像をクリックするとサイズ・配置（左/中央/右）・インデントを変更できます。文字色は
+        画像はドラッグ&ドロップまたは貼り付けで挿入できます。画像をクリックするとサイズ・配置（左/中央/右）・インデントを変更できます。
+        複数の画像を横に並べるには、各画像で「並び: 横」を選択してください（サイズ「中」なら2枚、「小」なら4枚まで並びます）。文字色は
         Slack 投稿には反映されません。
       </p>
     </div>
