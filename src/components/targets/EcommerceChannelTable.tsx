@@ -52,7 +52,7 @@ export function EcommerceChannelTable({ channels, onChange }: Props) {
 
   // 値変更
   const handleChange = useCallback((key: string, value: string) => {
-    const cleaned = value.replace(/[^0-9,]/g, '')
+    const cleaned = value.replace(/[^0-9,-]/g, '')
     setEditState((prev) => ({ ...prev, [key]: cleaned }))
   }, [])
 

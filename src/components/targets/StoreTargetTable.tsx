@@ -71,7 +71,7 @@ export function StoreTargetTable({ month, onSaveSuccess }: Props) {
   // セルの値変更
   const handleCellChange = useCallback((segmentId: string, kpiId: string, value: string) => {
     const key = `${segmentId}-${kpiId}`
-    const cleaned = value.replace(/[^0-9,]/g, '')
+    const cleaned = value.replace(/[^0-9,-]/g, '')
     setEditState((prev) => ({ ...prev, [key]: cleaned }))
   }, [])
 

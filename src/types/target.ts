@@ -112,9 +112,10 @@ export function formatNumber(value: number | null | undefined): string {
 export function parseInputValue(value: string): number | null {
   if (value === '' || value === '-') return null
   const num = parseFloat(value.replace(/,/g, ''))
-  if (isNaN(num) || num < 0) {
-    throw new Error('0以上の数値を入力してください')
+  if (isNaN(num)) {
+    throw new Error('数値を入力してください')
   }
+  // マイナス値は許可する（営業利益などの損失目標の入力に必要）
   return num
 }
 
@@ -249,9 +250,9 @@ export interface FinancialTargetInput {
     sales_store?: number | null
     sales_online?: number | null
     cost_of_sales?: number | null
-    gross_profit?: number | null
     sga_total?: number | null
-    operating_profit?: number | null
+    // 売上総利益・営業利益・各利益率は送信しない（バックエンドが
+    // sales_total / cost_of_sales / sga_total から計算して保存する）
   }
   cost_details?: {
     purchases?: number | null

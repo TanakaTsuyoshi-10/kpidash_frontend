@@ -58,7 +58,7 @@ export function EcommerceCustomerForm({ data, onChange }: Props) {
 
   // 値変更
   const handleChange = useCallback((field: keyof EditState, value: string) => {
-    const cleaned = value.replace(/[^0-9,]/g, '')
+    const cleaned = value.replace(/[^0-9,-]/g, '')
     setEditState((prev) => ({ ...prev, [field]: cleaned }))
   }, [])
 

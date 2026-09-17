@@ -177,19 +177,23 @@ export function FinancialTargetForm({ month, onSaveSuccess }: Props) {
   }, [formState, month, save, refetch, onSaveSuccess])
 
   // 項目行をレンダリング
+  // calculatedValue: 自動計算項目（売上総利益・営業利益）の現在の入力値からの計算結果
   const renderItemRow = (
     item: FinancialTargetItem,
     prefix: string,
-    salesTotal: number | null
+    salesTotal: number | null,
+    calculatedValue?: number | null
   ) => {
     const key = `${prefix}.${item.field_name}`
-    const isModified = formState[key] !== originalState[key]
+    const isModified = !item.is_calculated && formState[key] !== originalState[key]
 
-    // 現在の入力値から前年比を計算
+    // 現在の入力値（自動計算項目は計算値）から前年比・売上対比を計算
     let currentYoY: number | null = null
     let currentSalesRatio: number | null = null
     try {
-      const currentValue = parseInputValue(formState[key] || '')
+      const currentValue = item.is_calculated
+        ? calculatedValue ?? null
+        : parseInputValue(formState[key] || '')
       currentYoY = calculateYoY(currentValue, item.last_year_actual)
       currentSalesRatio = calculateSalesRatio(currentValue, salesTotal)
     } catch {
@@ -197,14 +201,24 @@ export function FinancialTargetForm({ month, onSaveSuccess }: Props) {
     }
 
     return (
-      <TableRow key={item.field_name}>
-        <TableCell className={cn('font-medium', item.is_calculated && 'text-gray-500')}>
+      <TableRow key={item.field_name} className={cn(item.is_calculated && 'bg-gray-50')}>
+        <TableCell className={cn('font-medium', item.is_calculated && 'text-gray-600')}>
           {item.display_name}
+          {item.is_calculated && (
+            <span className="ml-1.5 text-xs font-normal text-gray-400">自動計算</span>
+          )}
         </TableCell>
         <TableCell className="p-1 w-[150px]">
           {item.is_calculated ? (
-            <div className="text-right font-mono text-gray-500 px-3">
-              (自動計算)
+            <div
+              className={cn(
+                'text-right font-mono px-3 py-1',
+                calculatedValue != null && calculatedValue < 0
+                  ? 'text-red-600'
+                  : 'text-gray-700'
+              )}
+            >
+              {calculatedValue != null ? formatNumber(calculatedValue) : '-'}
             </div>
           ) : (
             <Input
@@ -310,35 +324,21 @@ export function FinancialTargetForm({ month, onSaveSuccess }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.summary_items.map((item) => renderItemRow(item, 'summary', salesTotal))}
-              {/* 自動計算行: 売上総利益 */}
-              <TableRow className="bg-gray-50">
-                <TableCell className="font-medium text-gray-500">売上総利益</TableCell>
-                <TableCell className="text-right font-mono text-gray-500">
-                  {grossProfit != null ? formatNumber(grossProfit) : '-'}
-                </TableCell>
-                <TableCell className="text-right font-mono text-sm text-gray-500">-</TableCell>
-                <TableCell className="text-right text-sm">
-                  {salesTotal && grossProfit != null
-                    ? `${((grossProfit / salesTotal) * 100).toFixed(1)}%`
-                    : '-'}
-                </TableCell>
-                <TableCell className="text-right">-</TableCell>
-              </TableRow>
-              {/* 自動計算行: 営業利益 */}
-              <TableRow className="bg-gray-50">
-                <TableCell className="font-medium text-gray-500">営業利益</TableCell>
-                <TableCell className="text-right font-mono text-gray-500">
-                  {operatingProfit != null ? formatNumber(operatingProfit) : '-'}
-                </TableCell>
-                <TableCell className="text-right font-mono text-sm text-gray-500">-</TableCell>
-                <TableCell className="text-right text-sm">
-                  {salesTotal && operatingProfit != null
-                    ? `${((operatingProfit / salesTotal) * 100).toFixed(1)}%`
-                    : '-'}
-                </TableCell>
-                <TableCell className="text-right">-</TableCell>
-              </TableRow>
+              {/* 売上総利益・営業利益は is_calculated=true で入力不可。
+                  現在の入力値からの計算結果をリアルタイム表示し、保存時は
+                  バックエンドが同じ式で計算した値を financial_data に保存する */}
+              {data?.summary_items.map((item) =>
+                renderItemRow(
+                  item,
+                  'summary',
+                  salesTotal,
+                  item.field_name === 'gross_profit'
+                    ? grossProfit
+                    : item.field_name === 'operating_profit'
+                      ? operatingProfit
+                      : undefined
+                )
+              )}
             </TableBody>
           </Table>
         </CardContent>
