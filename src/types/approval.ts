@@ -89,6 +89,7 @@ export interface ApprovalStep {
   original_assignee_id: string
   assignee_email: string
   assignee_name?: string | null
+  assignee_department?: string | null
   status: ApprovalStepStatus
   acted_at?: string | null
   comment?: string | null

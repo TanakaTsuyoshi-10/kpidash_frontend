@@ -8,7 +8,6 @@
  */
 'use client'
 
-import { Users } from 'lucide-react'
 import type { ApprovalStep } from '@/types/approval'
 import { cn } from '@/lib/utils'
 
@@ -145,7 +144,8 @@ export function ApprovalStampBoard({
           )}
         </StampCell>
 
-        {/* 各ステップ（同時承認グループは同じ枠内に並ぶ） */}
+        {/* 各ステップ（同時承認グループは同じ枠内に並ぶ）
+            ヘッダーは承認者の部署名、最終ステップは「最終承認者」を表示する */}
         {stageNos.map((stageNo) => {
           const group = steps.filter((s) => s.step_no === stageNo)
           const isCurrentStage =
@@ -153,12 +153,13 @@ export function ApprovalStampBoard({
             group.some((s) => s.status === 'pending') &&
             (mode !== 'sequential' || stageNo === currentStepNo)
           const isGroup = group.length > 1
+          const isFinalStage = stageNo === stageNos[stageNos.length - 1]
 
           const cells = group.map((step) => {
             const active = isCurrentStage && step.status === 'pending'
-            const header = isGroup
-              ? `${stageNo}` + '・同時'
-              : `ステップ${stageNo}`
+            const header = isFinalStage
+              ? '最終承認者'
+              : step.assignee_department || '承認者'
             return (
               <StampCell
                 key={step.id}
@@ -189,18 +190,17 @@ export function ApprovalStampBoard({
 
           if (!isGroup) return cells
 
-          // 同時承認グループ: 枠でまとめてラベルを付ける
+          // 同時承認グループ: 破線枠でまとめる（全員の承認で次へ進む）
           return (
             <div
               key={stageNo}
               className={cn(
                 'rounded-md border border-dashed p-1 pt-0',
-                isCurrentStage ? 'border-amber-300' : 'border-indigo-200',
+                isCurrentStage ? 'border-amber-300' : 'border-gray-300',
               )}
             >
-              <div className="flex items-center justify-center gap-1 text-[9px] text-indigo-500 py-0.5">
-                <Users className="h-2.5 w-2.5" />
-                ステップ{stageNo}・全員承認
+              <div className="text-center text-[9px] text-gray-400 py-0.5">
+                全員承認
               </div>
               <div className="flex items-stretch gap-1">{cells}</div>
             </div>

@@ -21,10 +21,10 @@ const MOCK_USERS = [
 ]
 
 const SAMPLE_STEPS: ApprovalStep[] = [
-  { id: 's1', request_id: 'r', step_no: 1, assignee_id: 'u1', original_assignee_id: 'u1', assignee_email: 'a@example.com', assignee_name: '営業A', status: 'approved', acted_at: null, comment: null, notified_at: null, created_at: '', updated_at: '' },
-  { id: 's2', request_id: 'r', step_no: 2, assignee_id: 'u3', original_assignee_id: 'u3', assignee_email: 'c@example.com', assignee_name: '製造C', status: 'approved', acted_at: null, comment: null, notified_at: null, created_at: '', updated_at: '' },
-  { id: 's3', request_id: 'r', step_no: 2, assignee_id: 'u4', original_assignee_id: 'u4', assignee_email: 'd@example.com', assignee_name: '管理D', status: 'pending', acted_at: null, comment: null, notified_at: null, created_at: '', updated_at: '' },
-  { id: 's4', request_id: 'r', step_no: 3, assignee_id: 'u5', original_assignee_id: 'u5', assignee_email: 'e@example.com', assignee_name: '社長E', status: 'pending', acted_at: null, comment: null, notified_at: null, created_at: '', updated_at: '' },
+  { id: 's1', request_id: 'r', step_no: 1, assignee_id: 'u1', original_assignee_id: 'u1', assignee_email: 'a@example.com', assignee_name: '営業A', assignee_department: '営業部', status: 'approved', acted_at: null, comment: null, notified_at: null, created_at: '', updated_at: '' },
+  { id: 's2', request_id: 'r', step_no: 2, assignee_id: 'u3', original_assignee_id: 'u3', assignee_email: 'c@example.com', assignee_name: '製造C', assignee_department: '製造部', status: 'approved', acted_at: null, comment: null, notified_at: null, created_at: '', updated_at: '' },
+  { id: 's3', request_id: 'r', step_no: 2, assignee_id: 'u4', original_assignee_id: 'u4', assignee_email: 'd@example.com', assignee_name: '管理D', assignee_department: '管理部', status: 'pending', acted_at: null, comment: null, notified_at: null, created_at: '', updated_at: '' },
+  { id: 's4', request_id: 'r', step_no: 3, assignee_id: 'u5', original_assignee_id: 'u5', assignee_email: 'e@example.com', assignee_name: '社長E', assignee_department: '経営', status: 'pending', acted_at: null, comment: null, notified_at: null, created_at: '', updated_at: '' },
 ]
 
 export default function DevRoutePage() {
