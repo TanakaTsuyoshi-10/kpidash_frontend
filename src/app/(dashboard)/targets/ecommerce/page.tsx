@@ -2,6 +2,7 @@
  * 通販部門 目標設定ページ
  */
 'use client'
+import { toast } from 'sonner'
 
 import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -68,11 +69,11 @@ export default function EcommerceTargetsPage() {
         new_customers: customerData?.new_customers ?? undefined,
         repeat_customers: customerData?.repeat_customers ?? undefined,
       })
-      alert(`${result.created_count}件作成、${result.updated_count}件更新しました`)
+      toast.success(`${result.created_count}件作成、${result.updated_count}件更新しました`)
       setHasChanges(false)
       refetch()
     } catch (err) {
-      alert(err instanceof Error ? err.message : '保存に失敗しました')
+      toast.error(err instanceof Error ? err.message : '保存に失敗しました')
     }
   }, [channelData, customerData, month, save, refetch])
 

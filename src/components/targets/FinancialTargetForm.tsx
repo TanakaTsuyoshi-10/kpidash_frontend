@@ -2,6 +2,7 @@
  * 財務目標設定フォームコンポーネント
  */
 'use client'
+import { toast } from 'sonner'
 
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -167,11 +168,11 @@ export function FinancialTargetForm({ month, onSaveSuccess }: Props) {
 
     try {
       const result = await save(input)
-      alert(`${result.created_count}件作成、${result.updated_count}件更新しました`)
+      toast.success(`${result.created_count}件作成、${result.updated_count}件更新しました`)
       refetch()
       onSaveSuccess?.()
     } catch (err) {
-      alert(err instanceof Error ? err.message : '保存に失敗しました')
+      toast.error(err instanceof Error ? err.message : '保存に失敗しました')
     }
   }, [formState, month, save, refetch, onSaveSuccess])
 
@@ -302,7 +303,7 @@ export function FinancialTargetForm({ month, onSaveSuccess }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>項目</TableHead>
-                <TableHead className="text-right w-[150px]">目標値(千円)</TableHead>
+                <TableHead className="text-right w-[150px]">目標値(円)</TableHead>
                 <TableHead className="text-right w-[100px]">前年実績</TableHead>
                 <TableHead className="text-right w-[80px]">売上対比</TableHead>
                 <TableHead className="text-right w-[80px]">前年比</TableHead>
@@ -353,7 +354,7 @@ export function FinancialTargetForm({ month, onSaveSuccess }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>項目</TableHead>
-                <TableHead className="text-right w-[150px]">目標値(千円)</TableHead>
+                <TableHead className="text-right w-[150px]">目標値(円)</TableHead>
                 <TableHead className="text-right w-[100px]">前年実績</TableHead>
                 <TableHead className="text-right w-[80px]">売上対比</TableHead>
                 <TableHead className="text-right w-[80px]">前年比</TableHead>
@@ -376,7 +377,7 @@ export function FinancialTargetForm({ month, onSaveSuccess }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>項目</TableHead>
-                <TableHead className="text-right w-[150px]">目標値(千円)</TableHead>
+                <TableHead className="text-right w-[150px]">目標値(円)</TableHead>
                 <TableHead className="text-right w-[100px]">前年実績</TableHead>
                 <TableHead className="text-right w-[80px]">売上対比</TableHead>
                 <TableHead className="text-right w-[80px]">前年比</TableHead>

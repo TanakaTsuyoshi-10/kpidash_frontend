@@ -2,6 +2,7 @@
  * 店舗目標設定テーブル（前年比付き）
  */
 'use client'
+import { toast } from 'sonner'
 
 import { useState, useCallback, useMemo, useEffect, Fragment } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -136,11 +137,11 @@ export function StoreTargetTable({ month, onSaveSuccess }: Props) {
 
     try {
       const result = await save({ month, targets })
-      alert(`${result.created_count}件作成、${result.updated_count}件更新しました`)
+      toast.success(`${result.created_count}件作成、${result.updated_count}件更新しました`)
       refetch()
       onSaveSuccess?.()
     } catch (err) {
-      alert(err instanceof Error ? err.message : '保存に失敗しました')
+      toast.error(err instanceof Error ? err.message : '保存に失敗しました')
     }
   }, [data, editState, month, save, refetch, onSaveSuccess])
 

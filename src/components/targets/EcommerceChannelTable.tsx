@@ -142,7 +142,7 @@ export function EcommerceChannelTable({ channels, onChange }: Props) {
                   チャネル
                 </TableHead>
                 <TableHead colSpan={3} className="text-center border-l border-gray-200">
-                  売上目標(千円)
+                  売上目標(円)
                 </TableHead>
                 <TableHead colSpan={3} className="text-center border-l border-gray-200">
                   購入者目標(人)

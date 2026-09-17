@@ -193,7 +193,7 @@ export interface DepartmentTargetSummary {
  */
 export interface StoreTargetValue {
   kpi_id: string
-  target_id: string | null
+  target_id: number | null
   value: number | null
   last_year_actual: number | null
   yoy_rate: number | null
