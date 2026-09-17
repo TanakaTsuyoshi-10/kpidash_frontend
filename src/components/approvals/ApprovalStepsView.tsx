@@ -5,7 +5,16 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, XCircle, Clock, MinusCircle, UserCog, ArrowRightLeft } from 'lucide-react'
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  MinusCircle,
+  UserCog,
+  ArrowRightLeft,
+  ArrowDown as ArrowDownIcon,
+  Users as UsersIcon,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -82,51 +91,73 @@ export function ApprovalStepsView({
     }
   }
 
+  // step_no ごとにグループ化（同じ step_no = 同時承認グループ）
+  const stageNos = [...new Set(steps.map((s) => s.step_no))].sort((a, b) => a - b)
+
   return (
     <div className="space-y-2">
-      {steps.map((step) => {
-        const isCurrent =
+      {stageNos.map((stageNo, stageIdx) => {
+        const group = steps.filter((s) => s.step_no === stageNo)
+        const isCurrentStage =
           requestStatus === 'pending' &&
-          step.status === 'pending' &&
-          (mode !== 'sequential' || step.step_no === currentStepNo)
+          group.some((s) => s.status === 'pending') &&
+          (mode !== 'sequential' || stageNo === currentStepNo)
         return (
-          <div
-            key={step.id}
-            className={`flex items-center gap-3 rounded-md border px-3 py-2 ${
-              isCurrent ? 'border-amber-300 bg-amber-50' : 'border-gray-200'
-            }`}
-          >
-            {mode === 'sequential' && (
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold flex items-center justify-center">
-                {step.step_no}
-              </span>
+          <div key={stageNo}>
+            {stageIdx > 0 && (
+              <div className="flex justify-center text-gray-300 py-0.5">
+                <ArrowDownIcon className="h-3.5 w-3.5" />
+              </div>
             )}
-            {STATUS_ICONS[step.status]}
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-gray-800 truncate">
-                {step.assignee_name ?? step.assignee_email}
-                {step.assignee_id !== step.original_assignee_id && (
-                  <span className="text-purple-600 text-xs ml-1.5">（差替済み）</span>
+            <div
+              className={`rounded-md border px-3 py-2 space-y-1.5 ${
+                isCurrentStage ? 'border-amber-300 bg-amber-50' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-xs font-semibold flex items-center justify-center">
+                  {stageNo}
+                </span>
+                {group.length > 1 && (
+                  <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                    <UsersIcon className="h-3 w-3" />
+                    {mode === 'parallel_or'
+                      ? 'いずれか1人の承認でOK'
+                      : '同時回覧・全員の承認が必要'}
+                  </span>
                 )}
-              </p>
-              {step.comment && (
-                <p className="text-xs text-gray-500 truncate">{step.comment}</p>
-              )}
+              </div>
+              {group.map((step) => (
+                <div key={step.id} className="flex items-center gap-3 pl-1">
+                  {STATUS_ICONS[step.status]}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-gray-800 truncate">
+                      {step.assignee_name ?? step.assignee_email}
+                      {step.assignee_id !== step.original_assignee_id && (
+                        <span className="text-purple-600 text-xs ml-1.5">（差替済み）</span>
+                      )}
+                    </p>
+                    {step.comment && (
+                      <p className="text-xs text-gray-500 truncate">{step.comment}</p>
+                    )}
+                  </div>
+                  <span className="flex-shrink-0 text-xs text-gray-500">
+                    {STEP_STATUS_LABELS[step.status]}
+                  </span>
+                  {canReassign && step.status === 'pending' && requestStatus === 'pending' && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setReassignTarget(step)}
+                      title="承認者を差し替える（管理者・役員のみ）"
+                    >
+                      <ArrowRightLeft className="h-4 w-4 text-gray-400" />
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
-            <span className="flex-shrink-0 text-xs text-gray-500">
-              {STEP_STATUS_LABELS[step.status]}
-            </span>
-            {canReassign && step.status === 'pending' && requestStatus === 'pending' && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setReassignTarget(step)}
-                title="承認者を差し替える（管理者・役員のみ）"
-              >
-                <ArrowRightLeft className="h-4 w-4 text-gray-400" />
-              </Button>
-            )}
           </div>
         )
       })}

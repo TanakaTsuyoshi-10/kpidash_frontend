@@ -44,6 +44,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { PermissionGuard } from '@/components/PermissionGuard'
 import { ApprovalStepsView } from '@/components/approvals/ApprovalStepsView'
+import { ApprovalStampBoard } from '@/components/approvals/ApprovalStampBoard'
 import { ApprovalTimeline } from '@/components/approvals/ApprovalTimeline'
 import { useUserContext } from '@/contexts/UserContext'
 import { useApprovalRequest, useViewerCandidates } from '@/hooks/useApprovals'
@@ -253,6 +254,16 @@ export default function ApprovalDetailPage({
             ` ・ 申請日時: ${new Date(request.submitted_at).toLocaleString('ja-JP')}`}
         </p>
 
+        {/* 決裁欄（判子ボード）: 承認状況が一目でわかるよう最上部に表示 */}
+        <ApprovalStampBoard
+          steps={request.steps}
+          requesterName={request.requester_name ?? request.requester_email}
+          submittedAt={request.submitted_at}
+          requestStatus={request.status}
+          currentStepNo={request.current_step_no}
+          mode={request.approval_mode}
+        />
+
         {/* アクションバー */}
         {request.can_act && myStep && (
           <Card className="border-amber-200 bg-amber-50">
@@ -371,7 +382,12 @@ export default function ApprovalDetailPage({
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              承認ルート（{APPROVAL_MODE_LABELS[request.approval_mode]}）
+              承認ルート
+              {request.approval_mode !== 'sequential' && (
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  （{APPROVAL_MODE_LABELS[request.approval_mode]}）
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -396,6 +412,13 @@ export default function ApprovalDetailPage({
                 閲覧者（確認押印）
               </CardTitle>
             </CardHeader>
+            {!['approved', 'published', 'publish_failed'].includes(request.status) && (
+              <div className="px-6 -mt-2 pb-1">
+                <p className="text-xs text-gray-400">
+                  ※ 閲覧者は承認完了後に閲覧できるようになり、確認（押印）ボタンを押せます
+                </p>
+              </div>
+            )}
             <CardContent>
               <div className="flex flex-wrap gap-3">
                 {request.viewers.map((v) => (

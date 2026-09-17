@@ -92,12 +92,9 @@ function NewApprovalForm() {
       .catch(() => toast.error('下書きの読み込みに失敗しました'))
   }, [editDraftId, router])
 
-  // 種別変更時: デフォルト承認モードとチャンネルを適用
-  useEffect(() => {
-    if (editDraftId) return // 下書き編集時は下書きの値を優先
-    const t = types.find((t) => t.code === requestType)
-    if (t) setMode(t.default_approval_mode)
-  }, [requestType, types, editDraftId])
+  // 承認ルートはステップエディタで組む方式に統一したため、種別の
+  // default_approval_mode による mode の上書きは行わない
+  // （同時承認は同一ステップ内の複数承認者で表現し、mode は常に sequential）
 
   useEffect(() => {
     if (bindings.length > 0 && !channelId) {
