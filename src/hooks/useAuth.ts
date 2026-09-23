@@ -19,6 +19,31 @@ const INACTIVITY_TIMEOUT = 4 * 60 * 60 * 1000
 // 警告表示（タイムアウト5分前）
 const WARNING_BEFORE = 5 * 60 * 1000
 
+// 最終操作時刻はタブ間で共有する（localStorage）。
+// タブごとの計測だと、放置された別タブが「4時間無操作」と誤判定して
+// アクティブなセッションを道連れにログアウトさせてしまう
+// （ログイン約1分後に強制ログアウトされる実障害の原因だった）。
+const ACTIVITY_STORAGE_KEY = 'maruoka-kpi:last-activity'
+// localStorage への書き込みは15秒に1回に間引く
+const ACTIVITY_WRITE_INTERVAL = 15 * 1000
+
+function readSharedActivity(): number {
+  try {
+    const v = Number(window.localStorage.getItem(ACTIVITY_STORAGE_KEY))
+    return Number.isFinite(v) ? v : 0
+  } catch {
+    return 0
+  }
+}
+
+function writeSharedActivity(now: number) {
+  try {
+    window.localStorage.setItem(ACTIVITY_STORAGE_KEY, String(now))
+  } catch {
+    // プライベートモード等で失敗しても無視（タブ内の計測は生きている）
+  }
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -31,16 +56,22 @@ export function useAuth() {
   // 意図的なログアウトかどうかを記録（SIGNED_OUT イベントの自動誘導と区別するため）
   const intentionalSignOutRef = useRef(false)
 
-  // アクティビティを記録
+  // アクティビティを記録（タブ内 + タブ間共有）
+  const lastWriteRef = useRef(0)
   const recordActivity = useCallback(() => {
-    lastActivityRef.current = Date.now()
+    const now = Date.now()
+    lastActivityRef.current = now
+    if (now - lastWriteRef.current > ACTIVITY_WRITE_INTERVAL) {
+      lastWriteRef.current = now
+      writeSharedActivity(now)
+    }
   }, [])
 
   // ログアウト処理（意図的）
   const signOut = useCallback(async (message?: string) => {
     intentionalSignOutRef.current = true
     try {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'local' })
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
@@ -59,7 +90,9 @@ export function useAuth() {
     if (!user) return
 
     const checkInactivity = () => {
-      const inactiveTime = Date.now() - lastActivityRef.current
+      // どこかのタブで操作があれば共有ストレージが更新されている
+      const lastActivity = Math.max(lastActivityRef.current, readSharedActivity())
+      const inactiveTime = Date.now() - lastActivity
       if (inactiveTime > INACTIVITY_TIMEOUT) {
         signOut('セッションがタイムアウトしました。再度ログインしてください。')
       } else if (inactiveTime > INACTIVITY_TIMEOUT - WARNING_BEFORE && !warningShownRef.current) {
@@ -134,6 +167,10 @@ export function useAuth() {
       password,
     })
     if (error) throw error
+
+    // ログイン直後を「操作あり」として共有記録（放置タブの誤タイムアウト防止）
+    lastActivityRef.current = Date.now()
+    writeSharedActivity(Date.now())
 
     // ログイン成功後、セッションからトークンを即座にキャッシュ
     // preload()時のgetSession()呼び出しを省略し200-500ms短縮
