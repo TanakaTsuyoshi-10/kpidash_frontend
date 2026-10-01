@@ -42,3 +42,15 @@ export async function updateOrgDepartment(
 ): Promise<OrgDepartment> {
   return apiClient.put<OrgDepartment>(`/api/v1/users/org-departments/${id}`, data)
 }
+
+export interface PasswordResetResult {
+  success: boolean
+  message: string
+  email: string | null
+  temp_password: string | null
+}
+
+/** 対象利用者のパスワードを仮パスワードに再設定する（管理者用） */
+export async function resetUserPassword(userId: string): Promise<PasswordResetResult> {
+  return apiClient.post<PasswordResetResult>(`/api/v1/users/${userId}/reset-password`)
+}

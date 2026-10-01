@@ -15,6 +15,7 @@ import { UserListTable } from '@/components/settings/UserListTable'
 import { UserCreateModal } from '@/components/settings/UserCreateModal'
 import { UserEditModal } from '@/components/settings/UserEditModal'
 import { OrgDepartmentModal } from '@/components/settings/OrgDepartmentModal'
+import { PasswordResetDialog } from '@/components/settings/PasswordResetDialog'
 import type { UserProfileResponse } from '@/types/user'
 
 export default function UsersPage() {
@@ -26,6 +27,7 @@ export default function UsersPage() {
   const [deptModalOpen, setDeptModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserProfileResponse | null>(null)
+  const [resetTarget, setResetTarget] = useState<UserProfileResponse | null>(null)
 
   // 管理者以外はリダイレクト
   useEffect(() => {
@@ -89,7 +91,11 @@ export default function UsersPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       ) : (
-        <UserListTable users={users} onEdit={handleEdit} />
+        <UserListTable
+          users={users}
+          onEdit={handleEdit}
+          onResetPassword={setResetTarget}
+        />
       )}
 
       <UserCreateModal
@@ -109,6 +115,11 @@ export default function UsersPage() {
         open={deptModalOpen}
         onOpenChange={setDeptModalOpen}
         onChanged={handleSuccess}
+      />
+
+      <PasswordResetDialog
+        user={resetTarget}
+        onOpenChange={(open) => !open && setResetTarget(null)}
       />
     </div>
   )

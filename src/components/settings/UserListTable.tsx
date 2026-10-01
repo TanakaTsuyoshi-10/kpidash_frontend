@@ -13,12 +13,13 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Pencil } from 'lucide-react'
+import { KeyRound, Pencil } from 'lucide-react'
 import type { UserProfileResponse } from '@/types/user'
 
 interface UserListTableProps {
   users: UserProfileResponse[]
   onEdit: (user: UserProfileResponse) => void
+  onResetPassword: (user: UserProfileResponse) => void
 }
 
 function getRoleBadge(role: string, roleName: string | null) {
@@ -63,7 +64,7 @@ function getDisplayName(user: UserProfileResponse) {
   return user.email.split('@')[0]
 }
 
-export function UserListTable({ users, onEdit }: UserListTableProps) {
+export function UserListTable({ users, onEdit, onResetPassword }: UserListTableProps) {
   return (
     <div className="border rounded-lg">
       <Table>
@@ -76,7 +77,7 @@ export function UserListTable({ users, onEdit }: UserListTableProps) {
             <TableHead>権限</TableHead>
             <TableHead>承認/閲覧</TableHead>
             <TableHead>状態</TableHead>
-            <TableHead className="w-[80px]">操作</TableHead>
+            <TableHead className="w-[110px]">操作</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -126,9 +127,19 @@ export function UserListTable({ users, onEdit }: UserListTableProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => onEdit(user)}
+                    title="編集"
                   >
                     <Pencil className="h-4 w-4" />
                     <span className="sr-only">編集</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onResetPassword(user)}
+                    title="パスワード再設定"
+                  >
+                    <KeyRound className="h-4 w-4 text-gray-500" />
+                    <span className="sr-only">パスワード再設定</span>
                   </Button>
                 </TableCell>
               </TableRow>
