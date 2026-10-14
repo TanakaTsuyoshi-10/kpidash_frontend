@@ -28,7 +28,7 @@ export const PAGE_LABELS: Record<PageKey, string> = {
   upload: 'データアップロード',
   targets: '目標管理',
   board: '取締役会',
-  labor: '経営指標（人件費・時間外）',
+  labor: '人事・労務（人事分析/人件費・時間外）',
   slack: 'Slack投稿',
   approvals: '承認ワークフロー',
 }

@@ -23,6 +23,7 @@ import {
   Briefcase,
   CheckSquare,
   LogOut,
+  Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUserContext } from '@/contexts/UserContext'
@@ -47,6 +48,7 @@ export const menuItems: MenuItem[] = [
   { href: '/ecommerce', label: '通販分析', icon: ShoppingCart, pageKey: 'ecommerce' },
   { href: '/manufacturing', label: '製造分析', icon: Factory, pageKey: 'manufacturing' },
   { href: '/manufacturing/complaints', label: 'クレーム管理', icon: AlertTriangle, pageKey: 'complaints' },
+  { href: '/hr', label: '人事分析', icon: Users, pageKey: 'labor' },
   { href: '/board', label: '取締役会', icon: Briefcase, pageKey: 'board' },
   { href: '/approvals', label: '承認ワークフロー', icon: CheckSquare, pageKey: 'approvals' },
   { href: '/upload', label: 'データアップロード', icon: Upload, pageKey: 'upload' },

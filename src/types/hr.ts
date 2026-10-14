@@ -39,3 +39,82 @@ export interface LaborSummaryResponse {
   /** サンプルデータかどうか（true=サンプル、false=SmartHR実データ） */
   is_sample: boolean
 }
+
+// =============================================================================
+// 人事分析（人員構成・推移・入退社・組織指標・店舗別人件費）
+// =============================================================================
+
+export interface HeadcountRow {
+  name: string
+  area?: string | null
+  total: number
+  fulltime: number
+  contract: number
+  parttime: number
+  unset: number
+}
+
+export interface HeadcountSummaryResponse {
+  as_of: string | null
+  stores: HeadcountRow[]
+  others: HeadcountRow[]
+  company: HeadcountRow | null
+  is_sample: boolean
+}
+
+export interface HeadcountTrendResponse {
+  months: string[]
+  by_group: Record<string, number[]>
+  by_department: Record<string, number[]>
+  is_sample: boolean
+}
+
+export interface TurnoverMonthPoint {
+  month: string
+  hires: number
+  leavers: number
+}
+
+export interface TurnoverResponse {
+  monthly: TurnoverMonthPoint[]
+  hires_total: number
+  leavers_total: number
+  avg_headcount: number | null
+  turnover_rate: number | null
+  reasons: { reason: string; count: number }[]
+  is_sample: boolean
+}
+
+export interface OrgHealthResponse {
+  avg_age: number | null
+  avg_tenure_years: number | null
+  age_distribution: { label: string; count: number }[]
+  by_department: {
+    department: string
+    headcount: number
+    avg_age: number | null
+    avg_tenure_years: number | null
+  }[]
+  is_sample: boolean
+}
+
+export interface StoreLaborRow {
+  store: string
+  area?: string | null
+  headcount: number
+  labor_cost: number
+  labor_cost_prev_year: number
+  labor_cost_yoy: number | null
+  sales: number | null
+  labor_cost_ratio: number | null
+  sales_per_head: number | null
+  overtime_per_head: number | null
+}
+
+export interface StoreLaborResponse {
+  month: string
+  rows: StoreLaborRow[]
+  total: StoreLaborRow | null
+  unmatched_stores: string[]
+  is_sample: boolean
+}
