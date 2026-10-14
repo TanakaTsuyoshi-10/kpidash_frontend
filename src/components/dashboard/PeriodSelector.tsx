@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { getYearOptions } from '@/lib/fiscal-year'
+import { getYearOptions, getCalendarYear } from '@/lib/fiscal-year'
 import type { PeriodType } from '@/types/dashboard'
 
 interface Props {
@@ -26,21 +26,9 @@ interface Props {
   onQuarterChange: (quarter: number) => void
 }
 
-// 月選択肢（8月が上、9月が下 - 年度末から年度初めの順）
-const MONTHS = [
-  { value: 8, label: '8月' },
-  { value: 7, label: '7月' },
-  { value: 6, label: '6月' },
-  { value: 5, label: '5月' },
-  { value: 4, label: '4月' },
-  { value: 3, label: '3月' },
-  { value: 2, label: '2月' },
-  { value: 1, label: '1月' },
-  { value: 12, label: '12月' },
-  { value: 11, label: '11月' },
-  { value: 10, label: '10月' },
-  { value: 9, label: '9月' },
-]
+// 月選択肢（8月が上、9月が下 - 年度末から年度初めの順）。
+// ラベルは誤読防止のため暦年付き（例: 2026年9月）で表示する
+const MONTH_VALUES = [8, 7, 6, 5, 4, 3, 2, 1, 12, 11, 10, 9]
 
 // 四半期選択肢
 const QUARTERS = [
@@ -123,9 +111,9 @@ export function PeriodSelector({
               <SelectValue placeholder="月" />
             </SelectTrigger>
             <SelectContent>
-              {MONTHS.map((m) => (
-                <SelectItem key={m.value} value={m.value.toString()}>
-                  {m.label}
+              {MONTH_VALUES.map((m) => (
+                <SelectItem key={m} value={m.toString()}>
+                  {getCalendarYear(year, m)}年{m}月
                 </SelectItem>
               ))}
             </SelectContent>

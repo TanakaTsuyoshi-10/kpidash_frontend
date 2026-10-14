@@ -15,6 +15,7 @@ import {
   getYearOptions,
   formatPeriod,
   getFiscalYearFromPeriod,
+  getCalendarYear,
 } from '@/lib/fiscal-year'
 
 interface Props {
@@ -24,21 +25,10 @@ interface Props {
   onChange: (value: string) => void
 }
 
-// 月選択肢（8月が上、9月が下 - 年度末から年度初めの順）
-const MONTHS = [
-  { value: 8, label: '8月' },
-  { value: 7, label: '7月' },
-  { value: 6, label: '6月' },
-  { value: 5, label: '5月' },
-  { value: 4, label: '4月' },
-  { value: 3, label: '3月' },
-  { value: 2, label: '2月' },
-  { value: 1, label: '1月' },
-  { value: 12, label: '12月' },
-  { value: 11, label: '11月' },
-  { value: 10, label: '10月' },
-  { value: 9, label: '9月' },
-]
+// 月選択肢（8月が上、9月が下 - 年度末から年度初めの順）。
+// 「2027年度の9月」は実際には2026年9月のため、誤読を防ぐよう
+// ラベルは暦年付き（例: 2026年9月）で表示する
+const MONTH_VALUES = [8, 7, 6, 5, 4, 3, 2, 1, 12, 11, 10, 9]
 
 export function FiscalMonthSelector({ value, onChange }: Props) {
   const years = getYearOptions()
@@ -75,15 +65,15 @@ export function FiscalMonthSelector({ value, onChange }: Props) {
         </SelectContent>
       </Select>
 
-      {/* 月選択 */}
+      {/* 月選択（暦年付きラベル） */}
       <Select value={currentMonth.toString()} onValueChange={handleMonthChange}>
-        <SelectTrigger className="w-[100px]">
+        <SelectTrigger className="w-[130px]">
           <SelectValue placeholder="月" />
         </SelectTrigger>
         <SelectContent>
-          {MONTHS.map((m) => (
-            <SelectItem key={m.value} value={m.value.toString()}>
-              {m.label}
+          {MONTH_VALUES.map((m) => (
+            <SelectItem key={m} value={m.toString()}>
+              {getCalendarYear(currentFiscalYear, m)}年{m}月
             </SelectItem>
           ))}
         </SelectContent>

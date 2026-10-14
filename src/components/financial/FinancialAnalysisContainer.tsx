@@ -349,7 +349,7 @@ export function FinancialAnalysisContainer({
         <div>
           <h1 className="text-2xl font-bold">財務分析</h1>
           <p className="text-sm text-gray-600 mt-1">
-            {formatDisplayPeriod(year, baseMonth)} | {year}年度
+            {getCurrentPeriodLabel()}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">

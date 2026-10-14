@@ -234,7 +234,6 @@ export default function StoreDetailPage({ params }: Props) {
               <div className={cn('font-bold', isCumulative ? 'text-lg' : 'text-2xl')}>
                 {isCumulative ? `${fiscalYearStart}/9〜${yearNum}/${monthNum} 累計` : displayMonth}
               </div>
-              <div className="text-sm text-gray-500">{fiscalYearStart}年度</div>
             </CardContent>
           </Card>
         </div>

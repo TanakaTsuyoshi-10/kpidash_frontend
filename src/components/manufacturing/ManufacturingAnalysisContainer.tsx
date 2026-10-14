@@ -130,7 +130,7 @@ export function ManufacturingAnalysisContainer({
         <div>
           <h1 className="text-2xl font-bold">製造分析</h1>
           <p className="text-sm text-gray-600 mt-1">
-            {formatDisplayPeriod(year, month)} | {year}年度
+            {getCurrentPeriodLabel()}
           </p>
         </div>
         <div className="flex items-center gap-3">

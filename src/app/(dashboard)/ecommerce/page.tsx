@@ -59,7 +59,7 @@ export default function EcommercePage() {
 
   // 現在の表示期間ラベル
   const currentPeriodLabel = periodType === 'cumulative'
-    ? `${fiscalYear}年度累計`
+    ? `累計（${fiscalYearStart}年9月〜${year}年${monthNum}月）`
     : `${year}年${monthNum}月`
 
   // エクスポート実行
