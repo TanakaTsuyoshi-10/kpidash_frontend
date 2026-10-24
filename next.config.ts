@@ -29,15 +29,7 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
-    // ローカル開発時はローカルバックエンド（localhost:8000）への接続を許可する
     const isDev = process.env.NODE_ENV !== 'production'
-    const connectSrc = [
-      "'self'",
-      'https://kpidash-backend-15142953408.asia-northeast1.run.app',
-      'https://oaymbdcnzycvhtwlntql.supabase.co',
-      'wss://oaymbdcnzycvhtwlntql.supabase.co',
-      ...(isDev ? ['http://localhost:8000', 'ws://localhost:3000', 'ws://localhost:3001'] : []),
-    ].join(' ')
 
     return [
       {
@@ -50,22 +42,7 @@ const nextConfig: NextConfig = {
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https:",
-              "font-src 'self' data:",
-              `connect-src ${connectSrc}`,
-              // 取締役会資料: Googleスライドの埋め込み表示を許可
-              "frame-src https://docs.google.com",
-              "frame-ancestors 'none'",
-              "base-uri 'self'",
-              "form-action 'self'"
-            ].join('; ')
-          }
+          // CSP は nonce 付与のため middleware（src/middleware.ts）で設定する
         ]
       },
       // 静的アセット用キャッシュ（_next/static配下のみ）

@@ -5,6 +5,11 @@ import { Toaster } from '@/components/ui/sonner'
 
 const inter = Inter({ subsets: ['latin'] })
 
+// nonceベースCSP（middlewareで付与）を機能させるため全ページを動的レンダリングにする。
+// 静的プリレンダリングだとHTML内のインラインスクリプトにリクエストごとのnonceを
+// 付与できず、CSPでブロックされてしまう。
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'MaruokaKPI - KPI管理システム',
   description: '社内KPI管理システム',

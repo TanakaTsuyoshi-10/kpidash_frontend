@@ -73,10 +73,55 @@ function readTokenExp(raw: string): number | null {
   }
 }
 
+const BACKEND_ORIGIN = 'https://kpidash-backend-15142953408.asia-northeast1.run.app'
+const SUPABASE_ORIGIN = 'https://oaymbdcnzycvhtwlntql.supabase.co'
+
+/**
+ * Content-Security-Policy を組み立てる。
+ * 本番はリクエストごとの nonce + strict-dynamic でインラインスクリプトを制限し、
+ * 開発は HMR 等のため unsafe-eval / unsafe-inline を許可する。
+ * （nonce を使うため全ページを動的レンダリングにしている: app/layout.tsx の force-dynamic）
+ */
+function buildCsp(nonce: string | null): string {
+  const isDev = process.env.NODE_ENV !== 'production'
+  const connectSrc = [
+    "'self'",
+    BACKEND_ORIGIN,
+    SUPABASE_ORIGIN,
+    `wss://${SUPABASE_ORIGIN.replace('https://', '')}`,
+    ...(isDev ? ['http://localhost:8000', 'ws://localhost:3000', 'ws://localhost:3001'] : []),
+  ].join(' ')
+  const scriptSrc = nonce
+    ? `'self' 'nonce-${nonce}' 'strict-dynamic'`
+    : "'self' 'unsafe-eval' 'unsafe-inline'"
+  return [
+    "default-src 'self'",
+    `script-src ${scriptSrc}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    `connect-src ${connectSrc}`,
+    'frame-src https://docs.google.com',
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ')
+}
+
 export function middleware(request: NextRequest) {
+  // 本番のみ nonce を生成（Next.js が request ヘッダーの CSP から nonce を拾い、
+  // フレームワークのインラインスクリプトに自動付与する）
+  const nonce =
+    process.env.NODE_ENV === 'production' ? btoa(crypto.randomUUID()) : null
+  const csp = buildCsp(nonce)
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('Content-Security-Policy', csp)
+  if (nonce) requestHeaders.set('x-nonce', nonce)
+
   const response = NextResponse.next({
-    request: { headers: request.headers },
+    request: { headers: requestHeaders },
   })
+  response.headers.set('Content-Security-Policy', csp)
 
   // リクエストIDを生成（ログ追跡用）
   const requestId = crypto.randomUUID()
@@ -106,5 +151,9 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/upload/:path*', '/targets/:path*', '/settings/:path*'],
+  // CSP付与のため静的アセット以外の全ページに適用する
+  // （未認証リダイレクトは従来どおり PROTECTED_PREFIXES のパスのみ）
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)',
+  ],
 }
