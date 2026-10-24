@@ -65,6 +65,7 @@ import {
   REQUEST_STATUS_LABELS,
   type ApprovalRequestStatus,
 } from '@/types/approval'
+import DOMPurify from 'isomorphic-dompurify'
 
 const STATUS_COLORS: Record<ApprovalRequestStatus, string> = {
   draft: 'bg-gray-100 text-gray-600',
@@ -364,7 +365,7 @@ export default function ApprovalDetailPage({
             {request.content.caption_html ? (
               <div
                 className="rich-content prose prose-sm max-w-none [&_img]:max-w-full [&_img]:rounded-md [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5"
-                dangerouslySetInnerHTML={{ __html: request.content.caption_html }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(request.content.caption_html) }}
               />
             ) : (
               <p className="text-sm text-gray-400">本文がありません</p>
